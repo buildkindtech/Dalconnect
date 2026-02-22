@@ -1,16 +1,9 @@
+import { useNews, type NewsItem } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function News() {
-  // Fetch news from API
-  const { data: newsItems = [], isLoading } = useQuery({
-    queryKey: ['news'],
-    queryFn: async () => {
-      const res = await fetch('/api/news');
-      if (!res.ok) throw new Error('Failed to fetch news');
-      return res.json();
-    }
-  });
+  const { data: newsItems, isLoading } = useNews();
 
   return (
     <div className="bg-slate-50 min-h-screen py-12">
@@ -24,44 +17,31 @@ export default function News() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {isLoading ? (
-            <div className="col-span-2 text-center py-12">
-              <p className="text-muted-foreground">로딩 중...</p>
-            </div>
-          ) : newsItems.length === 0 ? (
-            <div className="col-span-2 text-center py-12">
-              <p className="text-muted-foreground">뉴스가 없습니다</p>
-            </div>
+            [1,2,3,4].map(i => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-border">
+                <Skeleton className="h-64 w-full" />
+                <div className="p-8"><Skeleton className="h-6 w-3/4 mb-4" /><Skeleton className="h-4 w-full mb-2" /><Skeleton className="h-4 w-2/3" /></div>
+              </div>
+            ))
           ) : (
-            newsItems.map((news: any) => (
-            <a href={news.url} key={news.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border flex flex-col h-full">
-              <div className="h-64 overflow-hidden relative">
-                <img 
-                  src={news.thumbnail_url} 
-                  alt={news.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <Badge className="absolute top-4 left-4 bg-primary text-white shadow-md">
-                  {news.category}
-                </Badge>
-              </div>
-              <div className="p-8 flex-1 flex flex-col">
-                <h3 className="text-2xl font-bold mb-4 group-hover:text-primary transition-colors leading-tight font-ko">
-                  {news.title}
-                </h3>
-                <p className="text-slate-600 flex-1 text-lg mb-6 leading-relaxed">
-                  {news.content}
-                </p>
-                <div className="flex items-center justify-between text-sm font-medium text-slate-500 border-t pt-4">
-                  <span className="flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-slate-200 mr-2 flex items-center justify-center text-xs text-slate-600">
-                      {news.source.charAt(0)}
-                    </div>
-                    {news.source}
-                  </span>
-                  <span>{new Date(news.published_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            (newsItems ?? []).map((news: NewsItem) => (
+              <a href={news.url} key={news.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border flex flex-col h-full" data-testid={`card-news-${news.id}`}>
+                <div className="h-64 overflow-hidden relative">
+                  <img src={news.thumbnail_url || ''} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <Badge className="absolute top-4 left-4 bg-primary text-white shadow-md">{news.category}</Badge>
                 </div>
-              </div>
-            </a>
+                <div className="p-8 flex-1 flex flex-col">
+                  <h3 className="text-2xl font-bold mb-4 group-hover:text-primary transition-colors leading-tight font-ko">{news.title}</h3>
+                  <p className="text-slate-600 flex-1 text-lg mb-6 leading-relaxed">{news.content}</p>
+                  <div className="flex items-center justify-between text-sm font-medium text-slate-500 border-t pt-4">
+                    <span className="flex items-center">
+                      <div className="w-6 h-6 rounded-full bg-slate-200 mr-2 flex items-center justify-center text-xs text-slate-600">{news.source?.charAt(0)}</div>
+                      {news.source}
+                    </span>
+                    <span>{news.published_date ? new Date(news.published_date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
+                  </div>
+                </div>
+              </a>
             ))
           )}
         </div>

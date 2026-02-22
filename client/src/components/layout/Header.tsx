@@ -10,24 +10,16 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6 md:gap-10">
-          <Link href="/">
-            <a className="flex items-center space-x-2" data-testid="link-home">
+          <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
               <div className="bg-primary text-white p-1.5 rounded-md">
                 <Globe className="h-5 w-5" />
               </div>
               <span className="font-bold text-xl font-ko inline-block">DFW Hanin</span>
-            </a>
           </Link>
           <nav className="hidden md:flex gap-6">
-            <Link href="/listings">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/listings' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-listings">업소록</a>
-            </Link>
-            <Link href="/news">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-news">뉴스</a>
-            </Link>
-            <Link href="/pricing">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/pricing' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-pricing">업체 등록</a>
-            </Link>
+            <Link href="/listings" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/listings' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-listings">업소록</Link>
+            <Link href="/news" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-news">뉴스</Link>
+            <Link href="/pricing" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/pricing' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-pricing">업체 등록</Link>
           </nav>
         </div>
 

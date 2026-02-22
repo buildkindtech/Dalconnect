@@ -42,7 +42,11 @@ export const businesses = pgTable("businesses", {
   updated_at: timestamp("updated_at").defaultNow()
 });
 
-export const insertBusinessSchema = createInsertSchema(businesses);
+export const insertBusinessSchema = createInsertSchema(businesses).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
 export type InsertBusiness = z.infer<typeof insertBusinessSchema>;
 export type Business = typeof businesses.$inferSelect;
 
@@ -59,6 +63,9 @@ export const news = pgTable("news", {
   created_at: timestamp("created_at").defaultNow()
 });
 
-export const insertNewsSchema = createInsertSchema(news);
+export const insertNewsSchema = createInsertSchema(news).omit({
+  id: true,
+  created_at: true,
+});
 export type InsertNews = z.infer<typeof insertNewsSchema>;
 export type News = typeof news.$inferSelect;
