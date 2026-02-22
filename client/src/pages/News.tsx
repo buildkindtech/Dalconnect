@@ -25,7 +25,7 @@ export default function News() {
             ))
           ) : (
             (newsItems ?? []).map((news: NewsItem) => (
-              <a href={news.url} key={news.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border flex flex-col h-full" data-testid={`card-news-${news.id}`}>
+              <a href={news.url} target="_blank" rel="noopener noreferrer" key={news.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border flex flex-col h-full" data-testid={`card-news-${news.id}`}>
                 <div className="h-64 overflow-hidden relative">
                   <img src={news.thumbnail_url || ''} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <Badge className="absolute top-4 left-4 bg-primary text-white shadow-md">{news.category}</Badge>
