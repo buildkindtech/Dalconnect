@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CATEGORIES, MOCK_BUSINESSES, MOCK_NEWS } from "@/data/mockData";
+import { CATEGORIES } from "@/data/mockData";
+import { useQuery } from "@tanstack/react-query";
 import * as LucideIcons from "lucide-react";
 import heroImg from "@/assets/images/hero-dallas.jpg";
 
@@ -15,8 +16,25 @@ const Icon = ({ name, ...props }: { name: string, className?: string }) => {
 };
 
 export default function Home() {
-  const featuredBusinesses = MOCK_BUSINESSES.filter(b => b.featured).slice(0, 3);
-  const recentNews = MOCK_NEWS.slice(0, 3);
+  // Fetch featured businesses from API
+  const { data: featuredBusinesses = [] } = useQuery({
+    queryKey: ['featured'],
+    queryFn: async () => {
+      const res = await fetch('/api/featured');
+      if (!res.ok) throw new Error('Failed to fetch featured businesses');
+      return res.json();
+    }
+  });
+
+  // Fetch recent news from API
+  const { data: recentNews = [] } = useQuery({
+    queryKey: ['news', 'recent'],
+    queryFn: async () => {
+      const res = await fetch('/api/news?limit=3');
+      if (!res.ok) throw new Error('Failed to fetch news');
+      return res.json();
+    }
+  });
 
   return (
     <div className="flex flex-col min-h-screen">

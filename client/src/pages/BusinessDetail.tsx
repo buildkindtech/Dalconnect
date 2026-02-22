@@ -2,14 +2,33 @@ import { useParams } from "wouter";
 import { MapPin, Phone, Globe, Clock, Star, Share2, Heart, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_BUSINESSES } from "@/data/mockData";
+import { useQuery } from "@tanstack/react-query";
 import NotFound from "./not-found";
 
 export default function BusinessDetail() {
   const params = useParams();
-  const business = MOCK_BUSINESSES.find(b => b.id === params.id);
+  
+  // Fetch business by ID
+  const { data: business, isLoading, error } = useQuery({
+    queryKey: ['business', params.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/businesses/${params.id}`);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error('Failed to fetch business');
+      return res.json();
+    },
+    enabled: !!params.id
+  });
 
-  if (!business) return <NotFound />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">로딩 중...</p>
+      </div>
+    );
+  }
+
+  if (error || !business) return <NotFound />;
 
   return (
     <div className="bg-slate-50 min-h-screen pb-20">

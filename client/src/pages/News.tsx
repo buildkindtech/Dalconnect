@@ -1,7 +1,17 @@
-import { MOCK_NEWS } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
 
 export default function News() {
+  // Fetch news from API
+  const { data: newsItems = [], isLoading } = useQuery({
+    queryKey: ['news'],
+    queryFn: async () => {
+      const res = await fetch('/api/news');
+      if (!res.ok) throw new Error('Failed to fetch news');
+      return res.json();
+    }
+  });
+
   return (
     <div className="bg-slate-50 min-h-screen py-12">
       <div className="container mx-auto px-4 max-w-5xl">
@@ -13,7 +23,16 @@ export default function News() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {MOCK_NEWS.map(news => (
+          {isLoading ? (
+            <div className="col-span-2 text-center py-12">
+              <p className="text-muted-foreground">로딩 중...</p>
+            </div>
+          ) : newsItems.length === 0 ? (
+            <div className="col-span-2 text-center py-12">
+              <p className="text-muted-foreground">뉴스가 없습니다</p>
+            </div>
+          ) : (
+            newsItems.map((news: any) => (
             <a href={news.url} key={news.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border flex flex-col h-full">
               <div className="h-64 overflow-hidden relative">
                 <img 
@@ -43,7 +62,8 @@ export default function News() {
                 </div>
               </div>
             </a>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

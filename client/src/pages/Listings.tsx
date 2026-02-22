@@ -7,10 +7,21 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { CATEGORIES, MOCK_BUSINESSES } from "@/data/mockData";
+import { CATEGORIES } from "@/data/mockData";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Listings() {
-  const cities = Array.from(new Set(MOCK_BUSINESSES.map(b => b.city)));
+  // Fetch all businesses from API
+  const { data: businesses = [], isLoading } = useQuery({
+    queryKey: ['businesses'],
+    queryFn: async () => {
+      const res = await fetch('/api/businesses');
+      if (!res.ok) throw new Error('Failed to fetch businesses');
+      return res.json();
+    }
+  });
+
+  const cities = Array.from(new Set(businesses.map((b: any) => b.city).filter(Boolean)));
 
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
@@ -74,7 +85,7 @@ export default function Listings() {
         {/* Main Content */}
         <main className="flex-1 space-y-6">
           <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-border">
-            <p className="text-sm text-muted-foreground">총 <span className="font-bold text-foreground">{MOCK_BUSINESSES.length}</span>개의 업체가 검색되었습니다</p>
+            <p className="text-sm text-muted-foreground">총 <span className="font-bold text-foreground">{businesses.length}</span>개의 업체가 검색되었습니다</p>
             <select className="text-sm border-0 bg-transparent font-medium focus:ring-0 cursor-pointer">
               <option>추천순</option>
               <option>평점 높은순</option>
@@ -84,7 +95,16 @@ export default function Listings() {
           </div>
 
           <div className="grid grid-cols-1 gap-6">
-            {MOCK_BUSINESSES.map(business => (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">로딩 중...</p>
+              </div>
+            ) : businesses.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">검색 결과가 없습니다</p>
+              </div>
+            ) : (
+              businesses.map((business: any) => (
               <Card key={business.id} className="overflow-hidden hover:shadow-md transition-shadow">
                 <div className="flex flex-col sm:flex-row h-full">
                   <div className="w-full sm:w-64 h-48 sm:h-auto relative shrink-0">
@@ -144,7 +164,8 @@ export default function Listings() {
                   </CardContent>
                 </div>
               </Card>
-            ))}
+              ))
+            )}
           </div>
         </main>
       </div>
