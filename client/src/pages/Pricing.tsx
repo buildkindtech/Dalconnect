@@ -5,49 +5,49 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export default function Pricing() {
   const tiers = [
     {
-      name: "Free",
+      name: "무료",
       price: "$0",
-      description: "Basic listing for your business.",
+      description: "비즈니스를 위한 기본 리스팅입니다.",
       features: [
-        "Basic contact information",
-        "Address & Map pin",
-        "Business category",
-        "Receive community reviews"
+        "기본 연락처 정보",
+        "주소 및 지도 핀",
+        "비즈니스 카테고리 설정",
+        "커뮤니티 리뷰 받기"
       ],
-      buttonText: "Claim Free Listing",
+      buttonText: "무료 등록하기",
       variant: "outline" as const
     },
     {
-      name: "Premium",
+      name: "프리미엄",
       price: "$49",
-      period: "/month",
-      description: "Enhanced visibility and control.",
+      period: "/월",
+      description: "더 높은 노출도와 관리 기능을 제공합니다.",
       features: [
-        "Everything in Free",
-        "Add business hours",
-        "Upload up to 10 photos",
-        "Link to website & social media",
-        "Respond to reviews",
-        "Priority in search results"
+        "무료 플랜의 모든 기능",
+        "영업 시간 등록",
+        "최대 10장의 사진 업로드",
+        "웹사이트 및 SNS 링크 연결",
+        "리뷰 답글 작성 가능",
+        "검색 결과 상단 노출"
       ],
-      buttonText: "Upgrade to Premium",
+      buttonText: "프리미엄으로 업그레이드",
       variant: "default" as const,
       popular: true
     },
     {
-      name: "Elite",
+      name: "엘리트",
       price: "$99",
-      period: "/month",
-      description: "Maximum exposure and features.",
+      period: "/월",
+      description: "최고의 홍보 효과와 프리미엄 기능을 제공합니다.",
       features: [
-        "Everything in Premium",
-        "Featured badge on listing",
-        "Displayed in 'Featured' carousel",
-        "Unlimited photo uploads",
-        "Remove competitor ads on your page",
-        "Detailed analytics dashboard"
+        "프리미엄 플랜의 모든 기능",
+        "추천 업체 배지 부여",
+        "홈페이지 '추천 업체' 섹션 노출",
+        "사진 무제한 업로드",
+        "내 업체 페이지 광고 제거",
+        "상세 방문 분석 대시보드"
       ],
-      buttonText: "Get Elite Access",
+      buttonText: "엘리트 멤버십 신청",
       variant: "outline" as const
     }
   ];
@@ -56,9 +56,9 @@ export default function Pricing() {
     <div className="bg-slate-50 min-h-screen py-20">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 font-ko tracking-tight">Grow Your Business With Us</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 font-ko tracking-tight">비즈니스의 성장을 도와드립니다</h1>
           <p className="text-lg md:text-xl text-muted-foreground">
-            Reach thousands of local Korean-American residents in the Dallas-Fort Worth area. Choose the plan that fits your business needs.
+            달라스-포트워스 지역 수천 명의 한인들에게 비즈니스를 홍보하세요. 비즈니스 규모에 맞는 최적의 플랜을 선택하세요.
           </p>
         </div>
 
@@ -67,7 +67,7 @@ export default function Pricing() {
             <Card key={index} className={`relative flex flex-col ${tier.popular ? 'border-primary shadow-xl scale-105 z-10' : 'border-border shadow-sm mt-4 md:mt-0'}`}>
               {tier.popular && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-bold tracking-wider uppercase shadow-sm">
-                  Most Popular
+                  인기 상품
                 </div>
               )}
               <CardHeader className="text-center pb-8 pt-8">
@@ -101,9 +101,9 @@ export default function Pricing() {
         </div>
         
         <div className="mt-20 text-center max-w-2xl mx-auto">
-          <h3 className="text-2xl font-bold mb-4 font-ko">Have questions?</h3>
-          <p className="text-muted-foreground mb-6">Contact our support team for custom advertising packages or bulk listing discounts.</p>
-          <Button variant="link" className="text-primary text-lg">Contact Sales</Button>
+          <h3 className="text-2xl font-bold mb-4 font-ko">궁금한 점이 있으신가요?</h3>
+          <p className="text-muted-foreground mb-6">맞춤형 광고 패키지나 다중 등록 할인은 저희 마케팅 팀에 문의해 주세요.</p>
+          <Button variant="link" className="text-primary text-lg">마케팅 팀 문의하기</Button>
         </div>
       </div>
     </div>

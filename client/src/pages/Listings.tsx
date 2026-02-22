@@ -17,17 +17,17 @@ export default function Listings() {
       {/* Search Header */}
       <div className="bg-white border-b py-8">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-6 font-ko">Directory</h1>
+          <h1 className="text-3xl font-bold mb-6 font-ko">업소록</h1>
           <div className="flex flex-col md:flex-row gap-4 max-w-4xl">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-              <Input className="pl-10 h-12 text-base" placeholder="Search by name or keyword..." />
+              <Input className="pl-10 h-12 text-base" placeholder="업체명 또는 키워드 검색..." />
             </div>
             <div className="relative flex-1">
               <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-              <Input className="pl-10 h-12 text-base" placeholder="Location (e.g., Carrollton)" />
+              <Input className="pl-10 h-12 text-base" placeholder="지역 (예: 캐롤턴, 달라스...)" />
             </div>
-            <Button className="h-12 px-8 text-base rounded-md">Search</Button>
+            <Button className="h-12 px-8 text-base rounded-md">검색</Button>
           </div>
         </div>
       </div>
@@ -38,11 +38,11 @@ export default function Listings() {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-border sticky top-24">
             <div className="flex items-center gap-2 mb-6 font-semibold pb-4 border-b">
               <Filter className="h-5 w-5" />
-              <span>Filters</span>
+              <span>상세 필터</span>
             </div>
 
             <div className="mb-6">
-              <h3 className="font-semibold mb-3 text-sm text-slate-800 uppercase tracking-wider">Categories</h3>
+              <h3 className="font-semibold mb-3 text-sm text-slate-800 uppercase tracking-wider">카테고리</h3>
               <div className="space-y-3">
                 {CATEGORIES.map(cat => (
                   <div key={cat.id} className="flex items-center space-x-2">
@@ -56,7 +56,7 @@ export default function Listings() {
             </div>
 
             <div className="mb-6">
-              <h3 className="font-semibold mb-3 text-sm text-slate-800 uppercase tracking-wider">Cities</h3>
+              <h3 className="font-semibold mb-3 text-sm text-slate-800 uppercase tracking-wider">지역</h3>
               <div className="space-y-3">
                 {cities.map(city => (
                   <div key={city} className="flex items-center space-x-2">
@@ -74,12 +74,12 @@ export default function Listings() {
         {/* Main Content */}
         <main className="flex-1 space-y-6">
           <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-border">
-            <p className="text-sm text-muted-foreground">Showing <span className="font-bold text-foreground">{MOCK_BUSINESSES.length}</span> businesses</p>
+            <p className="text-sm text-muted-foreground">총 <span className="font-bold text-foreground">{MOCK_BUSINESSES.length}</span>개의 업체가 검색되었습니다</p>
             <select className="text-sm border-0 bg-transparent font-medium focus:ring-0 cursor-pointer">
-              <option>Recommended</option>
-              <option>Highest Rated</option>
-              <option>Most Reviewed</option>
-              <option>Newest</option>
+              <option>추천순</option>
+              <option>평점 높은순</option>
+              <option>리뷰 많은순</option>
+              <option>최신순</option>
             </select>
           </div>
 
@@ -134,10 +134,10 @@ export default function Listings() {
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" className="hidden sm:flex">
                           <Phone className="h-4 w-4 mr-2" />
-                          Call
+                          전화하기
                         </Button>
                         <Link href={`/business/${business.id}`}>
-                          <Button size="sm">View Profile</Button>
+                          <Button size="sm">자세히 보기</Button>
                         </Link>
                       </div>
                     </div>

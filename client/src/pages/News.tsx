@@ -6,9 +6,9 @@ export default function News() {
     <div className="bg-slate-50 min-h-screen py-12">
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-bold mb-4 font-ko">Community News</h1>
+          <h1 className="text-4xl font-bold mb-4 font-ko">커뮤니티 뉴스</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Stay up to date with the latest happenings, events, and business news in the DFW Korean community.
+            달라스-포트워스 한인 커뮤니티의 최신 소식, 이벤트 및 비즈니스 뉴스를 확인하세요.
           </p>
         </div>
 

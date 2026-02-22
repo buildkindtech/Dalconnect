@@ -32,14 +32,14 @@ export interface NewsItem {
 }
 
 export const CATEGORIES = [
-  { id: 'restaurants', name: 'Restaurants', icon: 'utensils' },
-  { id: 'beauty', name: 'Beauty & Salon', icon: 'scissors' },
-  { id: 'medical', name: 'Medical', icon: 'stethoscope' },
-  { id: 'legal', name: 'Legal Services', icon: 'scale' },
-  { id: 'real-estate', name: 'Real Estate', icon: 'home' },
-  { id: 'auto', name: 'Auto Services', icon: 'car' },
-  { id: 'education', name: 'Education', icon: 'book-open' },
-  { id: 'events', name: 'Events & Planning', icon: 'calendar' }
+  { id: 'restaurants', name: '식당', icon: 'utensils' },
+  { id: 'beauty', name: '미용/뷰티', icon: 'scissors' },
+  { id: 'medical', name: '의료/병원', icon: 'stethoscope' },
+  { id: 'legal', name: '법률 서비스', icon: 'scale' },
+  { id: 'real-estate', name: '부동산', icon: 'home' },
+  { id: 'auto', name: '자동차 서비스', icon: 'car' },
+  { id: 'education', name: '교육/학원', icon: 'book-open' },
+  { id: 'events', name: '이벤트/기획', icon: 'calendar' }
 ];
 
 export const MOCK_BUSINESSES: Business[] = [

@@ -31,19 +31,19 @@ export default function BusinessDetail() {
                 </Badge>
                 {business.claimed && (
                   <Badge variant="outline" className="bg-green-500/20 text-green-100 border-green-400/30 backdrop-blur-sm">
-                    <CheckCircle2 className="h-3 w-3 mr-1" /> Claimed
+                    <CheckCircle2 className="h-3 w-3 mr-1" /> 소유주 확인됨
                   </Badge>
                 )}
               </div>
               <h1 className="text-3xl md:text-5xl font-bold font-ko mb-2 drop-shadow-md">
-                {business.name_en} <span className="text-2xl md:text-3xl font-medium text-slate-300 ml-2">{business.name_ko}</span>
+                {business.name_ko} <span className="text-2xl md:text-3xl font-medium text-slate-300 ml-2">{business.name_en}</span>
               </h1>
               
               <div className="flex flex-wrap items-center gap-4 text-sm md:text-base text-slate-200">
                 <div className="flex items-center">
                   <Star className="h-5 w-5 text-secondary fill-secondary mr-1.5" />
                   <span className="font-bold text-white">{business.rating}</span>
-                  <span className="ml-1 opacity-80">({business.review_count} reviews)</span>
+                  <span className="ml-1 opacity-80">({business.review_count}개의 리뷰)</span>
                 </div>
                 <span>•</span>
                 <div className="flex items-center">
@@ -54,7 +54,7 @@ export default function BusinessDetail() {
             </div>
             
             <div className="flex gap-3 mt-4 md:mt-0 w-full md:w-auto">
-              <Button className="flex-1 md:flex-none rounded-full px-6" size="lg">Write Review</Button>
+              <Button className="flex-1 md:flex-none rounded-full px-6" size="lg">리뷰 작성</Button>
               <Button variant="outline" size="icon" className="rounded-full bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm h-11 w-11 shrink-0">
                 <Heart className="h-5 w-5" />
               </Button>
@@ -70,14 +70,14 @@ export default function BusinessDetail() {
         {/* Left Column - Details */}
         <div className="flex-1 space-y-8">
           <div className="bg-white rounded-xl p-8 shadow-sm border border-border">
-            <h2 className="text-2xl font-bold mb-4 font-ko">About</h2>
+            <h2 className="text-2xl font-bold mb-4 font-ko">업체 소개</h2>
             <p className="text-slate-600 leading-relaxed text-lg">
               {business.description}
             </p>
           </div>
 
           <div className="bg-white rounded-xl p-8 shadow-sm border border-border">
-            <h2 className="text-2xl font-bold mb-6 font-ko">Photos</h2>
+            <h2 className="text-2xl font-bold mb-6 font-ko">갤러리</h2>
             {business.photos.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {business.photos.map((photo, i) => (
@@ -88,9 +88,9 @@ export default function BusinessDetail() {
               </div>
             ) : (
               <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                <p className="text-muted-foreground">No photos uploaded yet.</p>
+                <p className="text-muted-foreground">업로드된 사진이 없습니다.</p>
                 {business.claimed && (
-                  <Button variant="outline" className="mt-4">Upload Photos</Button>
+                  <Button variant="outline" className="mt-4">사진 업로드</Button>
                 )}
               </div>
             )}
@@ -106,7 +106,7 @@ export default function BusinessDetail() {
                 <div>
                   <p className="font-medium text-slate-900">{business.address}</p>
                   <p className="text-slate-500">{business.city}, TX</p>
-                  <a href="#" className="text-primary text-sm font-medium hover:underline mt-1 inline-block">Get Directions</a>
+                  <a href="#" className="text-primary text-sm font-medium hover:underline mt-1 inline-block">찾아오는 길</a>
                 </div>
               </div>
               
@@ -143,7 +143,7 @@ export default function BusinessDetail() {
           <div className="bg-white rounded-xl shadow-sm border border-border p-6">
             <div className="flex items-center mb-4">
               <Clock className="h-5 w-5 text-primary mr-2" />
-              <h3 className="font-bold text-lg">Hours</h3>
+              <h3 className="font-bold text-lg">영업 시간</h3>
             </div>
             <ul className="space-y-3 text-sm">
               {Object.entries(business.hours).map(([day, hours]) => (
@@ -157,9 +157,9 @@ export default function BusinessDetail() {
 
           {!business.claimed && (
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 text-center">
-              <h3 className="font-bold mb-2 text-slate-900">Own this business?</h3>
-              <p className="text-sm text-slate-600 mb-4">Claim this listing to update information, respond to reviews, and add photos.</p>
-              <Button className="w-full">Claim Listing</Button>
+              <h3 className="font-bold mb-2 text-slate-900">비즈니스 소유주이신가요?</h3>
+              <p className="text-sm text-slate-600 mb-4">비즈니스 정보를 업데이트하고 고객 리뷰에 응답하시려면 소유권 확인을 진행하세요.</p>
+              <Button className="w-full">소유권 확인 신청</Button>
             </div>
           )}
         </aside>

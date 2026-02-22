@@ -20,13 +20,13 @@ export default function Header() {
           </Link>
           <nav className="hidden md:flex gap-6">
             <Link href="/listings">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/listings' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-listings">Directory</a>
+              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/listings' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-listings">업소록</a>
             </Link>
             <Link href="/news">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-news">News</a>
+              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-news">뉴스</a>
             </Link>
             <Link href="/pricing">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/pricing' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-pricing">Add Business</a>
+              <a className={`text-sm font-medium transition-colors hover:text-primary ${location === '/pricing' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-pricing">업체 등록</a>
             </Link>
           </nav>
         </div>
@@ -36,16 +36,16 @@ export default function Header() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search businesses..."
+              placeholder="업체 검색..."
               className="w-full bg-muted/50 pl-8 rounded-full"
               data-testid="input-global-search"
             />
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="ghost" className="font-ko font-medium">한글</Button>
+            <Button variant="ghost" className="font-ko font-medium">English</Button>
             <Button className="hidden md:flex bg-primary hover:bg-primary/90 rounded-full" data-testid="button-login">
-              Log In
+              로그인
             </Button>
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
