@@ -27,7 +27,46 @@ export default function News() {
             (newsItems ?? []).map((news: NewsItem) => (
               <a href={news.url} target="_blank" rel="noopener noreferrer" key={news.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border flex flex-col h-full" data-testid={`card-news-${news.id}`}>
                 <div className="h-64 overflow-hidden relative">
-                  <img src={news.thumbnail_url || ''} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  {news.thumbnail_url ? (
+                    <img 
+                      src={news.thumbnail_url} 
+                      alt={news.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          parent.classList.add('bg-gradient-to-br');
+                          if (news.category === '한인커뮤니티') {
+                            parent.classList.add('from-blue-500', 'to-purple-600');
+                          } else if (news.category === '스포츠') {
+                            parent.classList.add('from-green-500', 'to-teal-600');
+                          } else if (news.category === '비즈니스') {
+                            parent.classList.add('from-orange-500', 'to-red-600');
+                          } else {
+                            parent.classList.add('from-slate-500', 'to-slate-700');
+                          }
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-br ${
+                      news.category === '한인커뮤니티' ? 'from-blue-500 to-purple-600' :
+                      news.category === '스포츠' ? 'from-green-500 to-teal-600' :
+                      news.category === '비즈니스' ? 'from-orange-500 to-red-600' :
+                      'from-slate-500 to-slate-700'
+                    } flex items-center justify-center`}>
+                      <div className="text-white text-center p-8">
+                        <div className="text-6xl mb-4">
+                          {news.category === '한인커뮤니티' ? '🇰🇷' :
+                           news.category === '스포츠' ? '⚽' :
+                           news.category === '비즈니스' ? '💼' :
+                           '📰'}
+                        </div>
+                        <p className="text-xl font-bold opacity-90">{news.category}</p>
+                      </div>
+                    </div>
+                  )}
                   <Badge className="absolute top-4 left-4 bg-primary text-white shadow-md">{news.category}</Badge>
                 </div>
                 <div className="p-8 flex-1 flex flex-col">
