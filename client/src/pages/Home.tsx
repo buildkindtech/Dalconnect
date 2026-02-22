@@ -152,7 +152,8 @@ export default function Home() {
               ))
             ) : (
               recentNews.map((news: NewsItem) => (
-                <a href={news.url} target="_blank" rel="noopener noreferrer" key={news.id} className="group flex flex-col h-full bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow" data-testid={`card-news-${news.id}`}>
+                <Link href={`/news/${news.id}`} key={news.id}>
+                  <div className="group flex flex-col h-full bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer" data-testid={`card-news-${news.id}`}>
                   <div className="h-48 overflow-hidden relative">
                     {news.thumbnail_url ? (
                       <img 
@@ -204,7 +205,8 @@ export default function Home() {
                       <span>{news.published_date ? new Date(news.published_date).toLocaleDateString('ko-KR') : ''}</span>
                     </div>
                   </div>
-                </a>
+                  </div>
+                </Link>
               ))
             )}
           </div>

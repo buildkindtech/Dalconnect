@@ -13,6 +13,7 @@ import Home from "./pages/Home";
 import Listings from "./pages/Listings";
 import BusinessDetail from "./pages/BusinessDetail";
 import News from "./pages/News";
+import NewsDetail from "./pages/NewsDetail";
 import Pricing from "./pages/Pricing";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
           <Route path="/listings" component={Listings} />
           <Route path="/business/:id" component={BusinessDetail} />
           <Route path="/news" component={News} />
+          <Route path="/news/:id" component={NewsDetail} />
           <Route path="/pricing" component={Pricing} />
           <Route component={NotFound} />
         </Switch>

@@ -71,7 +71,7 @@ const LATEST_NEWS = [
     category: "지역소식",
     published_date: new Date("2026-02-22T02:53:00Z"),
     source: "Yahoo News",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-2",
@@ -81,7 +81,7 @@ const LATEST_NEWS = [
     category: "지역소식",
     published_date: new Date("2026-02-22T01:30:00Z"),
     source: "MSN",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-3",
@@ -91,7 +91,7 @@ const LATEST_NEWS = [
     category: "한인커뮤니티",
     published_date: new Date("2026-02-21T18:00:00Z"),
     source: "MSN",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-4",
@@ -101,7 +101,7 @@ const LATEST_NEWS = [
     category: "한인커뮤니티",
     published_date: new Date("2026-02-21T16:45:00Z"),
     source: "MSN",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-5",
@@ -111,7 +111,7 @@ const LATEST_NEWS = [
     category: "스포츠",
     published_date: new Date("2026-02-22T00:15:00Z"),
     source: "Reuters",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-6",
@@ -121,7 +121,7 @@ const LATEST_NEWS = [
     category: "지역소식",
     published_date: new Date("2026-02-21T22:30:00Z"),
     source: "MSN",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-7",
@@ -131,7 +131,7 @@ const LATEST_NEWS = [
     category: "스포츠",
     published_date: new Date("2026-02-21T20:00:00Z"),
     source: "Dallas Morning News",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-8",
@@ -141,7 +141,7 @@ const LATEST_NEWS = [
     category: "지역소식",
     published_date: new Date("2026-02-21T23:45:00Z"),
     source: "MSN",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-9",
@@ -151,7 +151,7 @@ const LATEST_NEWS = [
     category: "비즈니스",
     published_date: new Date("2026-02-21T15:00:00Z"),
     source: "Yahoo News",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-10",
@@ -161,7 +161,7 @@ const LATEST_NEWS = [
     category: "지역소식",
     published_date: new Date("2026-02-21T12:00:00Z"),
     source: "Yahoo News",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-11",
@@ -171,7 +171,7 @@ const LATEST_NEWS = [
     category: "한인커뮤니티",
     published_date: new Date("2026-02-21T14:30:00Z"),
     source: "MSN",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-12",
@@ -181,7 +181,7 @@ const LATEST_NEWS = [
     category: "지역소식",
     published_date: new Date("2026-02-22T06:00:00Z"),
     source: "MSN",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-13",
@@ -191,7 +191,7 @@ const LATEST_NEWS = [
     category: "스포츠",
     published_date: new Date("2026-02-21T19:15:00Z"),
     source: "Dallas Morning News",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-14",
@@ -201,7 +201,7 @@ const LATEST_NEWS = [
     category: "스포츠",
     published_date: new Date("2026-02-21T21:00:00Z"),
     source: "MSN",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   },
   {
     id: "news-15",
@@ -211,7 +211,7 @@ const LATEST_NEWS = [
     category: "스포츠",
     published_date: new Date("2026-02-22T01:45:00Z"),
     source: "Yahoo Sports",
-    get thumbnail_url() { return getImageForNews(this.title, this.category); }
+    thumbnail_url: ""
   }
 ].map(item => ({ ...item, thumbnail_url: item.thumbnail_url })); // getter를 실제 값으로
 

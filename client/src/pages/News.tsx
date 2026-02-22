@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { useNews, type NewsItem } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +26,8 @@ export default function News() {
             ))
           ) : (
             (newsItems ?? []).map((news: NewsItem) => (
-              <a href={news.url} target="_blank" rel="noopener noreferrer" key={news.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border flex flex-col h-full" data-testid={`card-news-${news.id}`}>
+              <Link href={`/news/${news.id}`} key={news.id}>
+                <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border flex flex-col h-full cursor-pointer" data-testid={`card-news-${news.id}`}>
                 <div className="h-64 overflow-hidden relative">
                   {news.thumbnail_url ? (
                     <img 
@@ -80,7 +82,8 @@ export default function News() {
                     <span>{news.published_date ? new Date(news.published_date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
                   </div>
                 </div>
-              </a>
+                </div>
+              </Link>
             ))
           )}
         </div>

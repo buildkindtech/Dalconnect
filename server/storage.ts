@@ -10,6 +10,7 @@ export interface IStorage {
   getBusiness(id: string): Promise<Business | undefined>;
   getFeaturedBusinesses(): Promise<Business[]>;
   getNews(category?: string, limit?: number): Promise<News[]>;
+  getNewsById(id: string): Promise<News | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -70,6 +71,11 @@ export class DatabaseStorage implements IStorage {
       return db.select().from(news).where(eq(news.category, category)).orderBy(desc(news.published_date)).limit(limit);
     }
     return db.select().from(news).orderBy(desc(news.published_date)).limit(limit);
+  }
+
+  async getNewsById(id: string): Promise<News | undefined> {
+    const [newsItem] = await db.select().from(news).where(eq(news.id, id));
+    return newsItem;
   }
 }
 

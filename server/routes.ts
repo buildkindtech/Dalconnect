@@ -64,12 +64,24 @@ export async function registerRoutes(
     }
   });
   
-  app.get("/api/news/:category", async (req, res) => {
+  app.get("/api/news/:idOrCategory", async (req, res) => {
     try {
-      const results = await storage.getNews(req.params.category);
+      const param = req.params.idOrCategory;
+      
+      // If it looks like an ID (news-1, news-2, etc.), fetch by ID
+      if (param.startsWith('news-')) {
+        const newsItem = await storage.getNewsById(param);
+        if (!newsItem) {
+          return res.status(404).json({ error: "News not found" });
+        }
+        return res.json(newsItem);
+      }
+      
+      // Otherwise, treat as category
+      const results = await storage.getNews(param);
       res.json(results);
     } catch (error) {
-      console.error("GET /api/news/:category error:", error);
+      console.error("GET /api/news/:idOrCategory error:", error);
       res.status(500).json({ error: "Failed to fetch news" });
     }
   });
