@@ -1,0 +1,102 @@
+{
+  "trusted_domains": [
+    "dallasnews.com",
+    "star-telegram.com",
+    "wfaa.com",
+    "nbcdfw.com",
+    "fox4news.com",
+    "cbs11.com",
+    "dallasobserver.com",
+    "bizjournals.com",
+    "weather.gov",
+    "google.com",
+    "yelp.com",
+    "eventbrite.com",
+    "reddit.com",
+    "facebook.com",
+    "zillow.com",
+    "apartments.com",
+    "yahoo.com",
+    "msn.com",
+    "reuters.com",
+    "ap.org",
+    "npr.org",
+    "cnn.com",
+    "bbc.com",
+    "usatoday.com",
+    "texastribune.org",
+    "kera.org",
+    "dmagazine.com"
+  ],
+  "search_queries": [
+    {
+      "query": "Dallas news",
+      "category": "지역소식",
+      "time_range": "day",
+      "priority": 1,
+      "max_results": 10
+    },
+    {
+      "query": "Dallas Korean community",
+      "category": "한인커뮤니티",
+      "time_range": "week",
+      "priority": 1,
+      "max_results": 10
+    },
+    {
+      "query": "Carrollton Texas Korean",
+      "category": "한인커뮤니티",
+      "time_range": "week",
+      "priority": 2,
+      "max_results": 5
+    },
+    {
+      "query": "Dallas Korean restaurant new",
+      "category": "비즈니스",
+      "time_range": "week",
+      "priority": 2,
+      "max_results": 5
+    },
+    {
+      "query": "Dallas Korean event",
+      "category": "이벤트",
+      "time_range": "week",
+      "priority": 1,
+      "max_results": 10
+    },
+    {
+      "query": "Fort Worth news",
+      "category": "지역소식",
+      "time_range": "day",
+      "priority": 2,
+      "max_results": 5
+    },
+    {
+      "query": "DFW business news",
+      "category": "비즈니스",
+      "time_range": "day",
+      "priority": 2,
+      "max_results": 5
+    },
+    {
+      "query": "Dallas weather alert",
+      "category": "날씨",
+      "time_range": "day",
+      "priority": 1,
+      "max_results": 3
+    }
+  ],
+  "filters": {
+    "min_title_length": 10,
+    "max_title_length": 200,
+    "max_age_hours": 48,
+    "exclude_keywords": [
+      "sponsored",
+      "advertisement",
+      "casino",
+      "betting",
+      "viagra"
+    ],
+    "duplicate_similarity_threshold": 0.9
+  }
+}
