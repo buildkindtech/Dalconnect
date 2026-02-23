@@ -58,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         apiVersion: '2024-12-18.acacia' as any,
       });
 
-      const pricing = PRICING_TIERS[tier];
+      const pricing = PRICING_TIERS[tier as keyof typeof PRICING_TIERS];
       const siteUrl = process.env.SITE_URL || "https://dalconnect.buildkind.tech";
 
       const session = await stripe.checkout.sessions.create({

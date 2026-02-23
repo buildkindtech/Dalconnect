@@ -1,107 +1,41 @@
-import type { Request, Response } from 'express';
-import { desc, eq, like, or, and, sql, gte } from 'drizzle-orm';
-import { db } from './_db';
-import { listings } from '../shared/schema';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import pg from 'pg';
 
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 1 });
   try {
-    // GET - List listings with filters
     if (req.method === 'GET') {
-      const { 
-        category, 
-        price_type,
-        location,
-        search, 
-        page = '1', 
-        limit = '12',
-        status = 'active'
-      } = req.query;
-      
+      const { category, search, page = '1', limit = '12', status = 'active' } = req.query;
       const pageNum = parseInt(page as string);
       const limitNum = parseInt(limit as string);
       const offset = (pageNum - 1) * limitNum;
 
-      // Build where conditions
-      let conditions: any[] = [];
-      
-      // Only show active and non-expired listings by default
-      conditions.push(eq(listings.status, status as string));
-      conditions.push(gte(listings.expires_at, sql`NOW()`));
-      
-      if (category && category !== 'all') {
-        conditions.push(eq(listings.category, category as string));
-      }
-      
-      if (price_type && price_type !== 'all') {
-        conditions.push(eq(listings.price_type, price_type as string));
-      }
-      
-      if (location && location !== 'all') {
-        conditions.push(eq(listings.location, location as string));
-      }
-      
-      if (search) {
-        const searchTerm = `%${search}%`;
-        conditions.push(
-          or(
-            like(listings.title, searchTerm),
-            like(listings.description, searchTerm)
-          )
-        );
-      }
+      const conditions: string[] = ["status = $1", "expires_at >= NOW()"];
+      const params: any[] = [status];
+      let idx = 2;
 
-      // Get total count
-      const countQuery = db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(listings)
-        .where(and(...conditions))
-        .limit(1);
-      
-      const countResult = await countQuery;
-      const total = countResult[0]?.count || 0;
+      if (category && category !== 'all') { conditions.push(`category = $${idx++}`); params.push(category); }
+      if (search) { conditions.push(`(title ILIKE $${idx} OR description ILIKE $${idx})`); params.push(`%${search}%`); idx++; }
 
-      // Get paginated results
-      const items = await db
-        .select()
-        .from(listings)
-        .where(and(...conditions))
-        .orderBy(desc(listings.created_at))
-        .limit(limitNum)
-        .offset(offset);
+      const where = `WHERE ${conditions.join(' AND ')}`;
+      const countR = await pool.query(`SELECT count(*)::int as total FROM listings ${where}`, params);
+      const dataR = await pool.query(`SELECT * FROM listings ${where} ORDER BY created_at DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, limitNum, offset]);
 
-      res.json({
-        items,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total,
-          totalPages: Math.ceil(total / limitNum)
-        }
-      });
-    } 
-    // POST - Create new listing
-    else if (req.method === 'POST') {
-      const listingData = req.body;
-      
-      // Basic validation
-      if (!listingData.title || !listingData.category) {
-        return res.status(400).json({ 
-          error: 'Title and category are required' 
-        });
-      }
-      
-      const [newListing] = await db
-        .insert(listings)
-        .values(listingData)
-        .returning();
-
-      res.status(201).json(newListing);
-    } 
-    else {
+      res.json({ items: dataR.rows, pagination: { page: pageNum, limit: limitNum, total: countR.rows[0].total, totalPages: Math.ceil(countR.rows[0].total / limitNum) } });
+    } else if (req.method === 'POST') {
+      const { title, description, price, price_type, category, condition, contact_method, contact_info, author_name, location } = req.body;
+      if (!title || !category) return res.status(400).json({ error: 'Title and category required' });
+      const r = await pool.query(
+        `INSERT INTO listings (id, title, description, price, price_type, category, condition, contact_method, contact_info, author_name, location) VALUES (gen_random_uuid(), $1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+        [title, description, price, price_type || 'fixed', category, condition, contact_method || 'phone', contact_info, author_name, location]
+      );
+      res.status(201).json(r.rows[0]);
+    } else {
       res.status(405).json({ error: 'Method not allowed' });
     }
-  } catch (error) {
-    console.error('Listings API error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  } finally {
+    await pool.end();
   }
 }
