@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFeaturedBusinesses, useNews } from "@/lib/api";
+import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
+import * as Icons from "lucide-react";
 
 const CATEGORIES = [
   { id: 'Korean Restaurant', name: '식당', icon: UtensilsCrossed, color: 'bg-red-500' },
@@ -134,12 +136,22 @@ export default function Home() {
                 <Link key={business.id} href={`/business/${business.id}`}>
                   <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
                     <CardContent className="p-0">
-                      <div 
-                        className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                        style={{ 
-                          backgroundImage: `url(${business.cover_url || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80'})` 
-                        }}
-                      />
+                      {hasValidImage(business.cover_url) ? (
+                        <div 
+                          className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                          style={{ 
+                            backgroundImage: `url(${business.cover_url})` 
+                          }}
+                        />
+                      ) : (
+                        <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                          {(() => {
+                            const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
+                            const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
+                            return IconComponent ? <IconComponent className="w-16 h-16 text-white/80" /> : null;
+                          })()}
+                        </div>
+                      )}
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors">
@@ -207,12 +219,18 @@ export default function Home() {
                 <a key={news.id} href={news.url} target="_blank" rel="noopener noreferrer">
                   <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
                     <CardContent className="p-0">
-                      <div 
-                        className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                        style={{ 
-                          backgroundImage: `url(${news.thumbnail_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'})` 
-                        }}
-                      />
+                      {hasValidImage(news.thumbnail_url) ? (
+                        <div 
+                          className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                          style={{ 
+                            backgroundImage: `url(${news.thumbnail_url})` 
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                          <Icons.Newspaper className="w-16 h-16 text-white/60" />
+                        </div>
+                      )}
                       <div className="p-6">
                         <Badge variant="secondary" className="mb-3">
                           {news.category || '뉴스'}

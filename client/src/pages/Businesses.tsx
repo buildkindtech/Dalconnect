@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBusinesses, useCategories } from "@/lib/api";
-import { getCategoryImage } from "@/lib/imageDefaults";
+import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
+import * as Icons from "lucide-react";
 
 const CITIES = [
   'Dallas',
@@ -218,12 +219,22 @@ export default function Businesses() {
                 <Link key={business.id} href={`/business/${business.id}`}>
                   <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group h-full">
                     <CardContent className="p-0">
-                      <div 
-                        className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                        style={{ 
-                          backgroundImage: `url(${getCategoryImage(business.category, business.cover_url)})` 
-                        }}
-                      />
+                      {hasValidImage(business.cover_url) ? (
+                        <div 
+                          className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                          style={{ 
+                            backgroundImage: `url(${business.cover_url})` 
+                          }}
+                        />
+                      ) : (
+                        <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                          {(() => {
+                            const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
+                            const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
+                            return IconComponent ? <IconComponent className="w-16 h-16 text-white/80" /> : null;
+                          })()}
+                        </div>
+                      )}
                       <div className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-1">

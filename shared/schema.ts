@@ -70,3 +70,26 @@ export const insertNewsSchema = createInsertSchema(news).omit({
 });
 export type InsertNews = z.infer<typeof insertNewsSchema>;
 export type News = typeof news.$inferSelect;
+
+// Blogs table
+export const blogs = pgTable("blogs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 500 }).notNull(),
+  slug: varchar("slug", { length: 500 }).notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  category: varchar("category", { length: 100 }),
+  cover_image: varchar("cover_image", { length: 500 }),
+  author: varchar("author", { length: 255 }).default('DalConnect'),
+  published_at: timestamp("published_at").defaultNow(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const insertBlogSchema = createInsertSchema(blogs).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+export type InsertBlog = z.infer<typeof insertBlogSchema>;
+export type Blog = typeof blogs.$inferSelect;
