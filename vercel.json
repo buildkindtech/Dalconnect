@@ -5,6 +5,11 @@
   "framework": null,
   "outputDirectory": "dist/public",
   "rewrites": [
+    { "source": "/api/businesses", "destination": "/api/businesses" },
+    { "source": "/api/featured", "destination": "/api/featured" },
+    { "source": "/api/news", "destination": "/api/news" },
+    { "source": "/api/health", "destination": "/api/health" },
+    { "source": "/api/stripe/create-checkout", "destination": "/api/stripe-checkout" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
