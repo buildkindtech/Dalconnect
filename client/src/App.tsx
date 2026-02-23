@@ -26,6 +26,7 @@ import Pricing from "./pages/Pricing";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import AdminDashboard from "./pages/AdminDashboard";
 import SetupRequired from "./pages/SetupRequired";
+import RegisterBusiness from "./pages/RegisterBusiness";
 
 function Router() {
   return (
@@ -36,6 +37,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/businesses" component={Businesses} />
           <Route path="/business/:id" component={BusinessDetail} />
+          <Route path="/register-business" component={RegisterBusiness} />
           <Route path="/news" component={News} />
           <Route path="/news/:id" component={NewsDetail} />
           <Route path="/blog" component={Blog} />

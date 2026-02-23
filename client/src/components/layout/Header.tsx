@@ -164,7 +164,7 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="/pricing">
+            <Link href="/register-business">
               <Button className="hidden md:flex bg-primary hover:bg-primary/90 rounded-full">
                 업체 등록
               </Button>
@@ -226,8 +226,8 @@ export default function Header() {
               >
                 문의
               </Link>
-              <Link href="/pricing">
-                <Button className="w-full bg-primary hover:bg-primary/90 rounded-full mt-2">
+              <Link href="/register-business">
+                <Button className="w-full bg-primary hover:bg-primary/90 rounded-full mt-2" onClick={() => setMobileMenuOpen(false)}>
                   업체 등록
                 </Button>
               </Link>

@@ -1,11 +1,21 @@
 import { useParams, Link } from "wouter";
-import { MapPin, Phone, Globe, Clock, Star, Share2, Navigation, ChevronLeft, ChevronRight, AlertCircle, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Globe, Clock, Star, Share2, Navigation, ChevronLeft, ChevronRight, AlertCircle, MessageCircle, Building2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useBusiness } from "@/lib/api";
 import { getCategoryImage } from "@/lib/imageDefaults";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +37,18 @@ export default function BusinessDetail() {
   const { data: business, isLoading, error } = useBusiness(id!);
   const { toast } = useToast();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Claim modal state
+  const [claimModalOpen, setClaimModalOpen] = useState(false);
+  const [claimData, setClaimData] = useState({
+    owner_name: "",
+    owner_email: "",
+    owner_phone: "",
+    password: "",
+    password_confirm: "",
+  });
+  const [claimErrors, setClaimErrors] = useState<Record<string, string>>({});
+  const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
 
   if (isLoading) {
     return (
@@ -129,6 +151,77 @@ export default function BusinessDetail() {
   };
 
   const openStatus = isOpenNow();
+
+  const handleClaimSubmit = async () => {
+    const errors: Record<string, string> = {};
+    
+    if (!claimData.owner_name.trim()) errors.owner_name = "이름은 필수입니다";
+    if (!claimData.owner_email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(claimData.owner_email)) {
+      errors.owner_email = "올바른 이메일을 입력해주세요";
+    }
+    if (!claimData.owner_phone.trim() || !/^[\d\s\-\+\(\)]{10,20}$/.test(claimData.owner_phone)) {
+      errors.owner_phone = "올바른 전화번호를 입력해주세요";
+    }
+    if (!claimData.password || claimData.password.length < 8) {
+      errors.password = "비밀번호는 최소 8자 이상이어야 합니다";
+    }
+    if (claimData.password !== claimData.password_confirm) {
+      errors.password_confirm = "비밀번호가 일치하지 않습니다";
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setClaimErrors(errors);
+      return;
+    }
+    
+    setIsSubmittingClaim(true);
+    try {
+      const response = await fetch('/api/businesses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'claim',
+          business_id: id,
+          owner_name: claimData.owner_name,
+          owner_email: claimData.owner_email,
+          owner_phone: claimData.owner_phone,
+          password: claimData.password,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({
+          title: "클레임 요청 완료!",
+          description: "관리자 검토 후 승인됩니다. 승인 시 이메일로 알려드립니다.",
+        });
+        setClaimModalOpen(false);
+        setClaimData({
+          owner_name: "",
+          owner_email: "",
+          owner_phone: "",
+          password: "",
+          password_confirm: "",
+        });
+        setClaimErrors({});
+      } else {
+        toast({
+          title: "클레임 요청 실패",
+          description: data.error || "오류가 발생했습니다.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "클레임 요청 실패",
+        description: error.message || "네트워크 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingClaim(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -364,15 +457,151 @@ export default function BusinessDetail() {
 
             {/* CTA */}
             {!business.claimed && (
-              <Card className="bg-primary text-white">
+              <Card className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-none">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-bold mb-2">업체 관계자이신가요?</h3>
-                  <p className="text-sm mb-4 opacity-90">
-                    업체를 등록하고 더 많은 정보를 제공하세요
-                  </p>
+                  <div className="flex items-start gap-3 mb-4">
+                    <Building2 className="h-6 w-6 mt-1" />
+                    <div>
+                      <h3 className="text-lg font-bold mb-2">이 업체의 사장님이신가요?</h3>
+                      <p className="text-sm opacity-90">
+                        업체를 클레임하고 정보를 직접 관리하세요
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Dialog open={claimModalOpen} onOpenChange={setClaimModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="secondary" className="w-full mb-2">
+                        내 업체로 등록하기
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>업체 클레임</DialogTitle>
+                        <DialogDescription>
+                          {business.name_ko || business.name_en} 업체의 소유자임을 인증해주세요
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4 py-4">
+                        <div>
+                          <Label htmlFor="claim_owner_name">대표자 이름 *</Label>
+                          <Input
+                            id="claim_owner_name"
+                            value={claimData.owner_name}
+                            onChange={(e) => {
+                              setClaimData(prev => ({ ...prev, owner_name: e.target.value }));
+                              setClaimErrors(prev => ({ ...prev, owner_name: "" }));
+                            }}
+                            placeholder="홍길동"
+                            className={claimErrors.owner_name ? "border-red-500" : ""}
+                          />
+                          {claimErrors.owner_name && (
+                            <p className="text-sm text-red-600 mt-1">{claimErrors.owner_name}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="claim_owner_email">이메일 (로그인용) *</Label>
+                          <Input
+                            id="claim_owner_email"
+                            type="email"
+                            value={claimData.owner_email}
+                            onChange={(e) => {
+                              setClaimData(prev => ({ ...prev, owner_email: e.target.value }));
+                              setClaimErrors(prev => ({ ...prev, owner_email: "" }));
+                            }}
+                            placeholder="owner@email.com"
+                            className={claimErrors.owner_email ? "border-red-500" : ""}
+                          />
+                          {claimErrors.owner_email && (
+                            <p className="text-sm text-red-600 mt-1">{claimErrors.owner_email}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="claim_owner_phone">전화번호 *</Label>
+                          <Input
+                            id="claim_owner_phone"
+                            value={claimData.owner_phone}
+                            onChange={(e) => {
+                              setClaimData(prev => ({ ...prev, owner_phone: e.target.value }));
+                              setClaimErrors(prev => ({ ...prev, owner_phone: "" }));
+                            }}
+                            placeholder="(214) 123-4567"
+                            className={claimErrors.owner_phone ? "border-red-500" : ""}
+                          />
+                          {claimErrors.owner_phone && (
+                            <p className="text-sm text-red-600 mt-1">{claimErrors.owner_phone}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="claim_password">비밀번호 (최소 8자) *</Label>
+                          <Input
+                            id="claim_password"
+                            type="password"
+                            value={claimData.password}
+                            onChange={(e) => {
+                              setClaimData(prev => ({ ...prev, password: e.target.value }));
+                              setClaimErrors(prev => ({ ...prev, password: "" }));
+                            }}
+                            placeholder="••••••••"
+                            className={claimErrors.password ? "border-red-500" : ""}
+                          />
+                          {claimErrors.password && (
+                            <p className="text-sm text-red-600 mt-1">{claimErrors.password}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="claim_password_confirm">비밀번호 확인 *</Label>
+                          <Input
+                            id="claim_password_confirm"
+                            type="password"
+                            value={claimData.password_confirm}
+                            onChange={(e) => {
+                              setClaimData(prev => ({ ...prev, password_confirm: e.target.value }));
+                              setClaimErrors(prev => ({ ...prev, password_confirm: "" }));
+                            }}
+                            placeholder="••••••••"
+                            className={claimErrors.password_confirm ? "border-red-500" : ""}
+                          />
+                          {claimErrors.password_confirm && (
+                            <p className="text-sm text-red-600 mt-1">{claimErrors.password_confirm}</p>
+                          )}
+                        </div>
+
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-sm text-blue-900">
+                            관리자 검토 후 승인됩니다. 승인 시 이메일로 알려드립니다.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => setClaimModalOpen(false)}
+                          className="flex-1"
+                          disabled={isSubmittingClaim}
+                        >
+                          취소
+                        </Button>
+                        <Button
+                          onClick={handleClaimSubmit}
+                          className="flex-1"
+                          disabled={isSubmittingClaim}
+                        >
+                          {isSubmittingClaim ? "제출 중..." : "인증 요청"}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
                   <Link href="/pricing">
-                    <Button variant="secondary" className="w-full">
-                      업체 등록하기
+                    <Button variant="ghost" className="w-full text-white hover:text-white hover:bg-white/20">
+                      프리미엄 플랜 보기
                     </Button>
                   </Link>
                 </CardContent>
