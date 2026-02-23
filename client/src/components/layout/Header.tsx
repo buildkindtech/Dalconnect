@@ -16,7 +16,7 @@ export default function Header() {
               <div className="bg-primary text-white p-1.5 rounded-md">
                 <Globe className="h-5 w-5" />
               </div>
-              <span className="font-bold text-xl font-ko inline-block">DFW Hanin</span>
+              <span className="font-bold text-xl font-ko inline-block">DalConnect</span>
           </Link>
           <nav className="hidden md:flex gap-6">
             <Link href="/listings" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/listings' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="link-nav-listings">업소록</Link>
