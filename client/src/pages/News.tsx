@@ -110,10 +110,8 @@ export default function News() {
               {newsItems.map((news: NewsItem) => {
                 const categoryStyle = getNewsCategoryStyle(news.category);
                 return (
-                  <a 
-                    href={news.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <Link 
+                    href={`/news/${news.id}`}
                     key={news.id}
                     className="block"
                   >
@@ -182,7 +180,7 @@ export default function News() {
                       </div>
                     </div>
                   </div>
-                </a>
+                </Link>
                 );
               })}
             </div>
