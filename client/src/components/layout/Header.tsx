@@ -151,6 +151,9 @@ export default function Header() {
               <Link href="/community" className={`text-sm font-medium transition-colors hover:text-primary ${location.startsWith('/community') ? 'text-primary' : 'text-muted-foreground'}`}>
                 커뮤니티
               </Link>
+              <Link href="/charts" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/charts' ? 'text-primary' : 'text-muted-foreground'}`}>
+                차트 🏆
+              </Link>
               <Link href="/news" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`}>
                 뉴스
               </Link>
@@ -207,6 +210,13 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 커뮤니티
+              </Link>
+              <Link 
+                href="/charts" 
+                className={`text-base font-medium transition-colors hover:text-primary ${location === '/charts' ? 'text-primary' : 'text-muted-foreground'}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                차트 🏆
               </Link>
               <Link 
                 href="/news" 

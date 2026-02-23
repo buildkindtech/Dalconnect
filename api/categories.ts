@@ -23,7 +23,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         max: 1,
       });
 
-      const { action } = req.query;
+      const { action, type } = req.query;
+
+      // 차트 데이터 반환
+      if (action === 'charts') {
+        try {
+          let query = `
+            SELECT 
+              id, chart_type, rank, title_ko, title_en, artist, platform, 
+              thumbnail_url, description, score, chart_date
+            FROM charts
+            WHERE chart_date = CURRENT_DATE
+          `;
+          let params: any[] = [];
+
+          // 특정 차트 타입 필터링
+          if (type && typeof type === 'string') {
+            query += ` AND chart_type = $1`;
+            params = [type];
+          }
+
+          query += ` ORDER BY rank ASC`;
+
+          const result = await pool.query(query, params);
+          await pool.end();
+
+          return res.status(200).json({
+            success: true,
+            type: type || 'all',
+            date: new Date().toISOString().split('T')[0],
+            data: result.rows
+          });
+        } catch (error: any) {
+          await pool.end();
+          return res.status(500).json({ 
+            error: error.message,
+            success: false 
+          });
+        }
+      }
 
       // 방문자 기록 및 통계 반환
       if (action === 'visit') {

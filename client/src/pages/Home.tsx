@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame, MessageCircle } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame, MessageCircle, Trophy, Music, Film, Tv } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,132 @@ const CATEGORIES = [
 const POPULAR_SEARCH_TAGS = [
   "한식당", "미용실", "교회", "정비소", "치과", "부동산", "학원", "한인마트"
 ];
+
+// Charts Preview Component
+function ChartsPreview() {
+  const [chartsData, setChartsData] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+
+  const chartTypes = [
+    { id: 'drama', label: '드라마', icon: Tv, color: 'from-blue-500 to-blue-600' },
+    { id: 'music', label: '음악', icon: Music, color: 'from-green-500 to-green-600' },
+    { id: 'movie', label: '영화', icon: Film, color: 'from-purple-500 to-purple-600' },
+    { id: 'netflix', label: '넷플릭스', icon: Tv, color: 'from-red-500 to-red-600' },
+  ];
+
+  useEffect(() => {
+    const fetchChartPreview = async () => {
+      try {
+        const promises = chartTypes.map(type =>
+          fetch(`/api/categories?action=charts&type=${type.id}`)
+            .then(res => res.json())
+            .catch(() => ({ success: false, data: [] }))
+        );
+        
+        const results = await Promise.all(promises);
+        const chartsObj: any = {};
+        
+        results.forEach((result, index) => {
+          if (result.success && result.data && result.data.length > 0) {
+            chartsObj[chartTypes[index].id] = result.data[0]; // Get #1 from each chart
+          }
+        });
+        
+        setChartsData(chartsObj);
+      } catch (error) {
+        console.error('Failed to fetch charts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChartPreview();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (Object.keys(chartsData).length === 0) {
+    return null; // Don't show section if no data
+  }
+
+  return (
+    <section className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <div className="flex justify-center items-center gap-3 mb-4">
+            <Trophy className="h-8 w-8 text-yellow-500" />
+            <h2 className="text-4xl font-bold">🏆 인기 차트</h2>
+          </div>
+          <p className="text-slate-600 text-lg">지금 가장 핫한 드라마, 음악, 영화를 확인하세요!</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {chartTypes.map((chart) => {
+            const chartItem = chartsData[chart.id];
+            const IconComponent = chart.icon;
+            
+            if (!chartItem) return null;
+
+            return (
+              <Card key={chart.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer">
+                <CardContent className="p-0">
+                  <div className={`bg-gradient-to-r ${chart.color} p-6 text-white relative overflow-hidden`}>
+                    <div className="absolute -top-4 -right-4 opacity-20 transform group-hover:scale-110 transition-transform">
+                      <IconComponent className="w-20 h-20" />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium opacity-90">{chart.label}</span>
+                        <div className="bg-white/20 rounded-full px-3 py-1">
+                          <span className="text-lg font-bold">#1</span>
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-lg line-clamp-2 mb-1">{chartItem.title_ko}</h3>
+                      <p className="text-sm opacity-90 line-clamp-1">{chartItem.artist}</p>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between text-sm text-slate-600">
+                      <span className="bg-slate-100 px-2 py-1 rounded-full text-xs font-medium">
+                        {chartItem.platform}
+                      </span>
+                      {chartItem.score && (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">{chartItem.score}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2 line-clamp-2">{chartItem.description}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="text-center">
+          <Link href="/charts">
+            <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white gap-2">
+              <Trophy className="h-5 w-5" />
+              전체 차트 보기
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -1134,6 +1260,9 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Charts Section */}
+      <ChartsPreview />
 
       {/* Newsletter Section */}
       <section className="py-16 bg-slate-50">

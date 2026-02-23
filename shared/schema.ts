@@ -253,3 +253,26 @@ export const insertCommunityTrendSchema = createInsertSchema(communityTrends).om
 });
 export type InsertCommunityTrend = z.infer<typeof insertCommunityTrendSchema>;
 export type CommunityTrend = typeof communityTrends.$inferSelect;
+
+// Charts table
+export const charts = pgTable("charts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  chart_type: varchar("chart_type", { length: 30 }).notNull(), // 'drama', 'movie', 'music', 'netflix', 'variety'
+  rank: integer("rank").notNull(),
+  title_ko: varchar("title_ko", { length: 200 }).notNull(),
+  title_en: varchar("title_en", { length: 200 }),
+  artist: varchar("artist", { length: 200 }), // 음악: 아티스트, 드라마: 출연진, 영화: 감독
+  platform: varchar("platform", { length: 50 }), // Netflix, tvN, MBC, Melon, Spotify, 극장 등
+  thumbnail_url: text("thumbnail_url"),
+  description: text("description"), // 장르, 한줄 설명
+  score: numeric("score", { precision: 3, scale: 1 }), // 평점 (있으면)
+  chart_date: timestamp("chart_date").default(sql`CURRENT_DATE`),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const insertChartSchema = createInsertSchema(charts).omit({
+  id: true,
+  created_at: true,
+});
+export type InsertChart = z.infer<typeof insertChartSchema>;
+export type Chart = typeof charts.$inferSelect;
