@@ -1,24 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
-    }
-  ],
-  "env": {
-    "DATABASE_URL": "postgresql://neondb_owner:npg_ySbZeC5J9wIs@ep-square-boat-ain9gi5m-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require"
-  },
-  "build": {
-    "env": {
-      "DATABASE_URL": "postgresql://neondb_owner:npg_ySbZeC5J9wIs@ep-square-boat-ain9gi5m-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require"
-    }
-  },
+  "buildCommand": "npm run build",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": "/api" }
   ]
 }
