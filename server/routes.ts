@@ -8,7 +8,22 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server | null> {
   
+  // Health check / setup status
+  app.get("/api/health", async (req, res) => {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({
+        status: "setup_required",
+        message: "DATABASE_URL environment variable not configured",
+        instructions: "Add DATABASE_URL to Vercel Environment Variables"
+      });
+    }
+    res.json({ status: "ok" });
+  });
+  
   app.get("/api/businesses", async (req, res) => {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: "Database not configured" });
+    }
     try {
       const { category, city, search, featured } = req.query;
       
