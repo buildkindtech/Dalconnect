@@ -386,101 +386,74 @@ export default function Businesses() {
               </div>
             ) : (
               <>
-                {/* Business List */}
-                <div className="space-y-3">
+                {/* Business List - Google Maps Style */}
+                <div className="space-y-2">
                   {businesses.map((business) => (
                     <Link key={business.id} href={`/business/${business.id}`}>
-                      <div className="bg-white rounded-xl border border-slate-200 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer p-4 md:p-5 flex gap-4 group">
-                        {/* Thumbnail */}
-                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-slate-100">
+                      <div className="bg-white border border-slate-200 hover:border-primary hover:shadow-md transition-all cursor-pointer p-3 flex gap-3 group rounded-lg">
+                        {/* Compact Thumbnail */}
+                        <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
                           {hasValidImage(business.cover_url) ? (
                             <img
                               src={business.cover_url!}
                               alt={business.name_ko || business.name_en}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              className="w-full h-full object-cover"
                             />
                           ) : (
                             <div
                               className={`w-full h-full bg-gradient-to-br ${getCategoryColor(
                                 business.category
-                              )} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                              )} flex items-center justify-center`}
                             >
                               {(() => {
                                 const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
                                 const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
-                                return IconComponent ? <IconComponent className="w-10 h-10 md:w-12 md:h-12 text-white/90" /> : null;
+                                return IconComponent ? <IconComponent className="w-7 h-7 text-white/90" /> : null;
                               })()}
                             </div>
                           )}
                         </div>
 
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          {/* Title Row */}
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-bold text-lg text-slate-900 group-hover:text-primary transition-colors truncate">
-                                {business.name_ko || business.name_en}
-                              </h3>
-                              {business.name_ko && business.name_en && (
-                                <p className="text-sm text-slate-500 truncate mt-0.5">{business.name_en}</p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {business.featured && (
-                                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-sm">
-                                  ⭐ 추천
-                                </Badge>
-                              )}
-                            </div>
+                        {/* Compact Info - Single Line Layout */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          {/* Line 1: Title + Featured Badge */}
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h3 className="font-bold text-slate-900 group-hover:text-primary transition-colors truncate">
+                              {business.name_ko || business.name_en}
+                            </h3>
+                            {business.featured && (
+                              <span className="text-yellow-500 text-sm flex-shrink-0">⭐</span>
+                            )}
                           </div>
 
-                          {/* Meta Info */}
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+                          {/* Line 2: All Meta Info in One Line */}
+                          <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
                             {/* Category */}
-                            <Badge variant="outline" className="border-primary/30 text-primary font-medium">
+                            <span className="font-medium text-primary">
                               {business.category}
-                            </Badge>
+                            </span>
 
                             {/* Rating */}
                             {business.rating && Number(business.rating) > 0 && (
-                              <div className="flex items-center gap-1.5">
-                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                <span className="font-bold text-slate-900">{business.rating}</span>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                <span className="font-semibold text-slate-900">{business.rating}</span>
                                 <span className="text-slate-400">({business.review_count || 0})</span>
                               </div>
                             )}
 
-                            {/* Location */}
-                            {business.city && (
-                              <div className="flex items-center gap-1 text-slate-600">
-                                <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                                <span className="font-medium">{business.city}</span>
-                              </div>
+                            {/* Address */}
+                            {business.address && (
+                              <span className="truncate text-slate-500">
+                                📍 {business.address}
+                              </span>
                             )}
-                          </div>
 
-                          {/* Address */}
-                          {business.address && (
-                            <p className="text-sm text-slate-500 mt-2 line-clamp-1 flex items-start gap-1.5">
-                              <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                              <span>{business.address}</span>
-                            </p>
-                          )}
-
-                          {/* Contact Info */}
-                          <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-500">
+                            {/* Phone */}
                             {business.phone && (
-                              <div className="flex items-center gap-1.5">
-                                <Phone className="h-3.5 w-3.5" />
-                                <span className="font-medium">{business.phone}</span>
-                              </div>
-                            )}
-                            {business.website && (
-                              <div className="flex items-center gap-1.5 text-primary hover:text-primary/80">
-                                <Globe className="h-3.5 w-3.5" />
-                                <span className="font-medium">웹사이트</span>
-                              </div>
+                              <span className="text-slate-500 flex-shrink-0">
+                                📞 {business.phone}
+                              </span>
                             )}
                           </div>
                         </div>
