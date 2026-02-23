@@ -1,28 +1,20 @@
-import type { Request, Response } from 'express';
-import { eq } from 'drizzle-orm';
-import { db } from '../_db';
-import { blogs } from '../../shared/schema';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import pg from 'pg';
 
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  
+  const { slug } = req.query;
+  if (!slug || typeof slug !== 'string') return res.status(400).json({ error: 'Slug required' });
+
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 1 });
   try {
-    const { slug } = req.params;
-
-    if (req.method === 'GET') {
-      const blog = await db.select()
-        .from(blogs)
-        .where(eq(blogs.slug, slug))
-        .limit(1);
-
-      if (!blog || blog.length === 0) {
-        return res.status(404).json({ error: 'Blog post not found' });
-      }
-
-      res.json(blog[0]);
-    } else {
-      res.status(405).json({ error: 'Method not allowed' });
-    }
-  } catch (error) {
-    console.error('Blog detail API error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    const r = await pool.query('SELECT * FROM blogs WHERE slug = $1 LIMIT 1', [slug]);
+    if (r.rowCount === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(r.rows[0]);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  } finally {
+    await pool.end();
   }
 }
