@@ -1,0 +1,40 @@
+
+> rest-express@1.0.0 build:client
+> vite build
+
+vite v7.3.1 building client environment for production...
+transforming...
+✓ 18 modules transformed.
+✗ Build failed in 125ms
+error during build:
+[vite:esbuild] Transform failed with 2 errors:
+/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/client/src/components/layout/Footer.tsx:158:8: ERROR: Unexpected closing "div" tag does not match opening "footer" tag
+/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/client/src/components/layout/Footer.tsx:159:13: ERROR: Unterminated regular expression
+file: /Users/aaron/.openclaw/workspace-manager/projects/dalconnect/client/src/components/layout/Footer.tsx:158:8
+
+Unexpected closing "div" tag does not match opening "footer" tag
+156 |            </div>
+157 |          </div>
+158 |        </div>
+    |          ^
+159 |      </footer>
+160 |    );
+
+Unterminated regular expression
+157 |          </div>
+158 |        </div>
+159 |      </footer>
+    |               ^
+160 |    );
+161 |  }
+
+    at failureErrorWithLog (/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/node_modules/vite/node_modules/esbuild/lib/main.js:1467:15)
+    at /Users/aaron/.openclaw/workspace-manager/projects/dalconnect/node_modules/vite/node_modules/esbuild/lib/main.js:736:50
+    at responseCallbacks.<computed> (/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/node_modules/vite/node_modules/esbuild/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/node_modules/vite/node_modules/esbuild/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/node_modules/vite/node_modules/esbuild/lib/main.js:581:7)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)
