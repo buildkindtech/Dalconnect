@@ -1,0 +1,1372 @@
+[dotenv@17.3.1] injecting env (3) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+📸 Google Places 실제 사진 가져오기 시작...
+
+🔑 API Key: AIzaSyAzcujFS2IfcaxV...
+📊 총 337개 업체 중 google_place_id가 있는 업체 처리
+
+
+[0.3%] Antioch Full Gospel Church of Dallas
+   Place ID: ChIJ2eiv1oElTIYRxz1TJt2xW1w
+   ✅ 4장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ2eiv1oElTIYRxz1TJt2xW1w/photos/ATCDN...
+
+[0.6%] 새날 침례교회
+   Place ID: ChIJAW6PdDwZTIYRjet2s7VKu70
+   ✅ 1장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJAW6PdDwZTIYRjet2s7VKu70/photos/ATCDN...
+
+[0.9%] Korean Church of Dallas (달라스연합교회)
+   Place ID: ChIJQTv42G4mTIYR6STuX95JKiQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJQTv42G4mTIYR6STuX95JKiQ/photos/ATCDN...
+
+[1.2%] Onyx Nail Bar Dallas - The Best Nail Salon in Uptown Dallas (20%off Mon-Wed 10am-3pm)
+   Place ID: ChIJs8yX0smeToYRJ_HdN96gWs4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJs8yX0smeToYRJ_HdN96gWs4/photos/ATCDN...
+
+[1.5%] CHO DANG VILLAGE - KOREAN RESTAURANT
+   Place ID: ChIJyYnHnB4lTIYRHHnhFNs6PHA
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJyYnHnB4lTIYRHHnhFNs6PHA/photos/ATCDN...
+
+[1.8%] Bros Korean BBQ Sushi Shabu
+   Place ID: ChIJRUyI9A0lTIYR90EWErA4aoc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJRUyI9A0lTIYR90EWErA4aoc/photos/ATCDN...
+
+[2.1%] 1인자감자탕 (Ilinja Gamjatang)
+   Place ID: ChIJo5k0bQAlTIYRBiWCEJlV3_c
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJo5k0bQAlTIYRBiWCEJlV3_c/photos/ATCDN...
+
+[2.4%] Khan Plastic Surgery
+   Place ID: ChIJrxMhRiuZToYRhPzjaJIRZtM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJrxMhRiuZToYRhPzjaJIRZtM/photos/ATCDN...
+
+[2.7%] Plano Top Dental Implant & Orthodontist in Plano
+   Place ID: ChIJ_RozATg9TIYRvHL8Bru8EEc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ_RozATg9TIYRvHL8Bru8EEc/photos/ATCDN...
+
+[3.0%] Dr. Taehee Kim
+   Place ID: ChIJBRyQHOejToYRRi8tu-aWpNA
+   ✅ 7장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJBRyQHOejToYRRi8tu-aWpNA/photos/ATCDN...
+
+[3.3%] K3S Auto Repair
+   Place ID: ChIJQR6mPYUnTIYRBzRcwF3i5jY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJQR6mPYUnTIYRBzRcwF3i5jY/photos/ATCDN...
+
+[3.6%] JapanDrift.net
+   Place ID: ChIJx6OS1_snTIYRENOMK9LZVdU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJx6OS1_snTIYRENOMK9LZVdU/photos/ATCDN...
+
+[3.9%] Law Office of Wonyoung Kim
+   Place ID: ChIJN7bZCvonTIYRgN3bn2Tfdn0
+   ⚠️  사진 없음 - NULL 유지
+
+[4.2%] 플라워마운드교회
+   Place ID: ChIJAacVtkssTIYREiw0FmTw7h4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJAacVtkssTIYREiw0FmTw7h4/photos/ATCDN...
+
+[4.5%] Marigold Skin
+   Place ID: ChIJ6zIgjOSbToYRYYm_EFp5sjI
+   ✅ 1장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ6zIgjOSbToYRYYm_EFp5sjI/photos/ATCDN...
+
+[4.7%] Chadâm Hair Lounge and CO2 Spa
+   Place ID: ChIJm_Dtlu8lTIYRqpwDpzj0fho
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJm_Dtlu8lTIYRqpwDpzj0fho/photos/ATCDN...
+
+[5.0%] Nayoung Salon ❤️New location ❤️ Balayage Japanese hair straighting Digtalperm Smp tattoo men’s perm Head spa Hairextension)
+   Place ID: ChIJG1utgdcgTIYR_kHE4yW-iv0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJG1utgdcgTIYR_kHE4yW-iv0/photos/ATCDN...
+
+[5.3%] SaySmile Dental: Nuri Kim, DDS
+   Place ID: ChIJm-deC3UnTIYR3rIKp48c2JM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJm-deC3UnTIYR3rIKp48c2JM/photos/ATCDN...
+
+[5.6%] 달라스 서남침례교회(SW Korean Baptist Church)
+   Place ID: ChIJt_cT5fkmTIYRpLBxsBNPfzM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJt_cT5fkmTIYRpLBxsBNPfzM/photos/ATCDN...
+
+[5.9%] Korean Speaking Realtor E.J Yoo
+   Place ID: ChIJR1Rb3mq3RIYRv8HtuqQRQUw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJR1Rb3mq3RIYRv8HtuqQRQUw/photos/ATCDN...
+
+[6.2%] JUNE KIM - Dallas Korean realtor 달라스 부동산 at Century 21 Judge Fite Company
+   Place ID: ChIJH35XAiIjTIYRww9tF6PQUdM
+   ✅ 4장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJH35XAiIjTIYRww9tF6PQUdM/photos/ATCDN...
+
+[6.5%] San Korean BBQ
+   Place ID: ChIJ3d8f556fToYRCpd_1OeS0Ng
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ3d8f556fToYRCpd_1OeS0Ng/photos/ATCDN...
+
+[6.8%] The Church of Jesus Christ our Lord (우리 주 예수 그리스도의 교회)
+   Place ID: ChIJ_eXtMaUlTIYRQhnxTz30c-w
+   ⚠️  사진 없음 - NULL 유지
+
+[7.1%] 리스타트 교회
+   Place ID: ChIJVVWloIIpTIYRhj_QT9mH3Wc
+   ✅ 3장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJVVWloIIpTIYRhj_QT9mH3Wc/photos/ATCDN...
+
+[7.4%] Korea in Dallas
+   Place ID: ChIJC38LV1YlTIYRjA10Vk1h5AA
+   ⚠️  사진 없음 - NULL 유지
+
+[7.7%] DFW MOBILE REPAIR
+   Place ID: ChIJbxT_mxskTIYR0KJhl8_puBY
+   ✅ 5장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJbxT_mxskTIYR0KJhl8_puBY/photos/ATCDN...
+
+[8.0%] Japanese Autoworks
+   Place ID: ChIJe9ZJ2Td-ToYRwBmOdaCag44
+   ✅ 1장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJe9ZJ2Td-ToYRwBmOdaCag44/photos/ATCDN...
+
+[8.3%] Wolfe Motors
+   Place ID: ChIJwU8lEPQnTIYRLFhqwzPvuZo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJwU8lEPQnTIYRLFhqwzPvuZo/photos/ATCDN...
+
+[8.6%] Emmanuel Korean United Methodist
+   Place ID: ChIJAQAAAHyDToYRbmDnMtNRG2M
+   ⚠️  사진 없음 - NULL 유지
+
+[8.9%] Dr. Jiu Kim, MD
+   Place ID: ChIJAxWAugScToYRGTgnWD7TZes
+   ⚠️  사진 없음 - NULL 유지
+
+[9.2%] Q Korean Cars
+   Place ID: ChIJUWhZCwChToYRAwNgwK2eqF0
+   ⚠️  사진 없음 - NULL 유지
+
+[9.5%] Korean North Central Global Methodist Church
+   Place ID: ChIJRQAp3sU6TIYReY49CDZtMqw
+   ✅ 5장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJRQAp3sU6TIYReY49CDZtMqw/photos/ATCDN...
+
+[9.8%] 제자침례교회
+   Place ID: ChIJbT5-Oz4mTIYRobXigt2HatA
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJbT5-Oz4mTIYRobXigt2HatA/photos/ATCDN...
+
+[10.1%] Joyful Korean Community Church(달라스 조이풀교회)
+   Place ID: ChIJR6_Awp4YTIYRRULHsOdobZI
+   ✅ 6장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJR6_Awp4YTIYRRULHsOdobZI/photos/ATCDN...
+
+[10.4%] 코너스톤 한인 침례교회
+   Place ID: ChIJJ311L1YvTIYRWfU_pNpT_nw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJJ311L1YvTIYRWfU_pNpT_nw/photos/ATCDN...
+
+[10.7%] 달라스 중앙감리교회
+   Place ID: ChIJKTWaJASCToYRzknwXLcHZ-Y
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJKTWaJASCToYRzknwXLcHZ-Y/photos/ATCDN...
+
+[11.0%] MZM Hair Salon(美姿曼造型 华人发廊)
+   Place ID: ChIJIcuQyNwlTIYRWjy8z_xzBBs
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJIcuQyNwlTIYRWjy8z_xzBBs/photos/ATCDN...
+
+[11.3%] 블론드 헤어 BLOND HAIR
+   Place ID: ChIJZ-sJx_IlTIYRCPsgG9WeGns
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJZ-sJx_IlTIYRCPsgG9WeGns/photos/ATCDN...
+
+[11.6%] Russian nails Dallas
+   Place ID: ChIJwSlw5QqhToYR7tEPC8WdOJM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJwSlw5QqhToYR7tEPC8WdOJM/photos/ATCDN...
+
+[11.9%] LAVENDER NAIL BAR II 10% OFF FOR FIRST TIME CUSTOMERS ONLY
+   Place ID: ChIJQdczcLUhTIYReZD8eQVq5Z4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJQdczcLUhTIYReZD8eQVq5Z4/photos/ATCDN...
+
+[12.2%] Kawaii Beauty Spa
+   Place ID: ChIJ--kwcWXLjmMR1ipHOPFzXtw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ--kwcWXLjmMR1ipHOPFzXtw/photos/ATCDN...
+
+[12.5%] Akyish Japanese Retreat & Spa DTX Plano
+   Place ID: ChIJOxNNQyA9TIYRpKTa7JXeJbM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJOxNNQyA9TIYRpKTa7JXeJbM/photos/ATCDN...
+
+[12.8%] Manos Nail Bar - Best Rated Nail Salon in Uptown Dallas ( 20% OFF Monday-Thursday until 3:00PM)
+   Place ID: ChIJczRJ-9OfToYRks7bIiJrUYo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJczRJ-9OfToYRks7bIiJrUYo/photos/ATCDN...
+
+[13.1%] 💈THE INS HAIR SALON - Asian Trend Hair & Color Expert💈 （网红造型 华人发廊）💈
+   Place ID: ChIJ6592Gd4ZTIYR91r92LzOCeY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ6592Gd4ZTIYR91r92LzOCeY/photos/ATCDN...
+
+[13.4%] Sul Lee Law Firm, PLLC
+   Place ID: ChIJ5x4nuo4nTIYRAsO-YcTcFXQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ5x4nuo4nTIYRAsO-YcTcFXQ/photos/ATCDN...
+
+[13.6%] 김봉룡 한인 공인회계사 Bongryong Kim, CPA - Carrollton Office
+   Place ID: ChIJmVSWcbYvTIYR9LrEpL5chxA
+   ✅ 2장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJmVSWcbYvTIYR9LrEpL5chxA/photos/ATCDN...
+
+[13.9%] 이정민 회계사
+   Place ID: ChIJG-PDnvsnTIYR0fvGhIkLps8
+   ✅ 3장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJG-PDnvsnTIYR0fvGhIkLps8/photos/ATCDN...
+
+[14.2%] 욘 우신스키, CPA, CFP, PC
+   Place ID: ChIJUflMQnwhTIYRdJj5lvghrzw
+   ✅ 4장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJUflMQnwhTIYRdJj5lvghrzw/photos/ATCDN...
+
+[14.5%] 최수곤 연방세무사
+   Place ID: ChIJ-bEgIdEnTIYRlBf-jRZzcb8
+   ✅ 2장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ-bEgIdEnTIYRlBf-jRZzcb8/photos/ATCDN...
+
+[14.8%] Dana HanBang 다나 한방 | Acupuncture Clinic, Oriental Medicine, 달라스 한의원
+   Place ID: ChIJdYOb6rUlTIYRt9t_3fw5l2I
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJdYOb6rUlTIYRt9t_3fw5l2I/photos/ATCDN...
+
+[15.1%] Song Dermatology
+   Place ID: ChIJpUWrPk0vTIYRDndtfdEuk9o
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJpUWrPk0vTIYRDndtfdEuk9o/photos/ATCDN...
+
+[15.4%] Dr. So Yeon Paek
+   Place ID: ChIJAQBAiWsgTIYR1O6hC1g51H0
+   ⚠️  사진 없음 - NULL 유지
+
+[15.7%] 에볼빙 뷰티플 민드 & 보디 헬스케어
+   Place ID: ChIJzUplAXomTIYRIV7RxLDipPA
+   ✅ 8장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJzUplAXomTIYRIV7RxLDipPA/photos/ATCDN...
+
+[16.0%] D'zyah's Spa
+   Place ID: ChIJ91FyoW4jTIYRsL-9jqaOsiA
+   ✅ 2장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ91FyoW4jTIYRsL-9jqaOsiA/photos/ATCDN...
+
+[16.3%] Nail'd Up!
+   Place ID: ChIJ8YGjwgMkTIYRWWk7TuD2cOA
+   ✅ 8장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ8YGjwgMkTIYRWWk7TuD2cOA/photos/ATCDN...
+
+[16.6%] LEE CPA FIRM 이성호회계사
+   Place ID: ChIJKZosq9slTIYREuLmGAU40fE
+   ⚠️  사진 없음 - NULL 유지
+
+[16.9%] 무봉리 토종 순대국
+   Place ID: ChIJATqFy_olTIYRCrDprkIWyTY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJATqFy_olTIYRCrDprkIWyTY/photos/ATCDN...
+
+[17.2%] Japanese Auto Repair Specialist of Farmers Branch, Texas
+   Place ID: ChIJab9EcPEmTIYRWUFDN0ZEicI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJab9EcPEmTIYRWUFDN0ZEicI/photos/ATCDN...
+
+[17.5%] Makka Auto Sales
+   Place ID: ChIJW89L4vAnTIYRHMuRzaBVQDQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJW89L4vAnTIYRHMuRzaBVQDQ/photos/ATCDN...
+
+[17.8%] AutoPark Dallas
+   Place ID: ChIJnRdJAcgmTIYR-uek6f4Jgr4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJnRdJAcgmTIYR-uek6f4Jgr4/photos/ATCDN...
+
+[18.1%] Nizar Auto Parts
+   Place ID: ChIJhZvu6PaFToYRE5K-BVj2kAE
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJhZvu6PaFToYRE5K-BVj2kAE/photos/ATCDN...
+
+[18.4%] Best Royal Cars
+   Place ID: ChIJz4KORo8nTIYRVpD-bQsui_U
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJz4KORo8nTIYRVpD-bQsui_U/photos/ATCDN...
+
+[18.7%] Mobile Auto Repair Pros of Dallas
+   Place ID: ChIJ5WKsKtSfToYR5xTX0cJ9EmI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ5WKsKtSfToYR5xTX0cJ9EmI/photos/ATCDN...
+
+[19.0%] Park Cities School of Music
+   Place ID: ChIJd6R2rGOeToYRLsAdofzKbIQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJd6R2rGOeToYRLsAdofzKbIQ/photos/ATCDN...
+
+[19.3%] New Korean School of Dallas at McKinney
+   Place ID: ChIJu7w6b7ARTIYRYE1EU6EbL0A
+   ✅ 2장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJu7w6b7ARTIYRYE1EU6EbL0A/photos/ATCDN...
+
+[19.6%] 신촌 정육 도매 마켓(shinchon meat wholesale market)
+   Place ID: ChIJO8Cy_44nTIYRcHKlrWWKmS4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJO8Cy_44nTIYRcHKlrWWKmS4/photos/ATCDN...
+
+[19.9%] Hong Kong Market Place
+   Place ID: ChIJ96RaTrgfTIYRbIMHViSTIgY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ96RaTrgfTIYRbIMHViSTIgY/photos/ATCDN...
+
+[20.2%] Jusgo Supermarket
+   Place ID: ChIJ0yErAtAZTIYRKFX5whOA2Fc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ0yErAtAZTIYRKFX5whOA2Fc/photos/ATCDN...
+
+[20.5%] Damasita - Korean Restaurant
+   Place ID: ChIJ15gauY4nTIYRKRfiNHL8cto
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ15gauY4nTIYRKRfiNHL8cto/photos/ATCDN...
+
+[20.8%] Neko Yubu
+   Place ID: ChIJN_mDdk6dToYRruw0Ay_eR0M
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJN_mDdk6dToYRruw0Ay_eR0M/photos/ATCDN...
+
+[21.1%] 우미옥
+   Place ID: ChIJr07tPaEfTIYRnd4lmCqr7ew
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJr07tPaEfTIYRnd4lmCqr7ew/photos/ATCDN...
+
+[21.4%] 만나 고기구이 & 샤브샤브 루이스빌점
+   Place ID: ChIJ19tb1XsvTIYRCrllXt7KCqM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ19tb1XsvTIYRCrllXt7KCqM/photos/ATCDN...
+
+[21.7%] Gen Korean BBQ House
+   Place ID: ChIJpQqv87-fToYR9aUkrfBhiQo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJpQqv87-fToYR9aUkrfBhiQo/photos/ATCDN...
+
+[22.0%] WooMeeOk Korean BBQ&Hotpot (Plano)
+   Place ID: ChIJYQDmqxsZTIYRUDtAh2d7K7Q
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJYQDmqxsZTIYRUDtAh2d7K7Q/photos/ATCDN...
+
+[22.3%] Yorienn Korean Fried Chicken & Yori Shop of Carrollton 요리엔 한식
+   Place ID: ChIJySuvIsgvTIYRJd_PsLtKjuY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJySuvIsgvTIYRJd_PsLtKjuY/photos/ATCDN...
+
+[22.6%] Doma Seolleongtang - Carrollton, 도마 설렁탕 캐럴턴
+   Place ID: ChIJ-zxPyuYlTIYRVpPKWuEslvo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ-zxPyuYlTIYRVpPKWuEslvo/photos/ATCDN...
+
+[22.8%] Chanmaru
+   Place ID: ChIJ-Z7ahpwvTIYRsyCbJKf8jgU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ-Z7ahpwvTIYRsyCbJKf8jgU/photos/ATCDN...
+
+[23.1%] 또서울
+   Place ID: ChIJN68z8U49TIYRf9uY267f7yw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJN68z8U49TIYRf9uY267f7yw/photos/ATCDN...
+
+[23.4%] Jinmi Korean Cuisine
+   Place ID: ChIJAzJfO50YTIYRuWlDfF9n0fc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJAzJfO50YTIYRuWlDfF9n0fc/photos/ATCDN...
+
+[23.7%] MANDURANG
+   Place ID: ChIJWehW-I8ZTIYRxB0SdN-0gn8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJWehW-I8ZTIYRxB0SdN-0gn8/photos/ATCDN...
+
+[24.0%] Koriyaki Asian Grill
+   Place ID: ChIJfU85SpspTIYRAipOUyuG6xc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJfU85SpspTIYRAipOUyuG6xc/photos/ATCDN...
+
+[24.3%] MeatBanchan
+   Place ID: ChIJIXctb4UlTIYRjEIhntZTjXU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJIXctb4UlTIYRjEIhntZTjXU/photos/ATCDN...
+
+[24.6%] Hiep Thai Food Store
+   Place ID: ChIJwSVNORQeTIYRRsI8DMps6iU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJwSVNORQeTIYRRsI8DMps6iU/photos/ATCDN...
+
+[24.9%] 수라
+   Place ID: ChIJpT7nmfMnTIYRyvOl_couC74
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJpT7nmfMnTIYRyvOl_couC74/photos/ATCDN...
+
+[25.2%] Firepan Korean BBQ and Bar All You Can Eat
+   Place ID: ChIJE597Ba4nTIYRtcTl4tA3QZM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJE597Ba4nTIYRtcTl4tA3QZM/photos/ATCDN...
+
+[25.5%] 고려갈비
+   Place ID: ChIJTQQfuo4nTIYRK_6LxUdpJsU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJTQQfuo4nTIYRK_6LxUdpJsU/photos/ATCDN...
+
+[25.8%] K-Pop Ramen Dallas
+   Place ID: ChIJRQw-5TefToYRNIsjCKxSRfY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJRQw-5TefToYRNIsjCKxSRfY/photos/ATCDN...
+
+[26.1%] 더 진국
+   Place ID: ChIJDxbNpJYlTIYRDNbZCyNR2ps
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJDxbNpJYlTIYRDNbZCyNR2ps/photos/ATCDN...
+
+[26.4%] LanGo Institute
+   Place ID: ChIJd0rFPnonTIYRhPBzyJMGW9Q
+   ✅ 7장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJd0rFPnonTIYRhPBzyJMGW9Q/photos/ATCDN...
+
+[26.7%] Gold Spoon 금수저
+   Place ID: ChIJO-7Hu2wlTIYRuOI2xXZ7lPQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJO-7Hu2wlTIYRuOI2xXZ7lPQ/photos/ATCDN...
+
+[27.0%] 장충동 왕 족발
+   Place ID: ChIJo8_K_PolTIYRGCtUYe-E1VE
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJo8_K_PolTIYRGCtUYe-E1VE/photos/ATCDN...
+
+[27.3%] Maht Gaek Korean Restaurant, Grilled Pork Ribs
+   Place ID: ChIJIb0C38cZTIYRypiC9lY_y3Y
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJIb0C38cZTIYRypiC9lY_y3Y/photos/ATCDN...
+
+[27.6%] Gen Korean BBQ House
+   Place ID: ChIJ_-xyF-MlTIYR_ZTE47yh_rw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ_-xyF-MlTIYR_ZTE47yh_rw/photos/ATCDN...
+
+[27.9%] 뚝배기
+   Place ID: ChIJ54LvT7QnTIYRz7NNNJFDd2M
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ54LvT7QnTIYRz7NNNJFDd2M/photos/ATCDN...
+
+[28.2%] 나주면옥 캐럴튼점
+   Place ID: ChIJm8qTZkwlTIYRtP27smCZWlo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJm8qTZkwlTIYRtP27smCZWlo/photos/ATCDN...
+
+[28.5%] Cafe HwaSan
+   Place ID: ChIJD4o_iw8jTIYRJa1eLHcpM98
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJD4o_iw8jTIYRJa1eLHcpM98/photos/ATCDN...
+
+[28.8%] Korea House 영동회관 Korean Cuisine & Sushi
+   Place ID: ChIJ28-L2Y4nTIYRrPiknisD6jY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ28-L2Y4nTIYRrPiknisD6jY/photos/ATCDN...
+
+[29.1%] 도마 설렁탕
+   Place ID: ChIJf7vaYrcnTIYRJS0KsQOTPJM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJf7vaYrcnTIYRJS0KsQOTPJM/photos/ATCDN...
+
+[29.4%] 이대감
+   Place ID: ChIJI3UP1lsnTIYRCOl6xFNUwRc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJI3UP1lsnTIYRCOl6xFNUwRc/photos/ATCDN...
+
+[29.7%] 달동네
+   Place ID: ChIJsdYJ1vInTIYRZSepkej-dyo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJsdYJ1vInTIYRZSepkej-dyo/photos/ATCDN...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 중간 보고 (100/337)
+   ✅ 사진 추가: 92개
+   ⚠️  사진 없음: 8개
+   ❌ 에러: 0개
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+[30.0%] Hong Dumpling House
+   Place ID: ChIJ5z374r4nTIYR0zR7E6NNg-k
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ5z374r4nTIYR0zR7E6NNg-k/photos/ATCDN...
+
+[30.3%] Don Sarang Original Korean BBQ (돈사랑)
+   Place ID: ChIJyxPmsjIlTIYRQQjup223ykM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJyxPmsjIlTIYRQQjup223ykM/photos/ATCDN...
+
+[30.6%] 새마을식당 캐롤튼점
+   Place ID: ChIJ0YKft3glTIYRYULyljhyRSo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ0YKft3glTIYRYULyljhyRSo/photos/ATCDN...
+
+[30.9%] 함지박 돼지갈비
+   Place ID: ChIJLQszAU8lTIYRiZe-sChCzXA
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJLQszAU8lTIYRiZe-sChCzXA/photos/ATCDN...
+
+[31.2%] It's KBBQ & Shabu Shabu
+   Place ID: ChIJq-01V9qJToYRzroYk0RrEHw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJq-01V9qJToYRzroYk0RrEHw/photos/ATCDN...
+
+[31.5%] Moodaepo Korean BBQ
+   Place ID: ChIJ1d4F74glTIYR_-hcSCzDoB0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ1d4F74glTIYR_-hcSCzDoB0/photos/ATCDN...
+
+[31.8%] 오미
+   Place ID: ChIJYWwXBPslTIYR2FXW9RAMv2c
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJYWwXBPslTIYR2FXW9RAMv2c/photos/ATCDN...
+
+[32.0%] Ari Korean BBQ
+   Place ID: ChIJDXl9TfslTIYRvJ9_FVPNS6U
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJDXl9TfslTIYRvJ9_FVPNS6U/photos/ATCDN...
+
+[32.3%] 곱창이야기
+   Place ID: ChIJXY3L6NsvTIYREcxumJE-zP8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJXY3L6NsvTIYREcxumJE-zP8/photos/ATCDN...
+
+[32.6%] DAQ Korean Style Cuisine & Chicken
+   Place ID: ChIJb5Mi_eslTIYRxLC27pK8DiI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJb5Mi_eslTIYRxLC27pK8DiI/photos/ATCDN...
+
+[32.9%] ZZIZIM Korean Kitchen
+   Place ID: ChIJCfa9dQElTIYRCajmEG2kjz8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJCfa9dQElTIYRCajmEG2kjz8/photos/ATCDN...
+
+[33.2%] Baro Baro Kimbap
+   Place ID: ChIJ9yMvh_8lTIYR-6Axg9OgwTc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ9yMvh_8lTIYR-6Axg9OgwTc/photos/ATCDN...
+
+[33.5%] Escape Ttopokki
+   Place ID: ChIJWzRgh88lTIYR1wXsn-uYt00
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJWzRgh88lTIYR1wXsn-uYt00/photos/ATCDN...
+
+[33.8%] 다미
+   Place ID: ChIJ4d635f4vTIYRi11D_5kQQ4I
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ4d635f4vTIYRi11D_5kQQ4I/photos/ATCDN...
+
+[34.1%] Jjamppong Zizon 짬뽕 지존
+   Place ID: ChIJ3VktcwAlTIYRx02I2Au6PNU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ3VktcwAlTIYRx02I2Au6PNU/photos/ATCDN...
+
+[34.4%] 텍산 왕발 족발집
+   Place ID: ChIJv5_ywVglTIYRY7h5rh3UVNg
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJv5_ywVglTIYRY7h5rh3UVNg/photos/ATCDN...
+
+[34.7%] Cho Dang Village - Plano
+   Place ID: ChIJIYXa3Z8ZTIYR7e1RNSbGyqs
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJIYXa3Z8ZTIYR7e1RNSbGyqs/photos/ATCDN...
+
+[35.0%] NAJU MYEONOK PLANO 나주면옥 플래노
+   Place ID: ChIJEUsUt4sZTIYRbSLbdiWbC0s
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJEUsUt4sZTIYRbSLbdiWbC0s/photos/ATCDN...
+
+[35.3%] Bon KBBQ
+   Place ID: ChIJSRNrL68ZTIYRpVfM0zuiK7Q
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJSRNrL68ZTIYRpVfM0zuiK7Q/photos/ATCDN...
+
+[35.6%] DALLAS WOORI REFORMED CHURCH
+   Place ID: ChIJccHaRI8nTIYRqhM8qapkmn0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJccHaRI8nTIYRqhM8qapkmn0/photos/ATCDN...
+
+[35.9%] Seapot
+   Place ID: ChIJr_69640ZTIYRH3rixlebc7Q
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJr_69640ZTIYRH3rixlebc7Q/photos/ATCDN...
+
+[36.2%] Kooksoo
+   Place ID: ChIJn7Rp9oIZTIYRLQ24oDLu9kQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJn7Rp9oIZTIYRLQ24oDLu9kQ/photos/ATCDN...
+
+[36.5%] MIGHTY CHICK
+   Place ID: ChIJ5d2nNuTXTYYR8RLI5dmC6uw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ5d2nNuTXTYYR8RLI5dmC6uw/photos/ATCDN...
+
+[36.8%] Mama's Korean Kitchen Tofu House
+   Place ID: ChIJ19OrA-aFToYRma8GSRA0Z8E
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ19OrA-aFToYRma8GSRA0Z8E/photos/ATCDN...
+
+[37.1%] JINSU KOREAN FOOD CATERING 진수성찬 잔치집
+   Place ID: ChIJPafg0cAvTIYR_MEyvNsYYTA
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJPafg0cAvTIYR_MEyvNsYYTA/photos/ATCDN...
+
+[37.4%] CJ's Bulgogi & Grill
+   Place ID: ChIJceVYgDonTIYR3Qwoiy668WE
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJceVYgDonTIYR3Qwoiy668WE/photos/ATCDN...
+
+[37.7%] 소문난 반찬나라
+   Place ID: ChIJYxVEW2ElTIYRDbw3bJK3wVQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJYxVEW2ElTIYRDbw3bJK3wVQ/photos/ATCDN...
+
+[38.0%] Mitsuwa Marketplace - Texas Plano
+   Place ID: ChIJQZdZlMQZTIYRQ1UMA2lim5c
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJQZdZlMQZTIYRQ1UMA2lim5c/photos/ATCDN...
+
+[38.3%] THE KOREAN AMERICAN ASSOCIATION OF DALLAS - 달라스 한인회
+   Place ID: ChIJ1wN1jJInTIYRGFHwHmJIsKg
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ1wN1jJInTIYRGFHwHmJIsKg/photos/ATCDN...
+
+[38.6%] Dr. Yoon Kang
+   Place ID: ChIJMyRoT_slTIYRVnvLcFySq0c
+   ⚠️  사진 없음 - NULL 유지
+
+[38.9%] 킹스파
+   Place ID: ChIJcxIsuvYnTIYRZKtTdqYoIYw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJcxIsuvYnTIYRZKtTdqYoIYw/photos/ATCDN...
+
+[39.2%] Quyen T. Hong, DDS
+   Place ID: ChIJj6pkUWmjToYRcjE0YTGGkhc
+   ✅ 1장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJj6pkUWmjToYRcjE0YTGGkhc/photos/ATCDN...
+
+[39.5%] Dr. Kim's Family Dentistry
+   Place ID: ChIJR5ts7_MnTIYRjeQwsIfKBHs
+   ✅ 7장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJR5ts7_MnTIYRjeQwsIfKBHs/photos/ATCDN...
+
+[39.8%] Pi-lingual Lab
+   Place ID: ChIJY17zK4AlTIYR807y6UQrhZU
+   ✅ 4장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJY17zK4AlTIYR807y6UQrhZU/photos/ATCDN...
+
+[40.1%] 핑크 박스
+   Place ID: ChIJpVvO3c0lTIYRQhtBjJ9u9Zg
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJpVvO3c0lTIYRQhtBjJ9u9Zg/photos/ATCDN...
+
+[40.4%] St. Andrew Kim Catholic Church
+   Place ID: ChIJ112bH9AnTIYRTY-gfID0_Z8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ112bH9AnTIYRTY-gfID0_Z8/photos/ATCDN...
+
+[40.7%] Happy Korean Church.행복한교회. Keller.Fort worth.
+   Place ID: ChIJp5LLovB4ToYRCpjaMqL-G5M
+   ✅ 5장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJp5LLovB4ToYRCpjaMqL-G5M/photos/ATCDN...
+
+[40.9%] 글로벌감리교회 한미연회 Korean American Annual Conference, The Global Methodist Church
+   Place ID: ChIJPUXlqZaDToYReeK5GXaLckg
+   ⚠️  사진 없음 - NULL 유지
+
+[41.2%] Suzuki Music Institute of Dallas
+   Place ID: ChIJF6e23mgfTIYRU_QNBsxdOkA
+   ⚠️  사진 없음 - NULL 유지
+
+[41.5%] Dr. Soo Y. Kim, MD
+   Place ID: ChIJw0eFiAScToYRwbKNUDXhEFI
+   ⚠️  사진 없음 - NULL 유지
+
+[41.8%] BeYOU Nail Bar
+   Place ID: ChIJb-hbSv2fToYRV5uHDrsVcTw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJb-hbSv2fToYRV5uHDrsVcTw/photos/ATCDN...
+
+[42.1%] 김희연변호사 코러스리갈 로펌 트리니티 타이틀 Eric Cho
+   Place ID: ChIJO3xZI0MnTIYRuQHyJ7nlPck
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJO3xZI0MnTIYRuQHyJ7nlPck/photos/ATCDN...
+
+[42.4%] KACCNT Korean American Chamber of Commerce North Texas 북텍사스한인상공회
+   Place ID: ChIJ2431t_MlTIYR0IqykbRU1fg
+   ✅ 5장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ2431t_MlTIYR0IqykbRU1fg/photos/ATCDN...
+
+[42.7%] Koreatown, Dallas
+   Place ID: ChIJhQsrdronTIYROVhMJxlGDgs
+   ⚠️  사진 없음 - NULL 유지
+
+[43.0%] The South Asian Attorney
+   Place ID: ChIJM2mXekW7YQARbD1q4A_Vvmw
+   ✅ 1장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJM2mXekW7YQARbD1q4A_Vvmw/photos/ATCDN...
+
+[43.3%] Arlington Music Hall
+   Place ID: ChIJQ4bF6HZ9ToYRRSKsVMXSXJw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJQ4bF6HZ9ToYRRSKsVMXSXJw/photos/ATCDN...
+
+[43.6%] H 마트 캐럴튼점
+   Place ID: ChIJBTQTT_slTIYRjrnYj3wOWE4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJBTQTT_slTIYRjrnYj3wOWE4/photos/ATCDN...
+
+[43.9%] 코리안 몰 - 퓌르노 크릭 빌리지 쇼핑센터
+   Place ID: ChIJwfT6GPslTIYRvgYFbPw454U
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJwfT6GPslTIYRvgYFbPw454U/photos/ATCDN...
+
+[44.2%] 캐럴턴 타운 센터
+   Place ID: ChIJhRveGeMlTIYR6s4earuBwg8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJhRveGeMlTIYR6s4earuBwg8/photos/ATCDN...
+
+[44.5%] ARITAUM (아리따움 케롤톤)
+   Place ID: ChIJMyRoT_slTIYRQpmbO9EP8kg
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJMyRoT_slTIYRQpmbO9EP8kg/photos/ATCDN...
+
+[44.8%] 더 코리안 크리스털 처치
+   Place ID: ChIJp4IE2KglTIYREuwiwbARqDU
+   ✅ 4장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJp4IE2KglTIYREuwiwbARqDU/photos/ATCDN...
+
+[45.1%] KITA Dallas Center (한국무역협회 댈러스지부)
+   Place ID: ChIJ_5Yho9ETgawR-mcDhp4Ab3c
+   ✅ 3장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ_5Yho9ETgawR-mcDhp4Ab3c/photos/ATCDN...
+
+[45.4%] Eye Q 20/20 Dallas 유럽안경원
+   Place ID: ChIJQy7XjfMnTIYRnLP6Um8U9G0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJQy7XjfMnTIYRnLP6Um8U9G0/photos/ATCDN...
+
+[45.7%] Sunny Hill Pediatrics: Min Jung, MD
+   Place ID: ChIJrXvwLCE9TIYRJiIGZkM0MI0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJrXvwLCE9TIYRJiIGZkM0MI0/photos/ATCDN...
+
+[46.0%] Semihan Church
+   Place ID: ChIJ8a3DWqAmTIYRZzgGccj4p2s
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ8a3DWqAmTIYRZzgGccj4p2s/photos/ATCDN...
+
+[46.3%] 토마스 황 CPA PC
+   Place ID: ChIJ-Xl8UpAnTIYRHp9tTav1Icg
+   ✅ 3장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ-Xl8UpAnTIYRHp9tTav1Icg/photos/ATCDN...
+
+[46.6%] H & M Tax Group
+   Place ID: ChIJ8wUAzLAhTIYRXjeZO1u-1IU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ8wUAzLAhTIYRXjeZO1u-1IU/photos/ATCDN...
+
+[46.9%] K-Beautylab Skincare
+   Place ID: ChIJmWrW8M0lTIYRvXBp9HIkfKE
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJmWrW8M0lTIYRvXBp9HIkfKE/photos/ATCDN...
+
+[47.2%] Skin World
+   Place ID: ChIJuSaiVUyjxokRn3UeLn9aJRk
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJuSaiVUyjxokRn3UeLn9aJRk/photos/ATCDN...
+
+[47.5%] Korean Home Health Care Inc.
+   Place ID: ChIJh1IAPYGkToYRB-IURhg-2Og
+   ✅ 2장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJh1IAPYGkToYRB-IURhg-2Og/photos/ATCDN...
+
+[47.8%] Dr. Myoungsoo Kwon
+   Place ID: ChIJNVBy4_GDToYRht2NfRgPQFQ
+   ⚠️  사진 없음 - NULL 유지
+
+[48.1%] 강윤철 치과
+   Place ID: ChIJPZKg0-QlTIYRS56Rz6zsQkY
+   ⚠️  사진 없음 - NULL 유지
+
+[48.4%] Dr. Sangkyu S. Kim, DDS
+   Place ID: ChIJNcFug44nTIYR4VKoEZyBFCc
+   ⚠️  사진 없음 - NULL 유지
+
+[48.7%] Korean War Veteran Association-Dallas
+   Place ID: ChIJC-qejJInTIYR3Ay-f0ELvRk
+   ⚠️  사진 없음 - NULL 유지
+
+[49.0%] 여우머리
+   Place ID: ChIJYWwXBPslTIYRgfrNhBBsW8Q
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJYWwXBPslTIYRgfrNhBBsW8Q/photos/ATCDN...
+
+[49.3%] 임마누엘 연합감리교회
+   Place ID: ChIJgwVBsm6DToYRM0ZVubCQ0qw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJgwVBsm6DToYRM0ZVubCQ0qw/photos/ATCDN...
+
+[49.6%] Dallas Top Scalp
+   Place ID: ChIJx8GW8ZMvTIYRaD4BDkdd5I4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJx8GW8ZMvTIYRaD4BDkdd5I4/photos/ATCDN...
+
+[49.9%] D'Art Dental Clinic
+   Place ID: ChIJMQR5064ZTIYRp4zglowww54
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJMQR5064ZTIYRp4zglowww54/photos/ATCDN...
+
+[50.1%] 맛객 캐럴턴
+   Place ID: ChIJTZk3jiklTIYR_GLOpvX7wXU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJTZk3jiklTIYR_GLOpvX7wXU/photos/ATCDN...
+
+[50.4%] H Mart Dallas Harry Hines
+   Place ID: ChIJE7znUwAnTIYR9k0t_hEqTTE
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJE7znUwAnTIYR9k0t_hEqTTE/photos/ATCDN...
+
+[50.7%] 고모네
+   Place ID: ChIJHQ8MLfMnTIYRq59eOUHrkxg
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJHQ8MLfMnTIYRq59eOUHrkxg/photos/ATCDN...
+
+[51.0%] 울타리몰 캐롤튼점
+   Place ID: ChIJ6UM88vQlTIYREpfglpJXMbs
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ6UM88vQlTIYREpfglpJXMbs/photos/ATCDN...
+
+[51.3%] TESO Life
+   Place ID: ChIJ4bnQ_3wlTIYRJoN6WeX-l3w
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ4bnQ_3wlTIYRJoN6WeX-l3w/photos/ATCDN...
+
+[51.6%] 시온마트 푸드코트
+   Place ID: ChIJUaG-qdIvTIYRUANgfvTecJc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJUaG-qdIvTIYRUANgfvTecJc/photos/ATCDN...
+
+[51.9%] Myanmar Store Asian Groceries
+   Place ID: ChIJ1eKmXrWfToYRpf2PYSymB8o
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ1eKmXrWfToYRpf2PYSymB8o/photos/ATCDN...
+
+[52.2%] Bethany Korean Presbyterian Church of Dallas
+   Place ID: ChIJg3LkIw0vTIYRbYqthVFq8T0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJg3LkIw0vTIYRbYqthVFq8T0/photos/ATCDN...
+
+[52.5%] 달라스 하나로 교회
+   Place ID: ChIJ8zcDNVImTIYRGrYo3WATMj8
+   ✅ 8장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ8zcDNVImTIYRGrYo3WATMj8/photos/ATCDN...
+
+[52.8%] The Face Room
+   Place ID: ChIJ-3sJPVkjTIYRda5owwp7q-w
+   ⚠️  사진 없음 - NULL 유지
+
+[53.1%] Dr. Joseph Jung
+   Place ID: ChIJNVoLw14jTIYR98RCxvGK72M
+   ⚠️  사진 없음 - NULL 유지
+
+[53.4%] SSAM KING
+   Place ID: ChIJScc1wVgZTIYRK_3ha7W_3Rc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJScc1wVgZTIYRK_3ha7W_3Rc/photos/ATCDN...
+
+[53.7%] DMS Care Korea
+   Place ID: ChIJl0cOBJslTIYRc340siDF1QI
+   ✅ 6장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJl0cOBJslTIYRc340siDF1QI/photos/ATCDN...
+
+[54.0%] Dallas Seoul Church
+   Place ID: ChIJBSl8XCkkTIYRPgwT9MqKHDM
+   ✅ 3장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJBSl8XCkkTIYRPgwT9MqKHDM/photos/ATCDN...
+
+[54.3%] The Great Tree Church (큰나무 교회)
+   Place ID: ChIJUx8GSu0lTIYRL3uxKRx-BjA
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJUx8GSu0lTIYRL3uxKRx-BjA/photos/ATCDN...
+
+[54.6%] Kinokuniya Bookstore - Carrollton
+   Place ID: ChIJ_-xyF-MlTIYRJYB0LJem2kI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ_-xyF-MlTIYRJYB0LJem2kI/photos/ATCDN...
+
+[54.9%] Uko Music Studio
+   Place ID: ChIJY6Ufwu8jTIYRgmsKQl6Eh_E
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJY6Ufwu8jTIYRgmsKQl6Eh_E/photos/ATCDN...
+
+[55.2%] Lakewood Conservatory of Fine Arts
+   Place ID: ChIJSw5qV_ShToYRxFI636awA1Y
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJSw5qV_ShToYRxFI636awA1Y/photos/ATCDN...
+
+[55.5%] RNDZVS The Studio
+   Place ID: ChIJVz6Vvq4hTIYR7QmbsfscHSA
+   ✅ 1장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJVz6Vvq4hTIYR7QmbsfscHSA/photos/ATCDN...
+
+[55.8%] 주 휴스턴 대한민국 총영사관 댈러스 출장소
+   Place ID: ChIJ6ZRhP9ggTIYR3d5v_WWBFnE
+   ✅ 9장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ6ZRhP9ggTIYR3d5v_WWBFnE/photos/ATCDN...
+
+[56.1%] New York Bakery & Korean Rice Cake
+   Place ID: ChIJk9PemfMnTIYRfEPo6D_Afac
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJk9PemfMnTIYRfEPo6D_Afac/photos/ATCDN...
+
+[56.4%] Korea Daily Texas Inc
+   Place ID: ChIJTQQfuo4nTIYRoVHZj6eDoOU
+   ⚠️  사진 없음 - NULL 유지
+
+[56.7%] Royal Korea Town Plaza
+   Place ID: ChIJiSR3vI4nTIYRo8mOzuae7Gw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJiSR3vI4nTIYRo8mOzuae7Gw/photos/ATCDN...
+
+[57.0%] 10X10 (TEN BY TEN )
+   Place ID: ChIJSeCG1folTIYRc63K7-WgMqQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJSeCG1folTIYRc63K7-WgMqQ/photos/ATCDN...
+
+[57.3%] Flora Kim Dermatology, MD, FAAD
+   Place ID: ChIJJw6_OOmfToYRzc6CbNDwp-Q
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJJw6_OOmfToYRzc6CbNDwp-Q/photos/ATCDN...
+
+[57.6%] Wesley Korean Methodist Church
+   Place ID: ChIJIQykWqAmTIYRgpNTwsJ5Cbw
+   ⚠️  사진 없음 - NULL 유지
+
+[57.9%] 예품교회 Yepum Church
+   Place ID: ChIJMV-KyQ2h5UwRIEQQVrPc9z8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJMV-KyQ2h5UwRIEQQVrPc9z8/photos/ATCDN...
+
+[58.2%] 뉴송교회
+   Place ID: ChIJd9JiW5wvTIYRoZU7tZJk7YE
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJd9JiW5wvTIYRoZU7tZJk7YE/photos/ATCDN...
+
+[58.5%] 코리안 월드 미시온 뱁티스트 처치
+   Place ID: ChIJGUlHWPkeTIYR86A3N6zg-yE
+   ✅ 1장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJGUlHWPkeTIYR86A3N6zg-yE/photos/ATCDN...
+
+[58.8%] Hyojin Kwon, MD
+   Place ID: ChIJBT0xgbAjTIYR8c2Mh5PVjvE
+   ✅ 7장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJBT0xgbAjTIYR8c2Mh5PVjvE/photos/ATCDN...
+
+[59.1%] Dr. John Y. Kim, MD
+   Place ID: ChIJY9kvK2M7TIYRZzz0pCtv-Rc
+   ⚠️  사진 없음 - NULL 유지
+
+[59.3%] Shin Hyun J MD
+   Place ID: ChIJp1MmWgKcToYRVvFj7hwfoIE
+   ⚠️  사진 없음 - NULL 유지
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 중간 보고 (200/337)
+   ✅ 사진 추가: 177개
+   ⚠️  사진 없음: 23개
+   ❌ 에러: 0개
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+[59.6%] Main Medical Clinic
+   Place ID: ChIJHZzVGu0lTIYRbn-ngh01io0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJHZzVGu0lTIYRbn-ngh01io0/photos/ATCDN...
+
+[59.9%] Yong D Chang,M.D.,FACP
+   Place ID: ChIJc-iw-8-DToYRYXBnwFL2j78
+   ✅ 3장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJc-iw-8-DToYRYXBnwFL2j78/photos/ATCDN...
+
+[60.2%] Skin Revival Studio
+   Place ID: ChIJ-_pc3VAZTIYR4f2n5Fa08o8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ-_pc3VAZTIYR4f2n5Fa08o8/photos/ATCDN...
+
+[60.5%] ZO Skin Centre
+   Place ID: ChIJA3qOWNueToYRuvNFDhfiYsg
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJA3qOWNueToYRuvNFDhfiYsg/photos/ATCDN...
+
+[60.8%] Sun and Moon Acupunture & Herbs Clinic(해와 달 한의원)
+   Place ID: ChIJVZ12VdMnTIYRg-VvbajjXEU
+   ✅ 8장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJVZ12VdMnTIYRg-VvbajjXEU/photos/ATCDN...
+
+[61.1%] Modern Line Med Spa
+   Place ID: ChIJk7dkA_YlTIYRyqpu3CbXQnk
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJk7dkA_YlTIYRyqpu3CbXQnk/photos/ATCDN...
+
+[61.4%] Family Center VitaleHEALTH | Carrollton
+   Place ID: ChIJ5zr0j-4lTIYRaBJm4-9gfEs
+   ✅ 4장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ5zr0j-4lTIYRaBJm4-9gfEs/photos/ATCDN...
+
+[61.7%] DANGSKYN
+   Place ID: ChIJg6HQoCahToYR4g9v6Kte_HI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJg6HQoCahToYR4g9v6Kte_HI/photos/ATCDN...
+
+[62.0%] Fresh Faces & Body Skincare
+   Place ID: ChIJdxgnMJIgTIYR-_9Y_V-YGOQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJdxgnMJIgTIYR-_9Y_V-YGOQ/photos/ATCDN...
+
+[62.3%] Eversmile Dental
+   Place ID: ChIJSeCG1folTIYR49RpoiyKnoc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJSeCG1folTIYR49RpoiyKnoc/photos/ATCDN...
+
+[62.6%] K Village Dental
+   Place ID: ChIJIY79ivolTIYRKg7K1ZW02Q0
+   ✅ 7장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJIY79ivolTIYRKg7K1ZW02Q0/photos/ATCDN...
+
+[62.9%] 미드웨이 덴탈 / 선히 카밀 홍, DDS
+   Place ID: ChIJ8Rc4SjInTIYRXG4L2eXFaaU
+   ✅ 3장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ8Rc4SjInTIYRXG4L2eXFaaU/photos/ATCDN...
+
+[63.2%] Kwon Dental
+   Place ID: ChIJsw8dhkEnTIYRdSm1Y_GiTvc
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJsw8dhkEnTIYRdSm1Y_GiTvc/photos/ATCDN...
+
+[63.5%] Dr. Heeje Lee
+   Place ID: ChIJu3ZSE7ouTIYRCAY0SDCdgtE
+   ⚠️  사진 없음 - NULL 유지
+
+[63.8%] Our Hair
+   Place ID: ChIJnzGv7W8lTIYReN3rO3EK7rk
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJnzGv7W8lTIYReN3rO3EK7rk/photos/ATCDN...
+
+[64.1%] Bijin Japanese Permanent Hair Straightening & Rebonding
+   Place ID: ChIJVReVurM7TIYRo0sw1PSZhz4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJVReVurM7TIYRo0sw1PSZhz4/photos/ATCDN...
+
+[64.4%] Hair Culture Dallas
+   Place ID: ChIJNck8KwQhTIYRp6-KT8OligU
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJNck8KwQhTIYRp6-KT8OligU/photos/ATCDN...
+
+[64.7%] Soodeh Salon
+   Place ID: ChIJ56HPsq8hTIYRHlPTRf3pLz0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ56HPsq8hTIYRHlPTRf3pLz0/photos/ATCDN...
+
+[65.0%] Sofie Hair Salon
+   Place ID: ChIJNcFug44nTIYRRftebjp4QQQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJNcFug44nTIYRRftebjp4QQQ/photos/ATCDN...
+
+[65.3%] Fresh Smile Dental care & Implant Center
+   Place ID: ChIJk-Bj7fsnTIYRE0SQVckkoKk
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJk-Bj7fsnTIYRE0SQVckkoKk/photos/ATCDN...
+
+[65.6%] Hanuri Church
+   Place ID: ChIJqYGJLmgmTIYRoyVdB4rnc5o
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJqYGJLmgmTIYRoyVdB4rnc5o/photos/ATCDN...
+
+[65.9%] Lee Sung-Hee DDS
+   Place ID: ChIJ35OZV7AlTIYRX4yKKYQHnKE
+   ⚠️  사진 없음 - NULL 유지
+
+[66.2%] Vogue Nail Bar
+   Place ID: ChIJ93LSilWfToYRI_GXAqzedl0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ93LSilWfToYRI_GXAqzedl0/photos/ATCDN...
+
+[66.5%] Van's Hair Salon
+   Place ID: ChIJWWdAevIlTIYRqFiFR2aoO64
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJWWdAevIlTIYRqFiFR2aoO64/photos/ATCDN...
+
+[66.8%] Park Seung Chol Hair Studio
+   Place ID: ChIJOdC714wnTIYRBf3lReEi7eo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJOdC714wnTIYRBf3lReEi7eo/photos/ATCDN...
+
+[67.1%] CHADÂM Hair Lounge and CO2 Spa Lovers Ln
+   Place ID: ChIJn3nUI1-fToYRe2lTINwag94
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJn3nUI1-fToYRe2lTINwag94/photos/ATCDN...
+
+[67.4%] Bella hair salon 벨라 헤어 살롱
+   Place ID: ChIJNXHTq9AnTIYRAiVQpm3DnFQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJNXHTq9AnTIYRAiVQpm3DnFQ/photos/ATCDN...
+
+[67.7%] Haru
+   Place ID: ChIJ6eostv0vTIYRddEsIWeYCWw
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ6eostv0vTIYRddEsIWeYCWw/photos/ATCDN...
+
+[68.0%] Dass Hair Salon
+   Place ID: ChIJYWwXBPslTIYRuDLKrn8qlOE
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJYWwXBPslTIYRuDLKrn8qlOE/photos/ATCDN...
+
+[68.2%] Dallas Dental Wellness
+   Place ID: ChIJOYCHgESeToYRLkPbj9tkMGM
+   ✅ 7장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJOYCHgESeToYRLkPbj9tkMGM/photos/ATCDN...
+
+[68.5%] Salon D
+   Place ID: ChIJG1utgdcgTIYRcXhYUiqd-Zo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJG1utgdcgTIYRcXhYUiqd-Zo/photos/ATCDN...
+
+[68.8%] The Gel Space Nail Studio
+   Place ID: ChIJnSp9Nj4hTIYRjdiZARutxCI
+   ✅ 6장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJnSp9Nj4hTIYRjdiZARutxCI/photos/ATCDN...
+
+[69.1%] Nail Bloom
+   Place ID: ChIJ4zlZwXkhTIYR0cRByZTMLos
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ4zlZwXkhTIYR0cRByZTMLos/photos/ATCDN...
+
+[69.4%] Zen Nails
+   Place ID: ChIJmeiCBdefToYRqPTa3OXJ32I
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJmeiCBdefToYRqPTa3OXJ32I/photos/ATCDN...
+
+[69.7%] Dallas Nail Bar & Spa
+   Place ID: ChIJOTGKcBEhTIYRWuTEO_sRB5U
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJOTGKcBEhTIYRWuTEO_sRB5U/photos/ATCDN...
+
+[70.0%] KC Nails & Spa
+   Place ID: ChIJua0nuzsjTIYRMR54jllVs88
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJua0nuzsjTIYRMR54jllVs88/photos/ATCDN...
+
+[70.3%] K_beauty LASH Studio
+   Place ID: ChIJqR309BYlTIYRaPQlmjA5y9Q
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJqR309BYlTIYRaPQlmjA5y9Q/photos/ATCDN...
+
+[70.6%] V NAILS & SPA IN CARROLLTON
+   Place ID: ChIJI2MFWX4lTIYRN2pJ0NseYsQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJI2MFWX4lTIYRN2pJ0NseYsQ/photos/ATCDN...
+
+[70.9%] JUJU NAILS
+   Place ID: ChIJKSizsrIlTIYRu-pKe0nShnY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJKSizsrIlTIYRu-pKe0nShnY/photos/ATCDN...
+
+[71.2%] Shepherd School of Language
+   Place ID: ChIJbS1Y3PslTIYRCw6Xzko-kE0
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJbS1Y3PslTIYRCw6Xzko-kE0/photos/ATCDN...
+
+[71.5%] World Language Schools - Dallas
+   Place ID: ChIJ-SsSf20hTIYR32KdxwdZlyE
+   ✅ 2장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ-SsSf20hTIYR32KdxwdZlyE/photos/ATCDN...
+
+[71.8%] Korean tutoring
+   Place ID: ChIJkfbkz9_3wokROI9uYQsRglc
+   ✅ 6장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJkfbkz9_3wokROI9uYQsRglc/photos/ATCDN...
+
+[72.1%] Uptown Spa
+   Place ID: ChIJlU70pSqfToYRu2FE1hXmVyM
+   ⚠️  사진 없음 - NULL 유지
+
+[72.4%] New Korean School of Dallas
+   Place ID: ChIJfV1tTT4jTIYRyldairiOy5g
+   ⚠️  사진 없음 - NULL 유지
+
+[72.7%] Korean American Center
+   Place ID: ChIJEeIXfeHc3IARzxfLF9t-igI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJEeIXfeHc3IARzxfLF9t-igI/photos/ATCDN...
+
+[73.0%] Dallas Music Academy
+   Place ID: ChIJvU3NtgOZToYRI1d0zXmYNJ8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJvU3NtgOZToYRI1d0zXmYNJ8/photos/ATCDN...
+
+[73.3%] Dallas Suzuki Academy
+   Place ID: ChIJ3cBT8uifToYRA-f8_IJbTdg
+   ✅ 9장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ3cBT8uifToYRA-f8_IJbTdg/photos/ATCDN...
+
+[73.6%] The Sound at Cypress Waters
+   Place ID: ChIJeZJUTIopTIYRxEaDWokW4gQ
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJeZJUTIopTIYRxEaDWokW4gQ/photos/ATCDN...
+
+[73.9%] Piano Lessons In Dallas
+   Place ID: ChIJo9btmdQnTIYRM2NcpXuMDdY
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJo9btmdQnTIYRM2NcpXuMDdY/photos/ATCDN...
+
+[74.2%] KP GROUP 박충원 부동산 Kevin Park, Realtor, ABR, Coldwell Banker-Frisco
+   Place ID: ChIJM7UPmE09TIYRRPjth5xWWRY
+   ✅ 5장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJM7UPmE09TIYRRPjth5xWWRY/photos/ATCDN...
+
+[74.5%] Heesue Hodgkins Keller Williams Realty Allen (달라스 희수 부동산)
+   Place ID: ChIJz8OeVToXTIYR7r-SX4ZAF5k
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJz8OeVToXTIYR7r-SX4ZAF5k/photos/ATCDN...
+
+[74.8%] Steve Won, MRG Realty (텍사스 달라스 부동산)
+   Place ID: ChIJM7l1mDclTIYRmDG3tm0p_9M
+   ✅ 1장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJM7l1mDclTIYRmDG3tm0p_9M/photos/ATCDN...
+
+[75.1%] 달라스 민킴부동산, Texas Real Estate Broker, Residential & Commercial Property
+   Place ID: ChIJV1AVBV4YBAMRW8GxayCHH44
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJV1AVBV4YBAMRW8GxayCHH44/photos/ATCDN...
+
+[75.4%] Jenny Kwon - 달라스 부동산 Korean Dallas Realtor at Century 21 Judge Fite Company
+   Place ID: ChIJR6vmy6AjTIYR59TBzE68xD8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJR6vmy6AjTIYR59TBzE68xD8/photos/ATCDN...
+
+[75.7%] Sang Kim Dallas Korean Realtor/Home Loan Specialist
+   Place ID: ChIJPSG56A4tTIYRYVmJSWDuioE
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJPSG56A4tTIYRYVmJSWDuioE/photos/ATCDN...
+
+[76.0%] 달라스 부동산-Katie (지혜) Reynolds with Fathom Realty
+   Place ID: ChIJw4zafxYlTIYRMN4mWVGbLJw
+   ⚠️  사진 없음 - NULL 유지
+
+[76.3%] Dallas European Auto
+   Place ID: ChIJR-j_uRIiTIYRjjU-AFYQ0zI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJR-j_uRIiTIYRjjU-AFYQ0zI/photos/ATCDN...
+
+[76.6%] Allied Auto Service
+   Place ID: ChIJx6OS1_snTIYRQYfuIXelrIo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJx6OS1_snTIYRQYfuIXelrIo/photos/ATCDN...
+
+[76.9%] Sun Express Auto Repair & Body
+   Place ID: ChIJM123cn2dToYR4AxYJ2szFBI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJM123cn2dToYR4AxYJ2szFBI/photos/ATCDN...
+
+[77.2%] 시온오토바디렌트
+   Place ID: ChIJ9SkS4rMnTIYRWe-vdBuPt0k
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ9SkS4rMnTIYRWe-vdBuPt0k/photos/ATCDN...
+
+[77.4%] All Star Japanese Engine & Auto Service
+   Place ID: ChIJoyRByMomTIYRRdgsd8NUfJM
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJoyRByMomTIYRRdgsd8NUfJM/photos/ATCDN...
+
+[77.7%] Japanese Auto Repair
+   Place ID: ChIJeU6mA6CDToYRv5Lqqs0M5rI
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJeU6mA6CDToYRv5Lqqs0M5rI/photos/ATCDN...
+
+[78.0%] 정비소
+   Place ID: ChIJKX75-vknTIYRqZcY939SUgo
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJKX75-vknTIYRqZcY939SUgo/photos/ATCDN...
+
+[78.3%] Jk One Auto Repair 한국정비소
+   Place ID: ChIJl-EdfwAnTIYRirNXVGfKrs4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJl-EdfwAnTIYRirNXVGfKrs4/photos/ATCDN...
+
+[78.6%] Go Luxury Auto Group
+   Place ID: ChIJ2yLiTj-ZToYRLqV3ieZdjjk
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ2yLiTj-ZToYRLqV3ieZdjjk/photos/ATCDN...
+
+[78.9%] Global
+   Place ID: ChIJ99snn9GdToYRrdOZ3kiI7AY
+   ✅ 3장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ99snn9GdToYRrdOZ3kiI7AY/photos/ATCDN...
+
+[79.2%] 에이스 카 세일즈
+   Place ID: ChIJ71U7RI8nTIYRvzP2YEuya4E
+   ✅ 5장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ71U7RI8nTIYRvzP2YEuya4E/photos/ATCDN...
+
+[79.5%] Yume Cars
+   Place ID: ChIJ8-qI_wMnTIYR0PvKGsh2lu8
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ8-qI_wMnTIYR0PvKGsh2lu8/photos/ATCDN...
+
+[79.8%] Dallas European Collision & Auto Repair
+   Place ID: ChIJ_XhbeJInTIYR7izYU_Frc1I
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ_XhbeJInTIYR7izYU_Frc1I/photos/ATCDN...
+
+[80.1%] Hance's European
+   Place ID: ChIJlxZ7adSdToYRT-5dOOAlQb4
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJlxZ7adSdToYRT-5dOOAlQb4/photos/ATCDN...
+
+[80.4%] Jp Auto Service
+   Place ID: ChIJrfcRUHWiToYRq2pbFilOwOE
+   ✅ 4장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJrfcRUHWiToYRq2pbFilOwOE/photos/ATCDN...
+
+[80.7%] Young Automotive
+   Place ID: ChIJAyMEk7snTIYRhW5Tp2jF2vs
+   ✅ 10장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJAyMEk7snTIYRhW5Tp2jF2vs/photos/ATCDN...
+
+[81.0%] 황인호 변호사 - HWANG LAW OFFICE PLLC
+   Place ID: ChIJ80uzXIMlTIYRfx5tE0hMeI8
+   ✅ 2장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ80uzXIMlTIYRfx5tE0hMeI8/photos/ATCDN...
+
+[81.3%] Korus Legal Professional Corporation (Korus Law Firm)
+   Place ID: ChIJ7-2lkb8nTIYRTromNbNIR-w
+   ✅ 8장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJ7-2lkb8nTIYRTromNbNIR-w/photos/ATCDN...
+
+[81.6%] Koenigsegg Dallas
+   Place ID: ChIJf3K_pYGfToYRn17uwJVrvno
+   ✅ 4장의 사진 발견
+   📷 Cover: https://places.googleapis.com/v1/places/ChIJf3K_pYGfToYRn17uwJVrvno/photos/ATCDN...
+
+[81.9%] Post Oak Motor Cars
+   Place ID: ChIJCcRurTjBQIYRVt6Kw1LU-1o
