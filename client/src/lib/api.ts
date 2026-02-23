@@ -74,6 +74,24 @@ export interface Blog {
   updated_at: string;
 }
 
+export interface CategoryStat {
+  category: string;
+  count: number;
+}
+
+export interface CityStat {
+  city: string;
+  count: number;
+}
+
+export interface Stats {
+  categoryStats: CategoryStat[];
+  cityStats: CityStat[];
+  totalBusinesses: number;
+  trending: Business[];
+  recent: Business[];
+}
+
 async function fetchApi<T>(endpoint: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`);
   if (!response.ok) {
@@ -179,5 +197,13 @@ export function useBlog(slug: string) {
     queryKey: ['blog', slug],
     queryFn: () => fetchApi<Blog>(`/api/blogs/${slug}`),
     enabled: !!slug,
+  });
+}
+
+export function useStats() {
+  return useQuery<Stats>({
+    queryKey: ['stats'],
+    queryFn: () => fetchApi<Stats>('/api/stats'),
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 }

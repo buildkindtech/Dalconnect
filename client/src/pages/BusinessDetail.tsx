@@ -61,7 +61,7 @@ export default function BusinessDetail() {
 
   const coverImage = getCategoryImage(business.category, business.cover_url);
   const googleMapsEmbedUrl = business.address
-    ? `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(business.address)}`
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(business.address)}&output=embed&z=15`
     : null;
   const googleMapsDirectionsUrl = business.address
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(business.address)}`
