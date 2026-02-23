@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame, MessageCircle, Trophy, Music, Film, Tv } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame, MessageCircle, Trophy, Music, Film, Tv, Gift } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -212,6 +212,26 @@ export default function Home() {
       }
     };
     fetchPopularPosts();
+  }, []);
+
+  // Fetch hot deals
+  const [hotDeals, setHotDeals] = useState<any[]>([]);
+  const [loadingDeals, setLoadingDeals] = useState(true);
+  useEffect(() => {
+    const fetchHotDeals = async () => {
+      try {
+        const response = await fetch('/api/featured?action=deals&hot=true');
+        if (response.ok) {
+          const deals = await response.json();
+          setHotDeals(deals || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch hot deals:', error);
+      } finally {
+        setLoadingDeals(false);
+      }
+    };
+    fetchHotDeals();
   }, []);
 
   // 방문자 카운터 API 호출
@@ -888,6 +908,155 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Hot Deals Section */}
+      <section className="py-20 bg-gradient-to-r from-red-50 to-orange-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-12">
+            <div className="flex items-center gap-3">
+              <Flame className="h-8 w-8 text-red-500" />
+              <div>
+                <h2 className="text-4xl font-bold">🔥 오늘의 핫딜</h2>
+                <p className="text-slate-600 mt-1">DFW 한인들을 위한 최고의 딜과 쿠폰!</p>
+              </div>
+            </div>
+            <Link href="/deals">
+              <Button className="bg-red-600 hover:bg-red-700 gap-2">
+                <Flame className="h-4 w-4" />
+                모든 딜 보기
+              </Button>
+            </Link>
+          </div>
+
+          {loadingDeals ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <Skeleton className="h-6 w-3/4 mb-3" />
+                    <Skeleton className="h-8 w-1/2 mb-2" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : hotDeals.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {hotDeals.slice(0, 3).map((deal) => {
+                const isHot = deal.likes > 200;
+                const isFree = deal.discount.includes('FREE') || deal.deal_price === 'FREE';
+                const getTimeRemaining = (expiresAt: string | null): { text: string; isUrgent: boolean } => {
+                  if (!expiresAt) return { text: '', isUrgent: false };
+                  
+                  const now = new Date().getTime();
+                  const expiry = new Date(expiresAt).getTime();
+                  const diff = expiry - now;
+                  
+                  if (diff <= 0) return { text: '마감', isUrgent: true };
+                  
+                  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                  
+                  if (days <= 2) {
+                    if (days === 0) return { text: `${hours}시간 후 마감`, isUrgent: true };
+                    return { text: `D-${days}`, isUrgent: true };
+                  }
+                  
+                  return { text: `${days}일 남음`, isUrgent: false };
+                };
+                const timeRemaining = getTimeRemaining(deal.expires_at || null);
+
+                return (
+                  <Card key={deal.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden relative cursor-pointer" 
+                        onClick={() => window.open(deal.deal_url, '_blank')}>
+                    {/* Hot/Free badges */}
+                    <div className="absolute top-3 left-3 z-10 flex gap-2">
+                      {isHot && (
+                        <Badge variant="destructive" className="bg-red-500 text-white font-bold text-xs">
+                          <Flame className="w-3 h-3 mr-1" />
+                          HOT
+                        </Badge>
+                      )}
+                      {isFree && (
+                        <Badge className="bg-green-500 text-white font-bold text-xs">
+                          <Gift className="w-3 h-3 mr-1" />
+                          FREE
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* Discount badge */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <Badge variant="destructive" className="bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold px-2 py-1">
+                        {deal.discount}
+                      </Badge>
+                    </div>
+                    
+                    <CardContent className="p-0">
+                      {/* Image/Gradient */}
+                      <div 
+                        className="h-40 bg-gradient-to-br from-blue-100 to-purple-100 bg-cover bg-center relative"
+                        style={{ backgroundImage: `url(${deal.image_url})` }}
+                      >
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+                      </div>
+                      
+                      <div className="p-4">
+                        {/* Store name */}
+                        <div className="text-sm font-medium text-gray-700 mb-1">{deal.store}</div>
+                        
+                        {/* Title */}
+                        <h3 className="font-bold text-lg mb-2 line-clamp-2 min-h-[3.5rem]">{deal.title}</h3>
+                        
+                        {/* Price section */}
+                        <div className="mb-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-gray-500 line-through text-sm">{deal.original_price}</span>
+                            <span className="text-red-600 font-bold text-xl">{deal.deal_price}</span>
+                          </div>
+                          
+                          {/* Coupon code */}
+                          {deal.coupon_code && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded px-2 py-1 text-xs">
+                              <span className="text-yellow-800">쿠폰: </span>
+                              <span className="font-mono font-bold text-yellow-900">{deal.coupon_code}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Expiry and likes */}
+                        <div className="flex items-center justify-between text-sm">
+                          {timeRemaining.text && (
+                            <div className={`flex items-center gap-1 ${timeRemaining.isUrgent ? 'text-red-600' : 'text-gray-600'}`}>
+                              <Clock className="w-3 h-3" />
+                              {timeRemaining.isUrgent && <span className="text-red-500 font-bold">🔴</span>}
+                              <span className="text-xs">{timeRemaining.text}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Heart className="w-3 h-3" />
+                            <span className="text-xs">{deal.likes}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {!loadingDeals && hotDeals.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🔥</div>
+              <p className="text-gray-500 text-lg">아직 등록된 딜이 없습니다.</p>
+              <p className="text-gray-400">곧 멋진 딜들을 준비해드릴게요!</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Blog Section */}
       <section className="py-20 bg-white">

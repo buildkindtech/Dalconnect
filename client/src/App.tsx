@@ -31,6 +31,7 @@ import Community from "./pages/Community";
 import CommunityPost from "./pages/CommunityPost";
 import CommunityNew from "./pages/CommunityNew";
 import Charts from "./pages/Charts";
+import Deals from "./pages/Deals";
 
 function Router() {
   return (
@@ -52,6 +53,7 @@ function Router() {
           <Route path="/community" component={Community} />
           <Route path="/community/new" component={CommunityNew} />
           <Route path="/community/:id" component={CommunityPost} />
+          <Route path="/deals" component={Deals} />
           <Route path="/charts" component={Charts} />
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
