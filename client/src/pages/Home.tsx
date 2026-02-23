@@ -28,11 +28,11 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
   const { data: newsItems, isLoading: loadingNews } = useNews();
-  const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
+  const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 6 });
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
   const recentNews = newsItems?.slice(0, 3) ?? [];
-  const recentBlogs = blogPosts?.slice(0, 3) ?? [];
+  const recentBlogs = blogPosts?.slice(0, 6) ?? [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,12 +206,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Blog Section */}
+      {/* Latest Blog Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
             <div>
-              <h2 className="text-4xl font-bold mb-2">블로그</h2>
+              <h2 className="text-4xl font-bold mb-2 font-ko">최신 블로그</h2>
               <p className="text-slate-600">DFW 한인 생활 가이드와 유용한 팁</p>
             </div>
             <Link href="/blog">
@@ -222,8 +222,8 @@ export default function Home() {
           </div>
 
           {loadingBlogs ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((i) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-0">
                     <Skeleton className="w-full h-48" />
@@ -236,35 +236,49 @@ export default function Home() {
               ))}
             </div>
           ) : recentBlogs.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {recentBlogs.map((blog) => (
                 <Link key={blog.id} href={`/blog/${blog.slug}`}>
-                  <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
-                    <CardContent className="p-0">
-                      {blog.cover_image ? (
+                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group h-full">
+                    <CardContent className="p-0 flex flex-col h-full">
+                      {blog.cover_url || blog.cover_image ? (
                         <div 
                           className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ backgroundImage: `url(${blog.cover_image})` }}
+                          style={{ backgroundImage: `url(${blog.cover_url || blog.cover_image})` }}
                         />
                       ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:from-primary/20 transition-all">
                           <BookOpen className="h-16 w-16 text-primary/30" />
                         </div>
                       )}
-                      <div className="p-6">
-                        {blog.category && (
-                          <Badge variant="secondary" className="mb-3">
-                            {blog.category}
-                          </Badge>
-                        )}
-                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2">
+                      <div className="p-6 flex-1 flex flex-col">
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
+                          {blog.category && (
+                            <Badge variant="secondary" className="text-xs">
+                              {blog.category}
+                            </Badge>
+                          )}
+                          {blog.target_age && blog.target_age !== 'all' && (
+                            <Badge variant="outline" className="text-xs">
+                              {blog.target_age === '20s' ? '20대' :
+                               blog.target_age === '30s' ? '30대' :
+                               blog.target_age === '40s' ? '40대' :
+                               blog.target_age === '50s+' ? '50대+' : blog.target_age}
+                            </Badge>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
                           {blog.title}
                         </h3>
                         {blog.excerpt && (
-                          <p className="text-sm text-slate-600 line-clamp-2">{blog.excerpt}</p>
+                          <p className="text-sm text-slate-600 line-clamp-2 mb-3 flex-1">{blog.excerpt}</p>
                         )}
-                        <p className="text-xs text-slate-400 mt-3">
-                          {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR')}
+                        <p className="text-xs text-slate-400 mt-auto">
+                          {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
                         </p>
                       </div>
                     </CardContent>

@@ -64,6 +64,9 @@ export interface Blog {
   content: string;
   excerpt?: string;
   category?: string;
+  tags?: string[];
+  target_age?: string;
+  cover_url?: string;
   cover_image?: string;
   author: string;
   published_at: string;
@@ -148,10 +151,18 @@ export function useSearch(query: string) {
   });
 }
 
-export function useBlogs(params?: { category?: string; search?: string; limit?: number }) {
+export function useBlogs(params?: { 
+  category?: string; 
+  search?: string; 
+  target_age?: string;
+  tag?: string;
+  limit?: number 
+}) {
   const queryParams = new URLSearchParams();
   if (params?.category) queryParams.append('category', params.category);
   if (params?.search) queryParams.append('search', params.search);
+  if (params?.target_age) queryParams.append('target_age', params.target_age);
+  if (params?.tag) queryParams.append('tag', params.tag);
   if (params?.limit) queryParams.append('limit', params.limit.toString());
 
   const queryString = queryParams.toString();

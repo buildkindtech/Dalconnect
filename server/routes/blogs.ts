@@ -8,20 +8,40 @@ const router = Router();
 // Get all blogs with optional filtering
 router.get("/blogs", async (req, res) => {
   try {
-    const { category, search, limit = 20, offset = 0 } = req.query;
+    const { category, search, target_age, tag, limit = 20, offset = 0 } = req.query;
 
-    let query = db.select().from(blogs);
+    let conditions = [];
 
     // Filter by category
     if (category && typeof category === 'string') {
-      query = query.where(sql`${blogs.category} = ${category}`) as any;
+      conditions.push(sql`${blogs.category} = ${category}`);
+    }
+
+    // Filter by target_age
+    if (target_age && typeof target_age === 'string') {
+      conditions.push(sql`${blogs.target_age} = ${target_age}`);
+    }
+
+    // Filter by tag
+    if (tag && typeof tag === 'string') {
+      conditions.push(sql`${blogs.tags}::jsonb @> ${JSON.stringify([tag])}`);
     }
 
     // Search in title and content
     if (search && typeof search === 'string') {
-      query = query.where(
-        sql`${blogs.title} ILIKE ${`%${search}%`} OR ${blogs.content} ILIKE ${`%${search}%`}`
-      ) as any;
+      conditions.push(
+        sql`(${blogs.title} ILIKE ${`%${search}%`} OR ${blogs.content} ILIKE ${`%${search}%`})`
+      );
+    }
+
+    // Build query with conditions
+    let query = db.select().from(blogs);
+    
+    if (conditions.length > 0) {
+      const combined = conditions.reduce((acc, condition) => 
+        acc ? sql`${acc} AND ${condition}` : condition
+      );
+      query = query.where(combined) as any;
     }
 
     // Apply pagination and ordering
