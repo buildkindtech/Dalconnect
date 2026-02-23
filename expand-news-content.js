@@ -16,7 +16,7 @@ async function expandContentForCategories() {
       
       // 카테고리별 기사 조회
       const result = await pool.query(
-        'SELECT id, title, content, original_url FROM news WHERE category = $1 AND content IS NOT NULL ORDER BY created_at DESC LIMIT 10',
+        'SELECT id, title, content, url FROM news WHERE category = $1 AND content IS NOT NULL ORDER BY created_at DESC LIMIT 10',
         [category]
       );
       
