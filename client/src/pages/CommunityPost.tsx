@@ -86,24 +86,36 @@ export default function CommunityPost() {
       
       // Fetch related content in parallel
       const [businessesRes, newsRes, blogsRes] = await Promise.all([
-        fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&type=businesses`).catch(() => ({ ok: false })),
-        fetch(`/api/news?limit=3`).catch(() => ({ ok: false })),
-        fetch(`/api/blogs?limit=3`).catch(() => ({ ok: false })),
+        fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&type=businesses`).catch(() => null),
+        fetch(`/api/news?limit=3`).catch(() => null),
+        fetch(`/api/blogs?limit=3`).catch(() => null),
       ]);
 
       const results = { businesses: [], news: [], blogs: [] };
 
-      if (businessesRes.ok) {
-        const businessData = await businessesRes.json();
-        results.businesses = businessData.businesses?.slice(0, 3) || [];
+      if (businessesRes?.ok) {
+        try {
+          const businessData = await businessesRes.json();
+          results.businesses = businessData.businesses?.slice(0, 3) || [];
+        } catch (e) {
+          console.error('Failed to parse business data:', e);
+        }
       }
-      if (newsRes.ok) {
-        const newsData = await newsRes.json();
-        results.news = newsData.news?.slice(0, 3) || [];
+      if (newsRes?.ok) {
+        try {
+          const newsData = await newsRes.json();
+          results.news = newsData.news?.slice(0, 3) || [];
+        } catch (e) {
+          console.error('Failed to parse news data:', e);
+        }
       }
-      if (blogsRes.ok) {
-        const blogData = await blogsRes.json();
-        results.blogs = blogData.blogs?.slice(0, 3) || [];
+      if (blogsRes?.ok) {
+        try {
+          const blogData = await blogsRes.json();
+          results.blogs = blogData.blogs?.slice(0, 3) || [];
+        } catch (e) {
+          console.error('Failed to parse blog data:', e);
+        }
       }
 
       return results;
@@ -450,7 +462,7 @@ export default function CommunityPost() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Related Businesses */}
-                {recommendedContent?.businesses?.length > 0 && (
+                {recommendedContent?.businesses && recommendedContent.businesses.length > 0 && (
                   <div>
                     <h4 className="font-medium mb-2 text-sm">🏪 관련 업소</h4>
                     <div className="space-y-2">
@@ -467,7 +479,7 @@ export default function CommunityPost() {
                 )}
 
                 {/* Related News */}
-                {recommendedContent?.news?.length > 0 && (
+                {recommendedContent?.news && recommendedContent.news.length > 0 && (
                   <div>
                     <h4 className="font-medium mb-2 text-sm">📰 관련 뉴스</h4>
                     <div className="space-y-2">
@@ -483,7 +495,7 @@ export default function CommunityPost() {
                 )}
 
                 {/* Related Blogs */}
-                {recommendedContent?.blogs?.length > 0 && (
+                {recommendedContent?.blogs && recommendedContent.blogs.length > 0 && (
                   <div>
                     <h4 className="font-medium mb-2 text-sm">📝 관련 블로그</h4>
                     <div className="space-y-2">
@@ -498,7 +510,9 @@ export default function CommunityPost() {
                   </div>
                 )}
 
-                {(!recommendedContent?.businesses?.length && !recommendedContent?.news?.length && !recommendedContent?.blogs?.length) && (
+                {(!recommendedContent?.businesses || recommendedContent.businesses.length === 0) && 
+                 (!recommendedContent?.news || recommendedContent.news.length === 0) && 
+                 (!recommendedContent?.blogs || recommendedContent.blogs.length === 0) && (
                   <div className="text-center text-gray-500 text-sm py-4">
                     관련 콘텐츠를 찾고 있어요...
                   </div>

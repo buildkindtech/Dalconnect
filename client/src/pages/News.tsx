@@ -21,6 +21,7 @@ const CATEGORIES = [
   { id: '패션/뷰티', label: '패션/뷰티', emoji: '👗' },
   { id: '건강', label: '건강', emoji: '💪' },
   { id: '육아', label: '육아', emoji: '👶' },
+  { id: '부동산/숙소', label: '부동산/숙소', emoji: '🏠' },
 ];
 
 // Helper function to format relative time

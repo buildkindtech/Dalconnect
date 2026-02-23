@@ -219,8 +219,8 @@ export type CommunityPost = typeof communityPosts.$inferSelect;
 // Community comments table
 export const communityComments = pgTable("community_comments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  post_id: varchar("post_id").notNull().references(() => communityPosts.id, { onDelete: 'cascade' }),
-  parent_id: varchar("parent_id").references(() => communityComments.id, { onDelete: 'cascade' }),
+  post_id: varchar("post_id").notNull(),
+  parent_id: varchar("parent_id"),
   nickname: varchar("nickname", { length: 50 }).notNull(),
   password_hash: varchar("password_hash", { length: 255 }).notNull(),
   content: text("content").notNull(),

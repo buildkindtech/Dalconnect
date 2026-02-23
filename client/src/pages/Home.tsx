@@ -1018,6 +1018,123 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Community Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-4xl font-bold flex items-center gap-3">
+                <span className="text-2xl">🔥</span> 커뮤니티 인기글
+              </h2>
+              <p className="text-slate-600 mt-2">달라스 한인들이 함께 나누는 이야기</p>
+            </div>
+            <Link href="/community">
+              <Button variant="ghost" className="gap-2">
+                전체 보기 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {loadingCommunity ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-6 w-full" />
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : popularPosts.length > 0 ? (
+            <div className="space-y-3">
+              {popularPosts.map((post, index) => (
+                <Link key={post.id} href={`/community/${post.id}`}>
+                  <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-primary text-white text-sm font-bold rounded-full flex-shrink-0">
+                              {index + 1}
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {post.category}
+                            </Badge>
+                            {post.is_pinned && (
+                              <Badge variant="secondary" className="text-xs">
+                                <Flame className="w-3 h-3 mr-1" />
+                                공지
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <h3 className="font-bold text-lg text-slate-900 mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                            {post.title}
+                          </h3>
+                          
+                          <div className="flex items-center text-sm text-slate-600 space-x-4">
+                            <span className="flex items-center gap-1">
+                              <Users className="w-4 h-4" />
+                              {post.nickname}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="w-4 h-4" />
+                              {post.comment_count}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Heart className="w-4 h-4" />
+                              {post.likes}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-4 h-4" />
+                              {post.views}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <MessageCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600 mb-4">아직 커뮤니티 글이 없습니다</p>
+                <Link href="/community/new">
+                  <Button>첫 번째 글 작성하기</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {popularPosts.length > 0 && (
+            <div className="text-center mt-8">
+              <Link href="/community">
+                <Button size="lg" variant="outline" className="gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  커뮤니티 둘러보기
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Newsletter Section */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-4 max-w-4xl">
