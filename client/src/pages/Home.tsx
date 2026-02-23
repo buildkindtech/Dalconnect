@@ -35,8 +35,8 @@ export default function Home() {
   const recentNews = newsItems?.slice(0, 3) ?? [];
   const recentBlogs = blogPosts?.slice(0, 3) ?? [];
   const recentListings = listingsData?.items ?? [];
-  const trending = stats?.trending ?? [];
-  const recent = stats?.recent ?? [];
+  const trending: any[] = [];
+  const recent: any[] = [];
   const popularSearches: any[] = [];
 
   // Get count for each category
@@ -69,7 +69,7 @@ export default function Home() {
             DFW 한인 커뮤니티의 모든 것
           </h1>
           <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-slate-200">
-            달라스-포트워스 지역 {stats?.totalBusinesses || '350+'}개 한인 업체 정보와 최신 한인 뉴스
+            달라스-포트워스 지역 {1122}개 한인 업체 정보와 최신 한인 뉴스
           </p>
           
           {/* Big Search Bar */}
@@ -94,15 +94,15 @@ export default function Home() {
           <div className="mt-8 flex gap-8 justify-center text-white/90 text-sm">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              <span>{stats?.totalBusinesses || '350+'}개 업체</span>
+              <span>{1122}개 업체</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              <span>{stats?.cityStats?.length || '20+'}개 도시</span>
+              <span>{25}개 도시</span>
             </div>
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4" />
-              <span>{stats?.categoryStats?.length || '11'}개 카테고리</span>
+              <span>{11}개 카테고리</span>
             </div>
           </div>
         </div>
