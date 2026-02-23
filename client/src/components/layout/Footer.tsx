@@ -1,37 +1,63 @@
 import { Link } from "wouter";
-import { Globe, Mail, Phone, MapPin } from "lucide-react";
+import { Globe, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-950 text-slate-300 py-12">
-      <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="bg-primary text-white p-1.5 rounded-md">
-              <Globe className="h-5 w-5" />
+    <footer className="bg-slate-950 text-slate-300 py-16">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-gradient-to-br from-primary to-primary/80 text-white p-2 rounded-xl">
+                <Globe className="h-6 w-6" />
+              </div>
+              <h3 className="font-bold text-2xl text-white font-ko">DalConnect</h3>
             </div>
-            <h3 className="font-bold text-xl text-white">DalConnect</h3>
-          </div>
-          <p className="text-sm text-slate-400 max-w-xs">
-            달라스-포트워스 지역 한인 커뮤니티를 위한 최고의 비즈니스 디렉토리
-          </p>
-          <div className="mt-4 space-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span>Dallas-Fort Worth, TX</span>
+            <p className="text-sm text-slate-400 max-w-xs mb-6 leading-relaxed font-ko">
+              달라스-포트워스 한인 커뮤니티를 연결하는 플랫폼
+            </p>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                <span>Dallas-Fort Worth, TX</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" />
+                <a href="mailto:info@buildkind.tech" className="hover:text-primary transition-colors">
+                  info@buildkind.tech
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-primary" />
+                <a href="tel:+14696132763" className="hover:text-primary transition-colors">
+                  (469) 613-2763
+                </a>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              <a href="mailto:info@dalconnect.com" className="hover:text-primary">
-                info@dalconnect.com
+            
+            {/* Social Media Links */}
+            <div className="mt-6 flex gap-3">
+              <a 
+                href="#" 
+                className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-primary flex items-center justify-center transition-all hover:scale-110"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-4 w-4" />
               </a>
-            </div>
-            <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              <a href="tel:+14696132763" className="hover:text-primary">
-                (469) 613-2763
+              <a 
+                href="#" 
+                className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-primary flex items-center justify-center transition-all hover:scale-110"
+                aria-label="Instagram"
+              >
+                <Instagram className="h-4 w-4" />
               </a>
-            </div>
+              <a 
+                href="#" 
+                className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-primary flex items-center justify-center transition-all hover:scale-110"
+                aria-label="Twitter"
+              >
+                <Twitter className="h-4 w-4" />
+              </a>
           </div>
         </div>
         
@@ -106,10 +132,28 @@ export default function Footer() {
             </li>
           </ul>
         </div>
-      </div>
-      <div className="container mx-auto px-4 mt-12 pt-8 border-t border-slate-800 text-sm text-slate-500 text-center">
-        <p>&copy; {new Date().getFullYear()} DalConnect. All rights reserved.</p>
-        <p className="mt-2">Built with ❤️ for the DFW Korean Community</p>
+        </div>
+        
+        <div className="mt-12 pt-8 border-t border-slate-800">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
+            <div className="flex items-center gap-2">
+              <span>&copy; {new Date().getFullYear()} DalConnect. All rights reserved.</span>
+            </div>
+            <div className="flex items-center gap-1 text-slate-400">
+              <span>Built with</span>
+              <span className="text-red-500">❤️</span>
+              <span>for the DFW Korean Community by</span>
+              <a 
+                href="https://buildkind.tech" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="font-medium text-primary hover:underline ml-1"
+              >
+                BuildKind Tech
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   );

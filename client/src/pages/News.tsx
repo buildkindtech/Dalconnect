@@ -7,6 +7,7 @@ import { ExternalLink, Calendar, Building2, Plus, Filter } from "lucide-react";
 import { useState } from "react";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { NewsSubmissionDialog } from "@/components/NewsSubmissionDialog";
+import { getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
 
 const CATEGORIES = [
   { id: 'all', label: '전체', emoji: '📰' },
@@ -83,33 +84,35 @@ export default function News() {
             </div>
           ) : newsItems && newsItems.length > 0 ? (
             <div className="divide-y">
-              {newsItems.map((news: NewsItem) => (
-                <Link href={`/news/${news.id}`} key={news.id}>
-                  <div 
-                    className="p-6 hover:bg-slate-50 transition-colors cursor-pointer flex gap-4 items-start group"
-                    data-testid={`news-item-${news.id}`}
-                  >
-                    {/* Thumbnail */}
-                    {news.thumbnail_url ? (
-                      <div className="w-20 h-20 rounded overflow-hidden flex-shrink-0 border border-border">
-                        <img 
-                          src={news.thumbnail_url} 
-                          alt={news.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `<div class="w-full h-full bg-slate-100 flex items-center justify-center text-2xl">${getCategoryEmoji(news.category)}</div>`;
-                            }
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-20 h-20 rounded bg-slate-100 flex items-center justify-center flex-shrink-0 text-2xl">
-                        {getCategoryEmoji(news.category)}
-                      </div>
-                    )}
+              {newsItems.map((news: NewsItem) => {
+                const categoryStyle = getNewsCategoryStyle(news.category);
+                return (
+                  <Link href={`/news/${news.id}`} key={news.id}>
+                    <div 
+                      className="p-6 hover:bg-slate-50 transition-colors cursor-pointer flex gap-4 items-start group"
+                      data-testid={`news-item-${news.id}`}
+                    >
+                      {/* Thumbnail */}
+                      {news.thumbnail_url ? (
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-border">
+                          <img 
+                            src={news.thumbnail_url} 
+                            alt={news.title} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center text-3xl">${categoryStyle.emoji}</div>`;
+                              }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className={`w-20 h-20 rounded-lg bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center flex-shrink-0 text-3xl`}>
+                          {categoryStyle.emoji}
+                        </div>
+                      )}
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
@@ -157,7 +160,8 @@ export default function News() {
                     </div>
                   </div>
                 </Link>
-              ))}
+              );
+              })}
             </div>
           ) : (
             <div className="p-12 text-center text-slate-500">

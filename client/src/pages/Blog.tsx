@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBlogs } from "@/lib/api";
+import { getBlogCategoryStyle } from "@/lib/blogNewsDefaults";
 
 const CATEGORIES = [
   '맛집/식당',
@@ -132,20 +133,22 @@ export default function Blog() {
             </div>
           ) : blogs && blogs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogs.map((blog) => (
-                <Link key={blog.id} href={`/blog/${blog.slug}`}>
-                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group h-full">
-                    <CardContent className="p-0 flex flex-col h-full">
-                      {blog.cover_url || blog.cover_image ? (
-                        <div 
-                          className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ backgroundImage: `url(${blog.cover_url || blog.cover_image})` }}
-                        />
-                      ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:from-primary/30 transition-all">
-                          <BookOpen className="h-16 w-16 text-primary/40" />
-                        </div>
-                      )}
+              {blogs.map((blog) => {
+                const categoryStyle = getBlogCategoryStyle(blog.category);
+                return (
+                  <Link key={blog.id} href={`/blog/${blog.slug}`}>
+                    <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl">
+                      <CardContent className="p-0 flex flex-col h-full">
+                        {blog.cover_url || blog.cover_image ? (
+                          <div 
+                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                            style={{ backgroundImage: `url(${blog.cover_url || blog.cover_image})` }}
+                          />
+                        ) : (
+                          <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center group-hover:scale-105 transition-all`}>
+                            <span className="text-7xl">{categoryStyle.emoji}</span>
+                          </div>
+                        )}
                       
                       <div className="p-6 flex-1 flex flex-col">
                         <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -212,7 +215,8 @@ export default function Blog() {
                     </CardContent>
                   </Card>
                 </Link>
-              ))}
+              );
+              })}
             </div>
           ) : (
             <div className="text-center py-20">

@@ -1,13 +1,14 @@
 import { Link, useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFeaturedBusinesses, useNews, useBlogs, useListings } from "@/lib/api";
+import { useFeaturedBusinesses, useNews, useBlogs, useListings, useCategories } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
+import { getBlogCategoryStyle, getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import * as Icons from "lucide-react";
 
@@ -23,6 +24,10 @@ const CATEGORIES = [
   { id: '한인마트', name: '마트', icon: ShoppingCart, color: 'bg-teal-500' },
 ];
 
+const POPULAR_SEARCH_TAGS = [
+  "한식당", "미용실", "교회", "정비소", "치과", "부동산", "학원", "한인마트"
+];
+
 export default function Home() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,6 +35,7 @@ export default function Home() {
   const { data: newsItems, isLoading: loadingNews } = useNews();
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
+  const { data: categories } = useCategories();
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
   const recentNews = newsItems?.slice(0, 3) ?? [];
@@ -40,8 +46,10 @@ export default function Home() {
   const popularSearches: any[] = [];
 
   // Get count for each category
-  const getCategoryCount = (_categoryId: string) => {
-    return null;
+  const getCategoryCount = (categoryId: string) => {
+    if (!categories) return null;
+    const found = categories.find(c => c.category === categoryId);
+    return found ? found.count : null;
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -105,6 +113,19 @@ export default function Home() {
               <span>{11}개 카테고리</span>
             </div>
           </div>
+
+          {/* Popular Search Tags */}
+          <div className="mt-6 flex flex-wrap gap-3 justify-center">
+            {POPULAR_SEARCH_TAGS.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setLocation(`/businesses?search=${encodeURIComponent(tag)}`)}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-white transition-all hover:scale-105"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -120,17 +141,17 @@ export default function Home() {
                 <button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className="bg-white rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-4 group relative"
+                  className="bg-white rounded-xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-4 group"
                 >
-                  {count !== null && count > 0 && (
-                    <Badge className="absolute top-4 right-4 bg-primary">
-                      {count}+
-                    </Badge>
-                  )}
                   <div className={`${category.color} w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                     <IconComponent className="h-8 w-8 text-white" />
                   </div>
-                  <span className="font-semibold text-lg text-slate-800">{category.name}</span>
+                  <div className="text-center">
+                    <span className="font-semibold text-lg text-slate-800 block">{category.name}</span>
+                    {count !== null && count > 0 && (
+                      <span className="text-sm text-slate-500 mt-1 block">({count})</span>
+                    )}
+                  </div>
                 </button>
               );
             })}
@@ -295,9 +316,9 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featured.map((business) => (
-                <Link key={business.id} href={`/business/${business.id}`}>
-                  <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
-                    <CardContent className="p-0">
+                <Card key={business.id} className="overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
+                  <CardContent className="p-0">
+                    <Link href={`/business/${business.id}`}>
                       {hasValidImage(business.cover_url) ? (
                         <div 
                           className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
@@ -312,40 +333,82 @@ export default function Home() {
                           })()}
                         </div>
                       )}
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko">
-                              {business.name_ko || business.name_en}
-                            </h3>
-                            {business.name_ko && business.name_en && (
-                              <p className="text-sm text-slate-500 mt-0.5">{business.name_en}</p>
-                            )}
-                          </div>
-                          {business.featured && (
-                            <Badge variant="default" className="ml-2 flex-shrink-0">추천</Badge>
+                    </Link>
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <Link href={`/business/${business.id}`} className="flex-1 min-w-0">
+                          <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko">
+                            {business.name_ko || business.name_en}
+                          </h3>
+                          {business.name_ko && business.name_en && (
+                            <p className="text-sm text-slate-500 mt-0.5">{business.name_en}</p>
+                          )}
+                        </Link>
+                      </div>
+                      
+                      <Badge 
+                        variant="secondary" 
+                        className="mb-3 text-xs"
+                        style={{ 
+                          background: `linear-gradient(to right, ${getCategoryColor(business.category).replace('from-', '').replace('to-', '').split(' ').map(c => `var(--${c})`).join(', ')})`,
+                          color: 'white'
+                        }}
+                      >
+                        {business.category}
+                      </Badge>
+                      
+                      {/* Star Rating Visualization */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-1">
+                          {business.rating && parseFloat(business.rating) > 0 ? (
+                            <>
+                              {[...Array(5)].map((_, i) => {
+                                const rating = parseFloat(business.rating || '0');
+                                const fillPercentage = Math.min(Math.max(rating - i, 0), 1);
+                                return (
+                                  <div key={i} className="relative">
+                                    <Star className="h-4 w-4 text-slate-300" />
+                                    {fillPercentage > 0 && (
+                                      <div className="absolute inset-0 overflow-hidden" style={{ width: `${fillPercentage * 100}%` }}>
+                                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              <span className="font-bold text-lg ml-1">{business.rating}</span>
+                            </>
+                          ) : (
+                            <span className="text-slate-400 text-sm">평점 없음</span>
                           )}
                         </div>
-                        <p className="text-slate-600 mb-3 font-ko">{business.category}</p>
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                            <span className="font-semibold">{business.rating || 'N/A'}</span>
-                          </div>
+                        {business.review_count && business.review_count > 0 && (
                           <span className="text-slate-500 text-sm">
-                            ({business.review_count || 0} 리뷰)
+                            💬 {business.review_count}개 리뷰
                           </span>
-                        </div>
-                        {business.address && (
-                          <div className="flex items-start gap-2 text-sm text-slate-600">
-                            <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                            <span className="line-clamp-2">{business.address}</span>
-                          </div>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                      
+                      {business.city && (
+                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-3">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{business.city}</span>
+                        </div>
+                      )}
+                      
+                      {business.phone && (
+                        <a 
+                          href={`tel:${business.phone}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors md:hidden"
+                        >
+                          <Phone className="h-4 w-4" />
+                          <span className="font-medium">전화 걸기</span>
+                        </a>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
@@ -470,40 +533,43 @@ export default function Home() {
             </div>
           ) : recentBlogs.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {recentBlogs.map((blog) => (
-                <Link key={blog.id} href={`/blog/${blog.slug}`}>
-                  <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
-                    <CardContent className="p-0">
-                      {blog.cover_image ? (
-                        <div 
-                          className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ backgroundImage: `url(${blog.cover_image})` }}
-                        />
-                      ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                          <BookOpen className="h-16 w-16 text-primary/30" />
+              {recentBlogs.map((blog) => {
+                const categoryStyle = getBlogCategoryStyle(blog.category);
+                return (
+                  <Link key={blog.id} href={`/blog/${blog.slug}`}>
+                    <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
+                      <CardContent className="p-0">
+                        {blog.cover_image || blog.cover_url ? (
+                          <div 
+                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                            style={{ backgroundImage: `url(${blog.cover_image || blog.cover_url})` }}
+                          />
+                        ) : (
+                          <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                            <span className="text-7xl">{categoryStyle.emoji}</span>
+                          </div>
+                        )}
+                        <div className="p-6">
+                          {blog.category && (
+                            <Badge variant="secondary" className="mb-3">
+                              {blog.category}
+                            </Badge>
+                          )}
+                          <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
+                            {blog.title}
+                          </h3>
+                          {blog.excerpt && (
+                            <p className="text-sm text-slate-600 line-clamp-2">{blog.excerpt}</p>
+                          )}
+                          <p className="text-xs text-slate-400 mt-3">
+                            {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR')}
+                          </p>
                         </div>
-                      )}
-                      <div className="p-6">
-                        {blog.category && (
-                          <Badge variant="secondary" className="mb-3">
-                            {blog.category}
-                          </Badge>
-                        )}
-                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2">
-                          {blog.title}
-                        </h3>
-                        {blog.excerpt && (
-                          <p className="text-sm text-slate-600 line-clamp-2">{blog.excerpt}</p>
-                        )}
-                        <p className="text-xs text-slate-400 mt-3">
-                          {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR')}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
@@ -541,61 +607,76 @@ export default function Home() {
             </div>
           ) : recentListings.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentListings.map((listing) => (
-                <Link key={listing.id} href={`/marketplace/${listing.id}`}>
-                  <Card className="hover:shadow-xl transition-shadow cursor-pointer group h-full">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <Badge variant="secondary" className="text-xs">
-                          {listing.category}
-                        </Badge>
-                        {listing.price_type === 'free' && (
-                          <Badge className="bg-green-600 text-xs">무료</Badge>
-                        )}
-                      </div>
-                      
-                      <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors min-h-[3.5rem]">
-                        {listing.title}
-                      </h3>
-                      
-                      <div className="text-2xl font-bold text-primary mb-3">
-                        {listing.price_type === 'free' ? '무료나눔' : 
-                         listing.price_type === 'contact' ? '가격문의' :
-                         listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의'}
-                      </div>
-                      
-                      <p className="text-sm text-slate-600 line-clamp-2 mb-4 min-h-[2.5rem]">
-                        {listing.description || '설명 없음'}
-                      </p>
-                      
-                      <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {listing.location || '위치 미정'}
+              {recentListings.map((listing) => {
+                const date = new Date(listing.created_at);
+                const now = new Date();
+                const diffMs = now.getTime() - date.getTime();
+                const diffMins = Math.floor(diffMs / (1000 * 60));
+                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                
+                let timeAgo = '';
+                if (diffMins < 60) timeAgo = `${diffMins}분 전`;
+                else if (diffHours < 24) timeAgo = `${diffHours}시간 전`;
+                else if (diffDays === 1) timeAgo = '어제';
+                else if (diffDays < 7) timeAgo = `${diffDays}일 전`;
+                else timeAgo = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+                
+                return (
+                  <Link key={listing.id} href={`/marketplace/${listing.id}`}>
+                    <Card className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-4 flex-wrap">
+                          <Badge variant="outline" className="text-xs font-medium">
+                            {listing.category}
+                          </Badge>
+                          {listing.price_type === 'free' && (
+                            <Badge className="bg-green-600 hover:bg-green-700 text-xs">
+                              🎁 무료나눔
+                            </Badge>
+                          )}
+                          {listing.price && listing.price !== '0' && (
+                            <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">
+                              협상가능
+                            </Badge>
+                          )}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
-                            {listing.views || 0}
+                        
+                        <h3 className="font-bold text-xl mb-3 line-clamp-2 group-hover:text-primary transition-colors min-h-[3.5rem] font-ko">
+                          {listing.title}
+                        </h3>
+                        
+                        <div className="text-3xl font-bold mb-4" style={{ color: listing.price_type === 'free' ? '#16a34a' : '#2563EB' }}>
+                          {listing.price_type === 'free' ? '무료' : 
+                           listing.price_type === 'contact' ? '가격문의' :
+                           listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의'}
+                        </div>
+                        
+                        <p className="text-sm text-slate-600 line-clamp-2 mb-4 min-h-[2.5rem]">
+                          {listing.description || '설명 없음'}
+                        </p>
+                        
+                        <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t">
+                          <div className="flex items-center gap-1 font-medium">
+                            <MapPin className="w-3.5 h-3.5" />
+                            {listing.location || '위치 미정'}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {(() => {
-                              const date = new Date(listing.created_at);
-                              const now = new Date();
-                              const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-                              if (diffDays === 0) return '오늘';
-                              if (diffDays === 1) return '어제';
-                              if (diffDays < 7) return `${diffDays}일 전`;
-                              return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
-                            })()}
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5" />
+                              {listing.views || 0}
+                            </div>
+                            <div className="flex items-center gap-1 font-medium text-primary">
+                              <Clock className="w-3.5 h-3.5" />
+                              {timeAgo}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           )}
 
@@ -638,36 +719,39 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {recentNews.map((news) => (
-                <a key={news.id} href={news.url} target="_blank" rel="noopener noreferrer">
-                  <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
-                    <CardContent className="p-0">
-                      {hasValidImage(news.thumbnail_url) ? (
-                        <div 
-                          className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ backgroundImage: `url(${news.thumbnail_url})` }}
-                        />
-                      ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                          <Icons.Newspaper className="w-16 h-16 text-white/60" />
+              {recentNews.map((news) => {
+                const categoryStyle = getNewsCategoryStyle(news.category);
+                return (
+                  <a key={news.id} href={news.url} target="_blank" rel="noopener noreferrer">
+                    <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
+                      <CardContent className="p-0">
+                        {hasValidImage(news.thumbnail_url) ? (
+                          <div 
+                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                            style={{ backgroundImage: `url(${news.thumbnail_url})` }}
+                          />
+                        ) : (
+                          <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                            <span className="text-7xl">{categoryStyle.emoji}</span>
+                          </div>
+                        )}
+                        <div className="p-6">
+                          <Badge variant="secondary" className="mb-3">
+                            {news.category || '뉴스'}
+                          </Badge>
+                          <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
+                            {news.title}
+                          </h3>
+                          <p className="text-sm text-slate-600 line-clamp-2">{news.content}</p>
+                          <p className="text-xs text-slate-400 mt-3">
+                            {news.source} • {new Date(news.published_date).toLocaleDateString('ko-KR')}
+                          </p>
                         </div>
-                      )}
-                      <div className="p-6">
-                        <Badge variant="secondary" className="mb-3">
-                          {news.category || '뉴스'}
-                        </Badge>
-                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2">
-                          {news.title}
-                        </h3>
-                        <p className="text-sm text-slate-600 line-clamp-2">{news.content}</p>
-                        <p className="text-xs text-slate-400 mt-3">
-                          {news.source} • {new Date(news.published_date).toLocaleDateString('ko-KR')}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </a>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </a>
+                );
+              })}
             </div>
           )}
         </div>
