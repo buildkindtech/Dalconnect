@@ -12,10 +12,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const featured = await storage.getFeaturedBusinesses();
       return res.status(200).json(featured);
-    } catch (error) {
+    } catch (error: any) {
       console.error("GET /api/featured error:", error);
-      // Return empty array instead of error for now
-      return res.status(200).json([]);
+      return res.status(500).json({ 
+        error: "Failed to fetch featured businesses",
+        message: error.message 
+      });
     }
   }
 

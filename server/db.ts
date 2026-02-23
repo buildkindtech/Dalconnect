@@ -2,12 +2,14 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "../shared/schema";
 
+// Ensure DATABASE_URL is available (Vercel injects it at runtime)
 if (!process.env.DATABASE_URL) {
-  console.warn("⚠️ DATABASE_URL not set. App will return setup instructions.");
+  throw new Error("DATABASE_URL environment variable is not set");
 }
 
-const pool = process.env.DATABASE_URL
-  ? new pg.Pool({ connectionString: process.env.DATABASE_URL })
-  : null as any; // Fallback for build-time
+const pool = new pg.Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 export const db = drizzle(pool, { schema });

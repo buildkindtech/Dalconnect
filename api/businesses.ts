@@ -20,10 +20,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       
       return res.status(200).json(results);
-    } catch (error) {
+    } catch (error: any) {
       console.error("GET /api/businesses error:", error);
-      // Return empty array instead of error
-      return res.status(200).json([]);
+      return res.status(500).json({ 
+        error: "Failed to fetch businesses",
+        message: error.message 
+      });
     }
   }
 
