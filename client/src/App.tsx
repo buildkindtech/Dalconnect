@@ -4,7 +4,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import { useState, useEffect } from "react";
 
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
@@ -57,32 +56,6 @@ function Router() {
 }
 
 function App() {
-  const [setupRequired, setSetupRequired] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    fetch("/api/health")
-      .then(res => res.json())
-      .then(data => {
-        setSetupRequired(data.status === "setup_required");
-      })
-      .catch(() => setSetupRequired(false));
-  }, []);
-
-  if (setupRequired === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (setupRequired) {
-    return <SetupRequired />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

@@ -23,7 +23,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       // Parse query parameters
-      const { category, city, search, featured, page, limit } = req.query;
+      const { id, category, city, search, featured, page, limit } = req.query;
+
+      // Single business by ID
+      if (id && typeof id === 'string') {
+        const r = await pool.query('SELECT * FROM businesses WHERE id = $1 LIMIT 1', [id]);
+        await pool.end();
+        if (r.rowCount === 0) return res.status(404).json({ error: 'Not found' });
+        return res.json(r.rows[0]);
+      }
       
       const pageNum = parseInt(page as string) || 1;
       const limitNum = parseInt(limit as string) || 20;

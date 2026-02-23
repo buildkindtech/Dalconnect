@@ -5,7 +5,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 1 });
   try {
     if (req.method === 'GET') {
-      const { category, search, page = '1', limit = '12', status = 'active' } = req.query;
+      const { id, category, search, page = '1', limit = '12', status = 'active' } = req.query;
+      if (id && typeof id === 'string') {
+        const r = await pool.query('SELECT * FROM listings WHERE id = $1 LIMIT 1', [id]);
+        if (r.rowCount === 0) return res.status(404).json({ error: 'Not found' });
+        return res.json(r.rows[0]);
+      }
       const pageNum = parseInt(page as string);
       const limitNum = parseInt(limit as string);
       const offset = (pageNum - 1) * limitNum;

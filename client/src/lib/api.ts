@@ -160,7 +160,7 @@ export function useBusinesses(params?: {
 export function useBusiness(id: string) {
   return useQuery<Business>({
     queryKey: ['business', id],
-    queryFn: () => fetchApi<Business>(`/api/business/${id}`),
+    queryFn: () => fetchApi<Business>(`/api/businesses?id=${id}`),
     enabled: !!id,
   });
 }
@@ -273,7 +273,7 @@ export function useListings(params?: {
 export function useListing(id: string) {
   return useQuery<Listing>({
     queryKey: ['listing', id],
-    queryFn: () => fetchApi<Listing>(`/api/listings/${id}`),
+    queryFn: () => fetchApi<Listing>(`/api/listings?id=${id}`),
     enabled: !!id,
   });
 }
