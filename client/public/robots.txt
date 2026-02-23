@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Allow crawling of all public pages
+Allow: /listings
+Allow: /news
+Allow: /pricing
+
+# Disallow admin and payment pages
+Disallow: /admin
+Disallow: /payment-success
+
+# Sitemap location
+Sitemap: https://dalconnect.buildkind.tech/sitemap.xml
