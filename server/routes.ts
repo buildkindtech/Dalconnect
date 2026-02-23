@@ -3,9 +3,9 @@ import { type Server } from "http";
 import { storage } from "./storage";
 
 export async function registerRoutes(
-  httpServer: Server,
+  httpServer: Server | null,
   app: Express
-): Promise<Server> {
+): Promise<Server | null> {
   
   app.get("/api/businesses", async (req, res) => {
     try {
