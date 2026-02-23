@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage } from '../server/storage';
+import { getDb } from './_db';
+import { news } from '../shared/schema';
+import { eq, desc } from 'drizzle-orm';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,11 +12,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'GET') {
     try {
+      const db = getDb();
       const { category, limit } = req.query;
-      const results = await storage.getNews(
-        category as string | undefined,
-        limit ? Number(limit) : undefined
-      );
+      const limitNum = limit ? Number(limit) : 20;
+      
+      const results = category
+        ? await db
+            .select()
+            .from(news)
+            .where(eq(news.category, category as string))
+            .orderBy(desc(news.published_date))
+            .limit(limitNum)
+        : await db
+            .select()
+            .from(news)
+            .orderBy(desc(news.published_date))
+            .limit(limitNum);
+      
       return res.status(200).json(results);
     } catch (error: any) {
       console.error("GET /api/news error:", error);
