@@ -186,3 +186,70 @@ export const insertNewsSubmissionSchema = createInsertSchema(newsSubmissions).om
 });
 export type InsertNewsSubmission = z.infer<typeof insertNewsSubmissionSchema>;
 export type NewsSubmission = typeof newsSubmissions.$inferSelect;
+
+// Community posts table
+export const communityPosts = pgTable("community_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nickname: varchar("nickname", { length: 50 }).notNull(),
+  password_hash: varchar("password_hash", { length: 255 }).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  content: text("content").notNull(),
+  category: varchar("category", { length: 50 }).default('자유게시판'),
+  tags: json("tags").$type<string[]>().default(sql`'[]'`),
+  views: integer("views").default(0),
+  likes: integer("likes").default(0),
+  comment_count: integer("comment_count").default(0),
+  is_pinned: boolean("is_pinned").default(false),
+  ip_hash: varchar("ip_hash", { length: 64 }),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  views: true,
+  likes: true,
+  comment_count: true,
+});
+export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
+export type CommunityPost = typeof communityPosts.$inferSelect;
+
+// Community comments table
+export const communityComments = pgTable("community_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  post_id: varchar("post_id").notNull().references(() => communityPosts.id, { onDelete: 'cascade' }),
+  parent_id: varchar("parent_id").references(() => communityComments.id, { onDelete: 'cascade' }),
+  nickname: varchar("nickname", { length: 50 }).notNull(),
+  password_hash: varchar("password_hash", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  likes: integer("likes").default(0),
+  ip_hash: varchar("ip_hash", { length: 64 }),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const insertCommunityCommentSchema = createInsertSchema(communityComments).omit({
+  id: true,
+  created_at: true,
+  likes: true,
+});
+export type InsertCommunityComment = z.infer<typeof insertCommunityCommentSchema>;
+export type CommunityComment = typeof communityComments.$inferSelect;
+
+// Community trends table
+export const communityTrends = pgTable("community_trends", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  period: varchar("period", { length: 20 }).notNull(), // 'daily', 'weekly'
+  trending_topics: json("trending_topics").$type<Array<{topic: string, count: number, sentiment: string}>>(),
+  popular_keywords: json("popular_keywords").$type<Array<{keyword: string, count: number}>>(),
+  recommended_content: json("recommended_content").$type<Array<{type: string, id: string, title: string, relevance_score: number}>>(),
+  analyzed_at: timestamp("analyzed_at").defaultNow()
+});
+
+export const insertCommunityTrendSchema = createInsertSchema(communityTrends).omit({
+  id: true,
+  analyzed_at: true,
+});
+export type InsertCommunityTrend = z.infer<typeof insertCommunityTrendSchema>;
+export type CommunityTrend = typeof communityTrends.$inferSelect;

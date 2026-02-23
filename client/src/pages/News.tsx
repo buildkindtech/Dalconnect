@@ -15,6 +15,12 @@ const CATEGORIES = [
   { id: '한국뉴스', label: '한국뉴스', emoji: '🇰🇷' },
   { id: '미국뉴스', label: '미국뉴스', emoji: '🇺🇸' },
   { id: '월드뉴스', label: '월드뉴스', emoji: '🌍' },
+  { id: '연예/드라마', label: '연예/드라마', emoji: '🎬' },
+  { id: 'K-POP', label: 'K-POP', emoji: '🎤' },
+  { id: '스포츠', label: '스포츠', emoji: '⚽' },
+  { id: '패션/뷰티', label: '패션/뷰티', emoji: '👗' },
+  { id: '건강', label: '건강', emoji: '💪' },
+  { id: '육아', label: '육아', emoji: '👶' },
 ];
 
 // Helper function to format relative time
