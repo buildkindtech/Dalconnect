@@ -9,7 +9,7 @@ const MAX_REGISTRATIONS = 5;
 // Telegram notification helper
 async function sendTelegramAlert(message: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = '-5291007114'; // Hub-Projects
+  const chatId = process.env.TELEGRAM_CHAT_ID || '7966628100'; // Hub-Projects
   
   if (!token) {
     console.warn('TELEGRAM_BOT_TOKEN not configured, skipping notification');
