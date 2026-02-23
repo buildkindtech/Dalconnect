@@ -441,8 +441,16 @@ export default function Businesses() {
                   <>
                     <h3 className="text-2xl font-bold text-slate-800 mb-2">검색 결과가 없습니다</h3>
                     <p className="text-slate-500 mb-6 max-w-md mx-auto">
-                      다른 카테고리나 지역을 선택하거나 검색어를 변경해보세요.
+                      찾으시는 업체가 없으신가요?
                     </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+                      <a href="/register-business" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        📝 직접 업체 등록하기
+                      </a>
+                      <a href="/contact" className="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium">
+                        💬 업체 등록 요청하기
+                      </a>
+                    </div>
                     {hasActiveFilters && (
                       <Button onClick={clearAllFilters} size="lg" className="gap-2">
                         <X className="h-4 w-4" />
