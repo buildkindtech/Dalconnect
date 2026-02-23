@@ -144,3 +144,45 @@ export const insertSearchLogSchema = createInsertSchema(searchLogs).omit({
 });
 export type InsertSearchLog = z.infer<typeof insertSearchLogSchema>;
 export type SearchLog = typeof searchLogs.$inferSelect;
+
+// Newsletter subscribers table
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 255 }),
+  active: boolean("active").default(true),
+  subscribed_at: timestamp("subscribed_at").defaultNow(),
+  unsubscribed_at: timestamp("unsubscribed_at"),
+});
+
+export const insertNewsletterSubscriberSchema = createInsertSchema(newsletterSubscribers).omit({
+  id: true,
+  subscribed_at: true,
+  unsubscribed_at: true,
+});
+export type InsertNewsletterSubscriber = z.infer<typeof insertNewsletterSubscriberSchema>;
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+
+// Community news submissions table
+export const newsSubmissions = pgTable("news_submissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 500 }).notNull(),
+  content: text("content").notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  source_url: varchar("source_url", { length: 1000 }),
+  submitter_name: varchar("submitter_name", { length: 255 }),
+  submitter_email: varchar("submitter_email", { length: 255 }),
+  submitter_phone: varchar("submitter_phone", { length: 50 }),
+  status: varchar("status", { length: 20 }).default('pending'), // pending, approved, rejected
+  created_at: timestamp("created_at").defaultNow(),
+  reviewed_at: timestamp("reviewed_at"),
+});
+
+export const insertNewsSubmissionSchema = createInsertSchema(newsSubmissions).omit({
+  id: true,
+  created_at: true,
+  reviewed_at: true,
+  status: true,
+});
+export type InsertNewsSubmission = z.infer<typeof insertNewsSubmissionSchema>;
+export type NewsSubmission = typeof newsSubmissions.$inferSelect;

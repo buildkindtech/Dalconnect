@@ -3,8 +3,8 @@ import { type Server } from "http";
 import { storage } from "./storage";
 import { createCheckoutSession, verifyWebhook, handleSubscriptionCreated, handleSubscriptionCanceled } from "./stripe";
 import { db } from "./db";
-import { blogs } from "../shared/schema";
-import { desc, sql } from "drizzle-orm";
+import { blogs, newsletterSubscribers, newsSubmissions } from "../shared/schema";
+import { desc, sql, eq } from "drizzle-orm";
 
 export async function registerRoutes(
   httpServer: Server | null,
@@ -208,6 +208,115 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching blog:", error);
       res.status(500).json({ message: "Failed to fetch blog" });
+    }
+  });
+
+  // Newsletter subscription
+  app.post("/api/newsletter", async (req, res) => {
+    try {
+      const { email, name } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "이메일은 필수입니다" });
+      }
+
+      // Check if already subscribed
+      const existing = await db
+        .select()
+        .from(newsletterSubscribers)
+        .where(eq(newsletterSubscribers.email, email))
+        .limit(1);
+
+      if (existing.length > 0) {
+        // Reactivate if previously unsubscribed
+        if (!existing[0].active) {
+          await db
+            .update(newsletterSubscribers)
+            .set({ 
+              active: true, 
+              subscribed_at: new Date(),
+              unsubscribed_at: null,
+            })
+            .where(eq(newsletterSubscribers.email, email));
+          
+          return res.json({ message: "구독이 재활성화되었습니다" });
+        }
+        
+        return res.status(400).json({ message: "이미 구독 중입니다" });
+      }
+
+      // Create new subscription
+      await db.insert(newsletterSubscribers).values({
+        email,
+        name: name || null,
+        active: true,
+      });
+
+      res.json({ message: "구독 완료!" });
+    } catch (error) {
+      console.error("Error subscribing to newsletter:", error);
+      res.status(500).json({ message: "구독에 실패했습니다" });
+    }
+  });
+
+  // Newsletter unsubscribe
+  app.delete("/api/newsletter", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "이메일은 필수입니다" });
+      }
+
+      await db
+        .update(newsletterSubscribers)
+        .set({ 
+          active: false,
+          unsubscribed_at: new Date(),
+        })
+        .where(eq(newsletterSubscribers.email, email));
+
+      res.json({ message: "구독이 취소되었습니다" });
+    } catch (error) {
+      console.error("Error unsubscribing from newsletter:", error);
+      res.status(500).json({ message: "구독 취소에 실패했습니다" });
+    }
+  });
+
+  // News submission
+  app.post("/api/news-submissions", async (req, res) => {
+    try {
+      const {
+        title,
+        content,
+        category,
+        source_url,
+        submitter_name,
+        submitter_email,
+        submitter_phone,
+      } = req.body;
+
+      if (!title || !content || !category) {
+        return res.status(400).json({ 
+          message: "제목, 내용, 카테고리는 필수입니다" 
+        });
+      }
+
+      await db.insert(newsSubmissions).values({
+        title,
+        content,
+        category,
+        source_url: source_url || null,
+        submitter_name: submitter_name || null,
+        submitter_email: submitter_email || null,
+        submitter_phone: submitter_phone || null,
+        status: 'pending',
+      });
+
+      res.json({ message: "제보가 성공적으로 제출되었습니다" });
+    } catch (error) {
+      console.error("Error submitting news:", error);
+      res.status(500).json({ message: "제보에 실패했습니다" });
     }
   });
 

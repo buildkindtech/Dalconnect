@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFeaturedBusinesses, useNews, useBlogs, useStats, useListings, usePopularSearches } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import * as Icons from "lucide-react";
 
 const CATEGORIES = [
@@ -673,6 +674,13 @@ export default function Home() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-16 bg-slate-50">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <NewsletterSignup />
         </div>
       </section>
 
