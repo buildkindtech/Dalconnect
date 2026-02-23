@@ -10,19 +10,19 @@ rendering chunks...
 [meta-images] no Replit deployment domain found, skipping meta tag updates
 computing gzip size...
 ../dist/public/index.html                     3.08 kB │ gzip:   1.12 kB
-../dist/public/assets/index-B2_BZRUq.css    123.05 kB │ gzip:  18.84 kB
-../dist/public/assets/index-WfRvv3uY.js   1,187.21 kB │ gzip: 338.28 kB
+../dist/public/assets/index-xMiqbeOE.css    123.98 kB │ gzip:  18.92 kB
+../dist/public/assets/index-BP4vHKke.js   1,189.73 kB │ gzip: 338.98 kB
 
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 1.51s
+✓ built in 1.48s
 building server app...
 
   dist/app.cjs  1.1mb ⚠️
 
-⚡ Done in 57ms
+⚡ Done in 68ms
 
 > rest-express@1.0.0 postbuild
 > (npm run db:push && npm run db:init) || echo 'Skipping DB setup - configure DATABASE_URL in Vercel'
@@ -52,6 +52,9 @@ Using 'pg' driver for database querying
 [2K[1G[⣯] Pulling schema from database...
 [2K[1G[⣟] Pulling schema from database...
 [2K[1G[⡿] Pulling schema from database...
+[2K[1G[⢿] Pulling schema from database...
+[2K[1G[⣻] Pulling schema from database...
+[2K[1G[⣽] Pulling schema from database...
 [2K[1G[✓] Pulling schema from database...
 [✓] Changes applied
 

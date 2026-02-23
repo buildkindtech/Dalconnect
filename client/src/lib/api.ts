@@ -44,6 +44,7 @@ export interface BusinessesResponse {
     total: number;
     totalPages: number;
   };
+  no_results?: boolean;
 }
 
 export interface Category {
@@ -271,5 +272,19 @@ export function useListing(id: string) {
     queryKey: ['listing', id],
     queryFn: () => fetchApi<Listing>(`/api/listings/${id}`),
     enabled: !!id,
+  });
+}
+
+export interface PopularSearch {
+  query: string;
+  search_count: number;
+  last_searched: string;
+}
+
+export function usePopularSearches() {
+  return useQuery<{ searches: PopularSearch[] }>({
+    queryKey: ['popularSearches'],
+    queryFn: () => fetchApi<{ searches: PopularSearch[] }>('/api/popular-searches'),
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
   });
 }

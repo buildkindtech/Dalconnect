@@ -128,3 +128,19 @@ export const insertListingSchema = createInsertSchema(listings).omit({
 });
 export type InsertListing = z.infer<typeof insertListingSchema>;
 export type Listing = typeof listings.$inferSelect;
+
+// Search logs table
+export const searchLogs = pgTable("search_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  query: varchar("query", { length: 200 }).notNull(),
+  results_count: integer("results_count").default(0),
+  ip_address: varchar("ip_address", { length: 45 }),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const insertSearchLogSchema = createInsertSchema(searchLogs).omit({
+  id: true,
+  created_at: true,
+});
+export type InsertSearchLog = z.infer<typeof insertSearchLogSchema>;
+export type SearchLog = typeof searchLogs.$inferSelect;

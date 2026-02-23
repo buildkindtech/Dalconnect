@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFeaturedBusinesses, useNews, useBlogs, useStats, useListings } from "@/lib/api";
+import { useFeaturedBusinesses, useNews, useBlogs, useStats, useListings, usePopularSearches } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
 
 const CATEGORIES = [
-  { id: 'Korean Restaurant', name: '식당', icon: UtensilsCrossed, color: 'bg-red-500' },
+  { id: '식당', name: '식당', icon: UtensilsCrossed, color: 'bg-red-500' },
   { id: '교회', name: '교회', icon: Church, color: 'bg-purple-500' },
   { id: '병원', name: '병원', icon: Heart, color: 'bg-blue-500' },
   { id: '미용실', name: '미용실', icon: Scissors, color: 'bg-pink-500' },
@@ -30,6 +30,7 @@ export default function Home() {
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
   const { data: stats, isLoading: loadingStats } = useStats();
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
+  const { data: popularSearchesData } = usePopularSearches();
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
   const recentNews = newsItems?.slice(0, 3) ?? [];
@@ -37,6 +38,7 @@ export default function Home() {
   const recentListings = listingsData?.items ?? [];
   const trending = stats?.trending ?? [];
   const recent = stats?.recent ?? [];
+  const popularSearches = popularSearchesData?.searches ?? [];
 
   // Get count for each category
   const getCategoryCount = (categoryId: string) => {
@@ -138,6 +140,41 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Popular Searches */}
+      {popularSearches.length > 0 && (
+        <section className="py-16 bg-white border-y">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-3xl font-bold mb-3">많이 찾는 검색어</h2>
+              <p className="text-slate-600 mb-8">다른 사용자들이 많이 검색한 키워드입니다</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {popularSearches.map((search, index) => (
+                  <button
+                    key={search.query}
+                    onClick={() => {
+                      setSearchQuery(search.query);
+                      setLocation(`/businesses?search=${encodeURIComponent(search.query)}`);
+                    }}
+                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-slate-50 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition-all hover:shadow-lg hover:-translate-y-0.5"
+                  >
+                    <span className="text-lg font-bold text-slate-400 group-hover:text-white/70">
+                      {index + 1}
+                    </span>
+                    <span>{search.query}</span>
+                    <Badge 
+                      variant="secondary" 
+                      className="ml-1 bg-white/80 group-hover:bg-white/20 text-slate-600 group-hover:text-white text-xs"
+                    >
+                      {search.search_count}회
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Trending Businesses - NEW */}
       {trending.length > 0 && (

@@ -39,6 +39,8 @@ export default function Businesses() {
   const [sortBy, setSortBy] = useState(urlParams.get('sort') || 'featured');
   const [currentPage, setCurrentPage] = useState(parseInt(urlParams.get('page') || '1'));
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isAutoScraping, setIsAutoScraping] = useState(false);
+  const [autoScrapeComplete, setAutoScrapeComplete] = useState(false);
 
   // Debounced search
   useEffect(() => {
@@ -60,6 +62,42 @@ export default function Businesses() {
 
   const businesses = data?.businesses || [];
   const pagination = data?.pagination;
+  const noResults = data?.no_results || false;
+
+  // Auto-scrape when no results found
+  useEffect(() => {
+    if (noResults && debouncedSearch && !isAutoScraping && !autoScrapeComplete) {
+      const performAutoScrape = async () => {
+        setIsAutoScraping(true);
+        try {
+          console.log(`Auto-scraping for: "${debouncedSearch}"`);
+          const response = await fetch('/api/auto-scrape', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: debouncedSearch })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Auto-scrape result:', result);
+            if (result.added > 0) {
+              setAutoScrapeComplete(true);
+              // Refresh the search after 1 second
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+            }
+          }
+        } catch (error) {
+          console.error('Auto-scrape failed:', error);
+        } finally {
+          setIsAutoScraping(false);
+        }
+      };
+      
+      performAutoScrape();
+    }
+  }, [noResults, debouncedSearch, isAutoScraping, autoScrapeComplete]);
 
   // Sync URL with state
   useEffect(() => {
@@ -368,20 +406,50 @@ export default function Businesses() {
                 ))}
               </div>
             ) : businesses.length === 0 ? (
-              // Empty State
+              // Empty State with Auto-Scrape
               <div className="text-center py-20 bg-white rounded-xl border border-slate-200">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 mb-6">
-                  <Search className="h-10 w-10 text-slate-400" />
+                  {isAutoScraping ? (
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                  ) : autoScrapeComplete ? (
+                    <span className="text-4xl">✨</span>
+                  ) : (
+                    <Search className="h-10 w-10 text-slate-400" />
+                  )}
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 mb-2">검색 결과가 없습니다</h3>
-                <p className="text-slate-500 mb-6 max-w-md mx-auto">
-                  다른 카테고리나 지역을 선택하거나 검색어를 변경해보세요.
-                </p>
-                {hasActiveFilters && (
-                  <Button onClick={clearAllFilters} size="lg" className="gap-2">
-                    <X className="h-4 w-4" />
-                    모든 필터 초기화
-                  </Button>
+                
+                {isAutoScraping ? (
+                  <>
+                    <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                      자동으로 찾는 중...
+                    </h3>
+                    <p className="text-slate-500 mb-6 max-w-md mx-auto">
+                      "{debouncedSearch}" 관련 업체를 Google에서 검색하고 있습니다.
+                      <br />잠시만 기다려주세요.
+                    </p>
+                  </>
+                ) : autoScrapeComplete ? (
+                  <>
+                    <h3 className="text-2xl font-bold text-green-600 mb-2">
+                      새로운 업체를 찾았습니다!
+                    </h3>
+                    <p className="text-slate-500 mb-6 max-w-md mx-auto">
+                      페이지를 새로고침하고 있습니다...
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-2xl font-bold text-slate-800 mb-2">검색 결과가 없습니다</h3>
+                    <p className="text-slate-500 mb-6 max-w-md mx-auto">
+                      다른 카테고리나 지역을 선택하거나 검색어를 변경해보세요.
+                    </p>
+                    {hasActiveFilters && (
+                      <Button onClick={clearAllFilters} size="lg" className="gap-2">
+                        <X className="h-4 w-4" />
+                        모든 필터 초기화
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             ) : (

@@ -70,6 +70,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       params.push(offset);
 
       const result = await pool.query(query, params);
+      
+      // Log search query if present
+      if (search) {
+        const clientIp = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+        const ipAddress = Array.isArray(clientIp) ? clientIp[0] : clientIp?.toString().split(',')[0] || 'unknown';
+        
+        try {
+          await pool.query(
+            'INSERT INTO search_logs (query, results_count, ip_address) VALUES ($1, $2, $3)',
+            [search, total, ipAddress]
+          );
+        } catch (logError) {
+          console.error('Failed to log search:', logError);
+          // Don't fail the request if logging fails
+        }
+      }
+      
       await pool.end();
       
       return res.status(200).json({
@@ -79,7 +96,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           limit: limitNum,
           total,
           totalPages: Math.ceil(total / limitNum)
-        }
+        },
+        no_results: total === 0 && !!search
       });
     } catch (error: any) {
       return res.status(500).json({ 
