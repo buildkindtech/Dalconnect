@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
-import { MapPin, Phone, Globe, Clock, Star, Share2, Navigation } from "lucide-react";
+import { MapPin, Phone, Globe, Clock, Star, Share2, Navigation, ChevronLeft, ChevronRight, AlertCircle, MessageCircle } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useBusiness } from "@/lib/api";
 import { getCategoryImage } from "@/lib/imageDefaults";
+import { useToast } from "@/hooks/use-toast";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyAzcujFS2IfcaxVmtYvFEb4omQhVlOQCOE";
 
@@ -23,6 +25,8 @@ const DAYS_KO: Record<string, string> = {
 export default function BusinessDetail() {
   const { id } = useParams();
   const { data: business, isLoading, error } = useBusiness(id!);
+  const { toast } = useToast();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (isLoading) {
     return (
@@ -59,7 +63,18 @@ export default function BusinessDetail() {
     );
   }
 
-  const coverImage = getCategoryImage(business.category, business.cover_url);
+  // Image gallery setup
+  const images = business.cover_url ? [business.cover_url] : [getCategoryImage(business.category, null)];
+  const hasMultipleImages = images.length > 1;
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
   const googleMapsEmbedUrl = business.address
     ? `https://maps.google.com/maps?q=${encodeURIComponent(business.address)}&output=embed&z=15`
     : null;
@@ -82,36 +97,98 @@ export default function BusinessDetail() {
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-      alert('링크가 클립보드에 복사되었습니다!');
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: '링크 복사 완료!',
+        description: '클립보드에 링크가 복사되었습니다.',
+      });
     }
   };
 
+  const handleShareKakao = () => {
+    // Kakao share would require Kakao SDK integration
+    toast({
+      title: '카카오톡 공유',
+      description: '카카오톡 공유 기능은 준비 중입니다.',
+    });
+  };
+
+  // Check if business is open now
+  const isOpenNow = () => {
+    if (!business.hours || Object.keys(business.hours).length === 0) return null;
+    
+    const now = new Date();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const currentDay = dayNames[now.getDay()];
+    const currentHours = business.hours[currentDay];
+    
+    if (!currentHours || currentHours.toLowerCase().includes('closed')) return false;
+    
+    // Simple check - this could be improved with actual time parsing
+    return true;
+  };
+
+  const openStatus = isOpenNow();
+
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Cover Image */}
-      <div 
-        className="w-full h-[400px] bg-cover bg-center relative"
-        style={{ backgroundImage: `url(${coverImage})` }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-8 left-0 right-0 container mx-auto px-4">
-          <div className="flex items-end justify-between">
-            <div className="text-white">
-              {business.featured && (
-                <Badge variant="default" className="mb-2">추천 업체</Badge>
-              )}
-              <h1 className="text-4xl md:text-5xl font-bold mb-2 font-ko">
-                {business.name_ko || business.name_en}
-              </h1>
-              {business.name_ko && business.name_en && (
-                <p className="text-lg text-slate-200 opacity-90">{business.name_en}</p>
-              )}
+      {/* Cover Image Gallery */}
+      <div className="w-full h-[400px] bg-slate-900 relative overflow-hidden">
+        <div 
+          className="w-full h-full bg-cover bg-center transition-all duration-300"
+          style={{ backgroundImage: `url(${images[currentImageIndex]})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+          
+          {/* Gallery Navigation */}
+          {hasMultipleImages && (
+            <>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full opacity-70 hover:opacity-100"
+                onClick={prevImage}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full opacity-70 hover:opacity-100"
+                onClick={nextImage}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </Button>
+              <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+            </>
+          )}
+
+          <div className="absolute bottom-8 left-0 right-0 container mx-auto px-4">
+            <div className="flex items-end justify-between flex-wrap gap-4">
+              <div className="text-white">
+                {business.featured && (
+                  <Badge variant="default" className="mb-2">⭐ 추천 업체</Badge>
+                )}
+                <h1 className="text-4xl md:text-5xl font-bold mb-2 font-ko">
+                  {business.name_ko || business.name_en}
+                </h1>
+                {business.name_ko && business.name_en && (
+                  <p className="text-lg text-slate-200 opacity-90">{business.name_en}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" className="gap-2" onClick={handleShareKakao}>
+                  <MessageCircle className="h-4 w-4" />
+                  카카오톡
+                </Button>
+                <Button variant="secondary" size="sm" className="gap-2" onClick={handleShare}>
+                  <Share2 className="h-4 w-4" />
+                  링크복사
+                </Button>
+              </div>
             </div>
-            <Button variant="secondary" className="gap-2" onClick={handleShare}>
-              <Share2 className="h-4 w-4" />
-              공유
-            </Button>
           </div>
         </div>
       </div>
@@ -148,17 +225,40 @@ export default function BusinessDetail() {
             {business.hours && Object.keys(business.hours).length > 0 && (
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                    <Clock className="h-6 w-6" />
-                    영업시간
-                  </h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                      <Clock className="h-6 w-6" />
+                      영업시간
+                    </h2>
+                    {openStatus !== null && (
+                      <Badge className={openStatus ? "bg-green-600" : "bg-red-600"}>
+                        {openStatus ? "영업중" : "영업종료"}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="space-y-2">
-                    {Object.entries(business.hours).map(([day, hours]) => (
-                      <div key={day} className="flex justify-between py-2 border-b last:border-0">
-                        <span className="font-medium">{DAYS_KO[day.toLowerCase()] || day}</span>
-                        <span className="text-slate-600">{hours}</span>
-                      </div>
-                    ))}
+                    {Object.entries(business.hours).map(([day, hours]) => {
+                      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                      const today = dayNames[new Date().getDay()];
+                      const isToday = day.toLowerCase() === today;
+                      
+                      return (
+                        <div 
+                          key={day} 
+                          className={`flex justify-between py-2 border-b last:border-0 ${
+                            isToday ? 'bg-blue-50 -mx-2 px-2 rounded font-semibold' : ''
+                          }`}
+                        >
+                          <span className={isToday ? 'text-primary' : 'font-medium'}>
+                            {DAYS_KO[day.toLowerCase()] || day}
+                            {isToday && ' (오늘)'}
+                          </span>
+                          <span className={isToday ? 'text-primary' : 'text-slate-600'}>
+                            {hours}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -204,13 +304,21 @@ export default function BusinessDetail() {
                 <Separator />
                 
                 {business.phone && (
-                  <a href={`tel:${business.phone}`} className="flex items-start gap-3 group">
-                    <Phone className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                    <div>
-                      <p className="text-sm text-slate-600">전화번호</p>
-                      <p className="font-medium group-hover:text-primary">{business.phone}</p>
+                  <>
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <p className="text-sm text-green-700 mb-2 flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        전화번호
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">{business.phone}</p>
                     </div>
-                  </a>
+                    <a href={`tel:${business.phone}`} className="block">
+                      <Button size="lg" className="w-full gap-2 bg-green-600 hover:bg-green-700 text-lg h-14">
+                        <Phone className="h-5 w-5" />
+                        전화 걸기
+                      </Button>
+                    </a>
+                  </>
                 )}
 
                 {business.address && (
@@ -242,6 +350,15 @@ export default function BusinessDetail() {
                     </div>
                   </a>
                 )}
+
+                {/* Report Link */}
+                <Separator className="my-4" />
+                <Link href="/contact">
+                  <button className="w-full text-sm text-slate-600 hover:text-primary flex items-center justify-center gap-2 py-2">
+                    <AlertCircle className="h-4 w-4" />
+                    이 업체 정보가 잘못되었나요?
+                  </button>
+                </Link>
               </CardContent>
             </Card>
 

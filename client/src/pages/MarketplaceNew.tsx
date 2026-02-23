@@ -16,21 +16,22 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 const categories = [
-  { value: '가전/가구', label: '가전/가구 (Appliances/Furniture)' },
-  { value: '자동차', label: '자동차 (Vehicles)' },
-  { value: '전자기기', label: '전자기기 (Electronics)' },
-  { value: '의류/잡화', label: '의류/잡화 (Clothing/Misc)' },
-  { value: '부동산/렌트', label: '부동산/렌트 (Real Estate/Rent)' },
-  { value: '구인/구직', label: '구인/구직 (Jobs)' },
-  { value: '레슨/과외', label: '레슨/과외 (Lessons/Tutoring)' },
-  { value: '서비스', label: '서비스 (Services)' },
-  { value: '무료나눔', label: '무료나눔 (Free)' },
-  { value: '기타', label: '기타 (Other)' },
+  { value: '이사/가구', label: '🏠 이사/가구', emoji: '🏠' },
+  { value: '자동차', label: '🚗 자동차', emoji: '🚗' },
+  { value: '전자기기', label: '📱 전자기기', emoji: '📱' },
+  { value: '유아/키즈', label: '👶 유아/키즈', emoji: '👶' },
+  { value: '교재/서적', label: '📚 교재/서적', emoji: '📚' },
+  { value: '티켓/양도', label: '🎫 티켓/양도', emoji: '🎫' },
+  { value: '구인/구직', label: '💼 구인/구직', emoji: '💼' },
+  { value: '렌트/룸메이트', label: '🏡 렌트/룸메이트', emoji: '🏡' },
+  { value: '레슨/과외', label: '🎓 레슨/과외', emoji: '🎓' },
+  { value: '무료나눔', label: '🆓 무료나눔', emoji: '🆓' },
+  { value: '기타', label: '기타', emoji: '📦' },
 ];
 
 const conditions = [
-  { value: 'new', label: '새상품' },
-  { value: 'like_new', label: '거의 새것' },
+  { value: 'new', label: '새것' },
+  { value: 'like_new', label: '거의새것' },
   { value: 'good', label: '좋음' },
   { value: 'fair', label: '보통' },
 ];
@@ -70,10 +71,19 @@ export default function MarketplaceNew() {
     contact_info: '',
     author_name: '',
     location: '',
+    image_urls: ['', '', ''],
   });
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUrlChange = (index: number, value: string) => {
+    setFormData((prev) => {
+      const newImageUrls = [...prev.image_urls];
+      newImageUrls[index] = value;
+      return { ...prev, image_urls: newImageUrls };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,8 +120,8 @@ export default function MarketplaceNew() {
       const newListing = await response.json();
 
       toast({
-        title: '등록 완료!',
-        description: '매물이 성공적으로 등록되었습니다.',
+        title: '매물이 등록되었습니다! 🎉',
+        description: '성공적으로 등록되었습니다.',
       });
 
       navigate(`/marketplace/${newListing.id}`);
@@ -247,6 +257,23 @@ export default function MarketplaceNew() {
                 onChange={(e) => handleChange('description', e.target.value)}
                 rows={6}
               />
+            </div>
+
+            {/* Image URLs (Optional) */}
+            <div>
+              <Label>사진 (선택, 최대 3장)</Label>
+              <p className="text-sm text-gray-500 mb-2">이미지 URL을 입력하세요. 나중에 업로드 기능이 추가될 예정입니다.</p>
+              <div className="space-y-2">
+                {formData.image_urls.map((url, index) => (
+                  <Input
+                    key={index}
+                    type="url"
+                    placeholder={`이미지 URL ${index + 1}`}
+                    value={url}
+                    onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Location */}

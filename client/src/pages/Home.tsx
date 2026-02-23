@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +31,10 @@ const POPULAR_SEARCH_TAGS = [
 export default function Home() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [visitorStats, setVisitorStats] = useState<{
     todayViews: number;
     todayUnique: number;
@@ -42,6 +46,27 @@ export default function Home() {
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
   const { data: categories } = useCategories();
+  
+  // Fetch random restaurant for "Restaurant of the Day"
+  const [restaurantOfDay, setRestaurantOfDay] = useState<any>(null);
+  useEffect(() => {
+    const fetchRandomRestaurant = async () => {
+      try {
+        const response = await fetch('/api/businesses?category=식당&featured=true&limit=10');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.businesses && data.businesses.length > 0) {
+            // Pick a random restaurant
+            const randomIndex = Math.floor(Math.random() * data.businesses.length);
+            setRestaurantOfDay(data.businesses[randomIndex]);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch restaurant:', error);
+      }
+    };
+    fetchRandomRestaurant();
+  }, []);
 
   // 방문자 카운터 API 호출
   useEffect(() => {
@@ -58,6 +83,42 @@ export default function Home() {
     };
     
     recordVisit();
+  }, []);
+
+  // Autocomplete search with debounce
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      setSearchResults([]);
+      setShowAutocomplete(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        if (response.ok) {
+          const results = await response.json();
+          setSearchResults(results.slice(0, 5));
+          setShowAutocomplete(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch search results:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Close autocomplete on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowAutocomplete(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
@@ -77,9 +138,35 @@ export default function Home() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+    if (selectedIndex >= 0 && searchResults[selectedIndex]) {
+      // Navigate to selected result
+      setLocation(`/business/${searchResults[selectedIndex].id}`);
+      setShowAutocomplete(false);
+    } else if (searchQuery.trim()) {
       setLocation(`/businesses?search=${encodeURIComponent(searchQuery)}`);
+      setShowAutocomplete(false);
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showAutocomplete || searchResults.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % searchResults.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+    } else if (e.key === 'Escape') {
+      setShowAutocomplete(false);
+      setSelectedIndex(-1);
+    }
+  };
+
+  const handleResultClick = (businessId: string) => {
+    setLocation(`/business/${businessId}`);
+    setShowAutocomplete(false);
+    setSearchQuery('');
   };
 
   const handleCategoryClick = (categoryId: string) => {
@@ -103,23 +190,70 @@ export default function Home() {
             달라스-포트워스 지역 {1122}개 한인 업체 정보와 최신 한인 뉴스
           </p>
           
-          {/* Big Search Bar */}
-          <form onSubmit={handleSearch} className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl p-3 flex gap-3 shadow-2xl hover:shadow-3xl transition-shadow">
-              <div className="flex-1 flex items-center px-5">
-                <Search className="h-7 w-7 text-slate-400 mr-4 flex-shrink-0" />
-                <Input 
-                  className="border-0 shadow-none focus-visible:ring-0 text-xl text-slate-800 h-16 placeholder:text-slate-400" 
-                  placeholder="달라스 한인 맛집 검색..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          {/* Big Search Bar with Autocomplete */}
+          <div ref={searchRef} className="max-w-4xl mx-auto relative">
+            <form onSubmit={handleSearch}>
+              <div className="bg-white rounded-2xl p-3 flex gap-3 shadow-2xl hover:shadow-3xl transition-shadow">
+                <div className="flex-1 flex items-center px-5">
+                  <Search className="h-7 w-7 text-slate-400 mr-4 flex-shrink-0" />
+                  <Input 
+                    className="border-0 shadow-none focus-visible:ring-0 text-xl text-slate-800 h-16 placeholder:text-slate-400" 
+                    placeholder="달라스 한인 맛집 검색..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => searchQuery.length >= 2 && searchResults.length > 0 && setShowAutocomplete(true)}
+                  />
+                </div>
+                <Button type="submit" size="lg" className="h-16 px-12 text-xl font-semibold">
+                  검색
+                </Button>
               </div>
-              <Button type="submit" size="lg" className="h-16 px-12 text-xl font-semibold">
-                검색
-              </Button>
-            </div>
-          </form>
+            </form>
+
+            {/* Autocomplete Dropdown */}
+            {showAutocomplete && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl overflow-hidden z-50 border border-gray-200">
+                {searchResults.map((result, index) => (
+                  <button
+                    key={result.id}
+                    className={`w-full text-left px-6 py-4 hover:bg-gray-50 transition-colors border-b last:border-0 ${
+                      index === selectedIndex ? 'bg-blue-50' : ''
+                    }`}
+                    onClick={() => handleResultClick(result.id)}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0">
+                        {result.category && (
+                          <Badge variant="secondary" className="text-xs">
+                            {result.category}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-900 truncate">
+                          {result.name_ko || result.name_en}
+                        </div>
+                        {result.address && (
+                          <div className="text-sm text-gray-500 truncate flex items-center gap-1 mt-1">
+                            <MapPin className="w-3 h-3" />
+                            {result.address}
+                          </div>
+                        )}
+                      </div>
+                      {result.rating && (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium">{result.rating}</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Popular Search Tags */}
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
@@ -190,40 +324,116 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Popular Searches */}
-      {popularSearches.length > 0 && (
-        <section className="py-16 bg-white border-y">
+      {/* Restaurant of the Day */}
+      {restaurantOfDay && (
+        <section className="py-16 bg-gradient-to-r from-orange-50 to-red-50">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-bold mb-3">많이 찾는 검색어</h2>
-              <p className="text-slate-600 mb-8">다른 사용자들이 많이 검색한 키워드입니다</p>
-              <div className="flex flex-wrap justify-center gap-3">
-                {popularSearches.map((search, index) => (
-                  <button
-                    key={search.query}
-                    onClick={() => {
-                      setSearchQuery(search.query);
-                      setLocation(`/businesses?search=${encodeURIComponent(search.query)}`);
-                    }}
-                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-slate-50 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition-all hover:shadow-lg hover:-translate-y-0.5"
-                  >
-                    <span className="text-lg font-bold text-slate-400 group-hover:text-white/70">
-                      {index + 1}
-                    </span>
-                    <span>{search.query}</span>
-                    <Badge 
-                      variant="secondary" 
-                      className="ml-1 bg-white/80 group-hover:bg-white/20 text-slate-600 group-hover:text-white text-xs"
-                    >
-                      {search.search_count}회
-                    </Badge>
-                  </button>
-                ))}
+            <div className="max-w-5xl mx-auto">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm mb-4">
+                  <UtensilsCrossed className="h-5 w-5 text-orange-600" />
+                  <span className="font-bold text-orange-600">오늘의 맛집</span>
+                </div>
+                <h2 className="text-3xl font-bold mb-2">이 주의 추천 레스토랑</h2>
+                <p className="text-slate-600">DalConnect가 추천하는 특별한 맛집을 소개합니다</p>
               </div>
+              
+              <Card className="overflow-hidden hover:shadow-2xl transition-shadow">
+                <div className="grid md:grid-cols-2 gap-0">
+                  {/* Image */}
+                  <div className="relative h-64 md:h-auto">
+                    {hasValidImage(restaurantOfDay.cover_url) ? (
+                      <div 
+                        className="w-full h-full bg-cover bg-center"
+                        style={{ backgroundImage: `url(${restaurantOfDay.cover_url})` }}
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(restaurantOfDay.category)} flex items-center justify-center`}>
+                        <UtensilsCrossed className="w-24 h-24 text-white/80" />
+                      </div>
+                    )}
+                    {restaurantOfDay.featured && (
+                      <Badge className="absolute top-4 right-4 bg-orange-600">⭐ 추천</Badge>
+                    )}
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-8 flex flex-col justify-center">
+                    <Badge variant="secondary" className="w-fit mb-4">
+                      {restaurantOfDay.category}
+                    </Badge>
+                    <h3 className="text-3xl font-bold mb-2 font-ko">
+                      {restaurantOfDay.name_ko || restaurantOfDay.name_en}
+                    </h3>
+                    {restaurantOfDay.name_ko && restaurantOfDay.name_en && (
+                      <p className="text-lg text-slate-500 mb-4">{restaurantOfDay.name_en}</p>
+                    )}
+                    
+                    {restaurantOfDay.description && (
+                      <p className="text-slate-700 mb-4 line-clamp-3">{restaurantOfDay.description}</p>
+                    )}
+                    
+                    <div className="flex items-center gap-4 mb-4">
+                      {restaurantOfDay.rating && (
+                        <div className="flex items-center gap-2">
+                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                          <span className="text-xl font-bold">{restaurantOfDay.rating}</span>
+                          <span className="text-slate-500">({restaurantOfDay.review_count || 0} 리뷰)</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {restaurantOfDay.address && (
+                      <div className="flex items-start gap-2 text-slate-600 mb-6">
+                        <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                        <span>{restaurantOfDay.address}</span>
+                      </div>
+                    )}
+                    
+                    <Link href={`/business/${restaurantOfDay.id}`}>
+                      <Button size="lg" className="w-full md:w-auto bg-orange-600 hover:bg-orange-700">
+                        자세히 보기
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
         </section>
       )}
+
+      {/* Popular Searches */}
+      <section className="py-16 bg-white border-y">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <span className="font-bold text-primary">인기 검색어</span>
+            </div>
+            <h2 className="text-3xl font-bold mb-3">많이 찾는 검색어</h2>
+            <p className="text-slate-600 mb-8">다른 사용자들이 자주 검색하는 키워드입니다</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {POPULAR_SEARCH_TAGS.map((tag, index) => (
+                <button
+                  key={tag}
+                  onClick={() => {
+                    setSearchQuery(tag);
+                    setLocation(`/businesses?search=${encodeURIComponent(tag)}`);
+                  }}
+                  className="group relative inline-flex items-center gap-2 px-6 py-3 bg-slate-50 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition-all hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  <span className="text-lg font-bold text-slate-400 group-hover:text-white/70">
+                    {index + 1}
+                  </span>
+                  <span>{tag}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Trending Businesses - NEW */}
       {trending.length > 0 && (

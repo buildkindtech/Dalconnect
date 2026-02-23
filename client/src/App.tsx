@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
+import MobileNav from "./components/layout/MobileNav";
 
 // Pages
 import Home from "./pages/Home";
@@ -51,6 +52,7 @@ function Router() {
         </Switch>
       </main>
       <Footer />
+      <MobileNav />
     </div>
   );
 }
