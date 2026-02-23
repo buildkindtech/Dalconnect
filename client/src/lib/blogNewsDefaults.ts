@@ -39,6 +39,8 @@ export const newsCategoryStyles: Record<string, { gradient: string; emoji: strin
   '건강': { gradient: 'from-teal-500 to-green-600', emoji: '💪' },
   '육아': { gradient: 'from-amber-400 to-orange-500', emoji: '👶' },
   '부동산/숙소': { gradient: 'from-indigo-500 to-blue-600', emoji: '🏠' },
+  '세금/재정': { gradient: 'from-emerald-500 to-teal-600', emoji: '💰' },
+  '취업/사업': { gradient: 'from-blue-600 to-indigo-700', emoji: '💼' },
   '이민/비자': { gradient: 'from-sky-500 to-blue-600', emoji: '✈️' },
   '이민': { gradient: 'from-sky-500 to-blue-600', emoji: '✈️' },
   '비자': { gradient: 'from-sky-500 to-blue-600', emoji: '✈️' },

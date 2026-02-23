@@ -22,6 +22,10 @@ const CATEGORIES = [
   { id: '건강', label: '건강', emoji: '💪' },
   { id: '육아', label: '육아', emoji: '👶' },
   { id: '부동산/숙소', label: '부동산/숙소', emoji: '🏠' },
+  { id: '이민/비자', label: '이민/비자', emoji: '✈️' },
+  { id: '세금/재정', label: '세금/재정', emoji: '💰' },
+  { id: '취업/사업', label: '취업/사업', emoji: '💼' },
+  { id: '생활정보', label: '생활정보', emoji: '📋' },
 ];
 
 // Helper function to format relative time
