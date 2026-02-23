@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: dalconnect
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_ySbZeC5J9wIs@ep-square-boat-ain9gi5m-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require
