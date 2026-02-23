@@ -1,14 +1,42 @@
 User-agent: *
 Allow: /
 
-# Allow crawling of all public pages
-Allow: /listings
+# Explicitly allow important pages
+Allow: /businesses
+Allow: /business/*
+Allow: /blog
+Allow: /blog/*
 Allow: /news
+Allow: /marketplace
+Allow: /about
+Allow: /contact
 Allow: /pricing
 
-# Disallow admin and payment pages
+# Disallow admin, payment, and user-specific pages
 Disallow: /admin
+Disallow: /admin/*
 Disallow: /payment-success
+Disallow: /payment-cancel
+Disallow: /api/*
+Disallow: /dashboard/*
+Disallow: /*?apikey=
+Disallow: /*?token=
+
+# Disallow duplicate content (filtered views)
+Disallow: /*?sort=
+Disallow: /*?page=
+
+# Allow search engines to index city and category filters
+Allow: /businesses?category=*
+Allow: /businesses?city=*
+
+# Crawl delay (be respectful)
+Crawl-delay: 1
 
 # Sitemap location
 Sitemap: https://dalconnect.buildkind.tech/sitemap.xml
+
+# Additional metadata for search engines
+# Korean and English content available
+# Primary audience: Korean-American community in Dallas-Fort Worth
+# Categories: Restaurants, Markets, Churches, Professional Services, and more
