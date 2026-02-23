@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../server/storage';
+import { storage } from '../server/storage';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const { category, city, search, featured } = req.query;
       
-      const results = await db.getBusinesses({
+      const results = await storage.getBusinesses({
         category: category as string | undefined,
         city: city as string | undefined,
         search: search as string | undefined,

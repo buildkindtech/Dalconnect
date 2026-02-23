@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../server/storage';
+import { storage } from '../server/storage';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'GET') {
     try {
-      const featured = await db.getFeaturedBusinesses();
+      const featured = await storage.getFeaturedBusinesses();
       return res.status(200).json(featured);
     } catch (error) {
       console.error("GET /api/featured error:", error);
