@@ -15,6 +15,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: "DATABASE_URL not set" });
       }
 
+      const { id } = req.query;
+      
+      if (!id || typeof id !== 'string') {
+        return res.status(400).json({ error: "Business ID is required" });
+      }
+
       const pg = await import('pg');
       const pool = new pg.default.Pool({
         connectionString: process.env.DATABASE_URL,
@@ -22,17 +28,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         max: 1,
       });
 
-      const query = `
-        SELECT * FROM businesses 
-        WHERE featured = true 
-        ORDER BY rating DESC NULLS LAST, created_at DESC
-        LIMIT 12
-      `;
-
-      const result = await pool.query(query);
+      const query = 'SELECT * FROM businesses WHERE id = $1';
+      const result = await pool.query(query, [id]);
       await pool.end();
       
-      return res.status(200).json(result.rows);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Business not found" });
+      }
+      
+      return res.status(200).json(result.rows[0]);
     } catch (error: any) {
       return res.status(500).json({ 
         error: error.message

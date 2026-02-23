@@ -23,10 +23,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       const query = `
-        SELECT * FROM businesses 
-        WHERE featured = true 
-        ORDER BY rating DESC NULLS LAST, created_at DESC
-        LIMIT 12
+        SELECT 
+          category,
+          COUNT(*) as count
+        FROM businesses
+        GROUP BY category
+        ORDER BY count DESC, category ASC
       `;
 
       const result = await pool.query(query);

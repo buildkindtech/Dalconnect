@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -21,7 +23,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       const { category, limit } = req.query;
-      const limitNum = limit ? Number(limit) : 20;
       
       let query = 'SELECT * FROM news WHERE 1=1';
       const params: any[] = [];
@@ -33,21 +34,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         params.push(category);
       }
 
-      query += ' ORDER BY published_date DESC';
-      
-      paramCount++;
-      query += ` LIMIT $${paramCount}`;
-      params.push(limitNum);
+      query += ' ORDER BY published_date DESC NULLS LAST, created_at DESC';
+
+      if (limit) {
+        paramCount++;
+        query += ` LIMIT $${paramCount}`;
+        params.push(parseInt(limit as string));
+      } else {
+        query += ' LIMIT 50';
+      }
 
       const result = await pool.query(query, params);
       await pool.end();
       
       return res.status(200).json(result.rows);
     } catch (error: any) {
-      console.error("GET /api/news error:", error);
       return res.status(500).json({ 
-        error: "Failed to fetch news",
-        message: error.message 
+        error: error.message
       });
     }
   }

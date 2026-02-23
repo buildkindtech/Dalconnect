@@ -1,79 +1,135 @@
-import { queryClient } from "./queryClient";
 import { useQuery } from "@tanstack/react-query";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export interface Business {
   id: string;
   name_en: string;
-  name_ko: string | null;
+  name_ko?: string;
   category: string;
-  description: string | null;
-  address: string | null;
-  city: string | null;
-  phone: string | null;
-  email: string | null;
-  website: string | null;
-  hours: Record<string, string> | null;
-  logo_url: string | null;
-  cover_url: string | null;
-  photos: string[] | null;
-  tier: string | null;
-  featured: boolean | null;
-  claimed: boolean | null;
-  rating: string | null;
-  review_count: number | null;
-  created_at: string | null;
-  updated_at: string | null;
+  description?: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  hours?: Record<string, string>;
+  logo_url?: string;
+  cover_url?: string;
+  photos?: string[];
+  tier: string;
+  featured: boolean;
+  claimed: boolean;
+  rating?: string;
+  review_count?: number;
+  google_place_id?: string;
 }
 
 export interface NewsItem {
   id: string;
   title: string;
   url: string;
-  content: string | null;
-  category: string | null;
-  published_date: string | null;
-  source: string | null;
-  thumbnail_url: string | null;
-  created_at: string | null;
+  content?: string;
+  category?: string;
+  published_date: string;
+  source?: string;
+  thumbnail_url?: string;
 }
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-  return res.json();
+export interface BusinessesResponse {
+  businesses: Business[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
-export function useBusinesses(params?: { category?: string; city?: string; search?: string }) {
-  const searchParams = new URLSearchParams();
-  if (params?.category) searchParams.set("category", params.category);
-  if (params?.city) searchParams.set("city", params.city);
-  if (params?.search) searchParams.set("search", params.search);
-  const qs = searchParams.toString();
-  
-  return useQuery<Business[]>({
-    queryKey: ["businesses", params],
-    queryFn: () => fetchJson(`/api/businesses${qs ? `?${qs}` : ""}`),
+export interface Category {
+  category: string;
+  count: number;
+}
+
+export interface SearchResponse {
+  businesses: Business[];
+  news: NewsItem[];
+  query: string;
+}
+
+async function fetchApi<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`);
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export function useBusinesses(params?: {
+  category?: string;
+  city?: string;
+  search?: string;
+  featured?: boolean;
+  page?: number;
+  limit?: number;
+}) {
+  const queryParams = new URLSearchParams();
+  if (params?.category) queryParams.append('category', params.category);
+  if (params?.city) queryParams.append('city', params.city);
+  if (params?.search) queryParams.append('search', params.search);
+  if (params?.featured) queryParams.append('featured', 'true');
+  if (params?.page) queryParams.append('page', params.page.toString());
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+  const queryString = queryParams.toString();
+  const endpoint = `/api/businesses${queryString ? `?${queryString}` : ''}`;
+
+  return useQuery<BusinessesResponse>({
+    queryKey: ['businesses', params],
+    queryFn: () => fetchApi<BusinessesResponse>(endpoint),
   });
 }
 
 export function useBusiness(id: string) {
   return useQuery<Business>({
-    queryKey: ["business", id],
-    queryFn: () => fetchJson(`/api/businesses/${id}`),
+    queryKey: ['business', id],
+    queryFn: () => fetchApi<Business>(`/api/business/${id}`),
     enabled: !!id,
   });
 }
 
 export function useFeaturedBusinesses() {
   return useQuery<Business[]>({
-    queryKey: ["featured"],
-    queryFn: () => fetchJson("/api/featured"),
+    queryKey: ['businesses', 'featured'],
+    queryFn: () => fetchApi<Business[]>('/api/featured'),
   });
 }
 
-export function useNews(category?: string) {
+export function useCategories() {
+  return useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: () => fetchApi<Category[]>('/api/categories'),
+  });
+}
+
+export function useNews(params?: { category?: string; limit?: number }) {
+  const queryParams = new URLSearchParams();
+  if (params?.category) queryParams.append('category', params.category);
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+  const queryString = queryParams.toString();
+  const endpoint = `/api/news${queryString ? `?${queryString}` : ''}`;
+
   return useQuery<NewsItem[]>({
-    queryKey: ["news", category],
-    queryFn: () => fetchJson(category ? `/api/news/${category}` : "/api/news"),
+    queryKey: ['news', params],
+    queryFn: () => fetchApi<NewsItem[]>(endpoint),
+  });
+}
+
+export function useSearch(query: string) {
+  return useQuery<SearchResponse>({
+    queryKey: ['search', query],
+    queryFn: () => fetchApi<SearchResponse>(`/api/search?q=${encodeURIComponent(query)}`),
+    enabled: query.length > 0,
   });
 }

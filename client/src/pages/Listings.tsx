@@ -11,14 +11,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBusinesses, type Business } from "@/lib/api";
 
 const CATEGORIES = [
-  { id: 'restaurants', name: '식당' },
-  { id: 'beauty', name: '미용/뷰티' },
-  { id: 'medical', name: '의료/병원' },
-  { id: 'legal', name: '법률 서비스' },
-  { id: 'real-estate', name: '부동산' },
-  { id: 'auto', name: '자동차 서비스' },
-  { id: 'education', name: '교육/학원' },
-  { id: 'events', name: '이벤트/기획' }
+  { id: '식당', name: '식당' },
+  { id: '한인마트', name: '한인마트' },
+  { id: '교회', name: '교회' },
+  { id: '병원', name: '병원' },
+  { id: '미용실', name: '미용실' },
+  { id: '학원', name: '학원' },
+  { id: '부동산', name: '부동산' },
+  { id: '자동차', name: '자동차' },
+  { id: '법률/회계', name: '법률/회계' },
+  { id: '기타', name: '기타' }
 ];
 
 export default function Listings() {
@@ -26,14 +28,19 @@ export default function Listings() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [selectedCity, setSelectedCity] = useState<string | undefined>();
 
-  const { data: allBusinesses, isLoading } = useBusinesses({
+  const { data: businessesData, isLoading } = useBusinesses({
     category: selectedCategory,
     city: selectedCity,
     search: searchTerm || undefined,
   });
 
-  const businesses = allBusinesses ?? [];
-  const cities = ["Carrollton", "Dallas"];
+  const businesses = businessesData?.businesses ?? [];
+  const cities = [
+    "Allen", "Arlington", "Bedford", "Carrollton", "Colleyville", "Dallas", 
+    "Denton", "Euless", "Flower Mound", "Fort Worth", "Frisco", "Garland", 
+    "Grapevine", "Hurst", "Irving", "Keller", "Lewisville", "McKinney", 
+    "Plano", "Prosper", "Richardson", "Southlake"
+  ];
 
   return (
     <div className="bg-slate-50 min-h-screen pb-20">

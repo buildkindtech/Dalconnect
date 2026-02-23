@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dalconnect.buildkind.tech/sitemap.xml

@@ -11,10 +11,12 @@ import Footer from "./components/layout/Footer";
 
 // Pages
 import Home from "./pages/Home";
-import Listings from "./pages/Listings";
+import Businesses from "./pages/Businesses";
 import BusinessDetail from "./pages/BusinessDetail";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import Pricing from "./pages/Pricing";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -27,10 +29,12 @@ function Router() {
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
-          <Route path="/listings" component={Listings} />
+          <Route path="/businesses" component={Businesses} />
           <Route path="/business/:id" component={BusinessDetail} />
           <Route path="/news" component={News} />
           <Route path="/news/:id" component={NewsDetail} />
+          <Route path="/about" component={About} />
+          <Route path="/contact" component={Contact} />
           <Route path="/pricing" component={Pricing} />
           <Route path="/payment-success" component={PaymentSuccess} />
           <Route path="/admin" component={AdminDashboard} />

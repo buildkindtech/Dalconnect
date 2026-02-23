@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -9,12 +11,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'GET') {
     try {
-      // Step 1: Check env
       if (!process.env.DATABASE_URL) {
         return res.status(500).json({ error: "DATABASE_URL not set" });
       }
 
-      // Step 2: Import pg dynamically to catch import errors
       const pg = await import('pg');
       const pool = new pg.default.Pool({
         connectionString: process.env.DATABASE_URL,
@@ -22,9 +22,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         max: 1,
       });
 
-      // Step 3: Parse query parameters for filtering
-      const { category, city, search, featured, limit } = req.query;
+      // Parse query parameters
+      const { category, city, search, featured, page, limit } = req.query;
       
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = parseInt(limit as string) || 20;
+      const offset = (pageNum - 1) * limitNum;
+
       let query = 'SELECT * FROM businesses WHERE 1=1';
       const params: any[] = [];
       let paramCount = 0;
@@ -51,25 +55,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         query += ` AND featured = true`;
       }
 
-      // Add ordering by rating and created_at
-      query += ' ORDER BY rating DESC NULLS LAST, created_at DESC';
+      // Count total for pagination
+      const countQuery = query.replace('SELECT *', 'SELECT COUNT(*)');
+      const countResult = await pool.query(countQuery, params);
+      const total = parseInt(countResult.rows[0].count);
 
-      // Optional limit
-      if (limit) {
-        paramCount++;
-        query += ` LIMIT $${paramCount}`;
-        params.push(parseInt(limit as string));
-      }
+      // Add ordering and pagination
+      query += ' ORDER BY rating DESC NULLS LAST, created_at DESC';
+      paramCount++;
+      query += ` LIMIT $${paramCount}`;
+      params.push(limitNum);
+      paramCount++;
+      query += ` OFFSET $${paramCount}`;
+      params.push(offset);
 
       const result = await pool.query(query, params);
       await pool.end();
       
-      return res.status(200).json(result.rows);
+      return res.status(200).json({
+        businesses: result.rows,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages: Math.ceil(total / limitNum)
+        }
+      });
     } catch (error: any) {
       return res.status(500).json({ 
         error: error.message,
-        stack: error.stack?.split('\n').slice(0, 5),
-        name: error.name
+        stack: error.stack?.split('\n').slice(0, 5)
       });
     }
   }
