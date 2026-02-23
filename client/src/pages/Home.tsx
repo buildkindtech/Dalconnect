@@ -192,12 +192,17 @@ export default function Home() {
                         )}
                         <div className="p-6">
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors">
-                              {business.name_ko || business.name_en}
-                            </h3>
-                            <Badge variant="destructive" className="ml-2">🔥 HOT</Badge>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko">
+                                {business.name_ko || business.name_en}
+                              </h3>
+                              {business.name_ko && business.name_en && (
+                                <p className="text-sm text-slate-500 mt-0.5">{business.name_en}</p>
+                              )}
+                            </div>
+                            <Badge variant="destructive" className="ml-2 flex-shrink-0">🔥 HOT</Badge>
                           </div>
-                          <p className="text-slate-600 mb-3">{business.category}</p>
+                          <p className="text-slate-600 mb-3 font-ko">{business.category}</p>
                           <div className="flex items-center gap-2 mb-3">
                             <div className="flex items-center">
                               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
@@ -273,14 +278,19 @@ export default function Home() {
                       )}
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors">
-                            {business.name_ko || business.name_en}
-                          </h3>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko">
+                              {business.name_ko || business.name_en}
+                            </h3>
+                            {business.name_ko && business.name_en && (
+                              <p className="text-sm text-slate-500 mt-0.5">{business.name_en}</p>
+                            )}
+                          </div>
                           {business.featured && (
-                            <Badge variant="default" className="ml-2">추천</Badge>
+                            <Badge variant="default" className="ml-2 flex-shrink-0">추천</Badge>
                           )}
                         </div>
-                        <p className="text-slate-600 mb-3">{business.category}</p>
+                        <p className="text-slate-600 mb-3 font-ko">{business.category}</p>
                         <div className="flex items-center gap-2 mb-3">
                           <div className="flex items-center">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />

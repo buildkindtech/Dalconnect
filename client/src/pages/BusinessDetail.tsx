@@ -101,11 +101,11 @@ export default function BusinessDetail() {
               {business.featured && (
                 <Badge variant="default" className="mb-2">추천 업체</Badge>
               )}
-              <h1 className="text-4xl md:text-5xl font-bold mb-2">
+              <h1 className="text-4xl md:text-5xl font-bold mb-2 font-ko">
                 {business.name_ko || business.name_en}
               </h1>
               {business.name_ko && business.name_en && (
-                <p className="text-xl text-slate-200">{business.name_en}</p>
+                <p className="text-lg text-slate-200 opacity-90">{business.name_en}</p>
               )}
             </div>
             <Button variant="secondary" className="gap-2" onClick={handleShare}>
@@ -125,7 +125,7 @@ export default function BusinessDetail() {
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <Badge variant="secondary" className="text-base px-4 py-2">
+                  <Badge variant="secondary" className="text-base px-4 py-2 font-ko">
                     {business.category}
                   </Badge>
                   <div className="flex items-center gap-2">
