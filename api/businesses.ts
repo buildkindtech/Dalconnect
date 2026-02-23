@@ -6,6 +6,35 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 const MAX_REGISTRATIONS = 5;
 
+// Telegram notification helper
+async function sendTelegramAlert(message: string) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = '-5291007114'; // Hub-Projects
+  
+  if (!token) {
+    console.warn('TELEGRAM_BOT_TOKEN not configured, skipping notification');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        chat_id: chatId, 
+        text: message, 
+        parse_mode: 'HTML' 
+      })
+    });
+    
+    if (!response.ok) {
+      console.error('Telegram notification failed:', await response.text());
+    }
+  } catch (error) {
+    console.error('Failed to send Telegram notification:', error);
+  }
+}
+
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
   const record = rateLimitMap.get(ip);
@@ -307,6 +336,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         );
 
         await pool.end();
+        
+        // Send Telegram notification
+        await sendTelegramAlert(
+          `📝 <b>새 업체 등록 요청</b>\n\n` +
+          `업체: ${sanitized.name_ko || sanitized.name_en}\n` +
+          `대표: ${sanitized.owner_name}\n` +
+          `이메일: ${sanitized.owner_email}\n` +
+          `전화: ${sanitized.owner_phone}\n` +
+          `카테고리: ${sanitized.category}\n` +
+          `주소: ${sanitized.address}\n\n` +
+          `승인하려면 DB에서 status='approved'로 변경`
+        );
+        
         return res.status(201).json({
           success: true,
           message: "Registration submitted successfully. We'll review and approve within 24 hours.",
@@ -392,7 +434,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           [business_id, sanitized.owner_name, sanitized.owner_email, sanitized.owner_phone, passwordHash]
         );
 
+        // Get business name for notification
+        const businessInfo = await pool.query(
+          'SELECT name_ko, name_en FROM businesses WHERE id = $1',
+          [business_id]
+        );
+        const businessName = businessInfo.rows[0]?.name_ko || businessInfo.rows[0]?.name_en || 'Unknown Business';
+        
         await pool.end();
+        
+        // Send Telegram notification
+        await sendTelegramAlert(
+          `🏢 <b>업체 클레임 요청</b>\n\n` +
+          `업체: ${businessName}\n` +
+          `업체 ID: ${business_id}\n` +
+          `대표: ${sanitized.owner_name}\n` +
+          `이메일: ${sanitized.owner_email}\n` +
+          `전화: ${sanitized.owner_phone}\n\n` +
+          `승인하려면 DB에서 verified=true로 변경`
+        );
+        
         return res.status(201).json({
           success: true,
           message: "Claim submitted successfully. We'll review and approve your request."

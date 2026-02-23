@@ -12,11 +12,34 @@ import { getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
 const CATEGORIES = [
   { id: 'all', label: '전체', emoji: '📰' },
   { id: '로컬뉴스', label: '로컬뉴스', emoji: '🏙️' },
-  { id: '이민/비자', label: '이민/비자', emoji: '🛂' },
-  { id: '생활정보', label: '생활정보', emoji: '💡' },
-  { id: '커뮤니티', label: '커뮤니티', emoji: '🤝' },
-  { id: '이벤트', label: '이벤트', emoji: '🎉' },
+  { id: '한국뉴스', label: '한국뉴스', emoji: '🇰🇷' },
+  { id: '미국뉴스', label: '미국뉴스', emoji: '🇺🇸' },
+  { id: '월드뉴스', label: '월드뉴스', emoji: '🌍' },
 ];
+
+// Helper function to format relative time
+function getRelativeTime(date: string | Date): string {
+  const now = new Date();
+  const published = new Date(date);
+  const diffMs = now.getTime() - published.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) {
+    return `${diffMins}분 전`;
+  } else if (diffHours < 24) {
+    return `${diffHours}시간 전`;
+  } else if (diffDays < 7) {
+    return `${diffDays}일 전`;
+  } else {
+    return published.toLocaleDateString('ko-KR', { 
+      year: 'numeric',
+      month: 'short', 
+      day: 'numeric'
+    });
+  }
+}
 
 export default function News() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -87,7 +110,13 @@ export default function News() {
               {newsItems.map((news: NewsItem) => {
                 const categoryStyle = getNewsCategoryStyle(news.category);
                 return (
-                  <Link href={`/news/${news.id}`} key={news.id}>
+                  <a 
+                    href={news.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    key={news.id}
+                    className="block"
+                  >
                     <div 
                       className="p-6 hover:bg-slate-50 transition-colors cursor-pointer flex gap-4 items-start group"
                       data-testid={`news-item-${news.id}`}
@@ -137,30 +166,24 @@ export default function News() {
                         {news.source && (
                           <div className="flex items-center gap-1">
                             <Building2 className="h-3.5 w-3.5" />
-                            <span>{news.source}</span>
+                            <span>출처: {news.source}</span>
                           </div>
                         )}
                         {news.published_date && (
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
-                            <span>
-                              {new Date(news.published_date).toLocaleDateString('ko-KR', { 
-                                year: 'numeric',
-                                month: 'short', 
-                                day: 'numeric'
-                              })}
-                            </span>
+                            <span>{getRelativeTime(news.published_date)}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-1 text-primary">
                           <ExternalLink className="h-3.5 w-3.5" />
-                          <span>자세히 보기</span>
+                          <span>원문 보기</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                </Link>
-              );
+                </a>
+                );
               })}
             </div>
           ) : (

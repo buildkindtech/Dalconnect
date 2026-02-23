@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import Stripe from 'stripe';
 
 const PRICING_TIERS = {
   premium: {
@@ -29,6 +30,231 @@ const PRICING_TIERS = {
   },
 };
 
+// Telegram notification helper
+async function sendTelegramAlert(message: string) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = '-5291007114'; // Hub-Projects
+  
+  if (!token) {
+    console.warn('TELEGRAM_BOT_TOKEN not configured, skipping notification');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        chat_id: chatId, 
+        text: message, 
+        parse_mode: 'HTML' 
+      })
+    });
+    
+    if (!response.ok) {
+      console.error('Telegram notification failed:', await response.text());
+    }
+  } catch (error) {
+    console.error('Failed to send Telegram notification:', error);
+  }
+}
+
+// Webhook handler
+async function handleWebhook(req: VercelRequest, res: VercelResponse) {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!sig || !webhookSecret) {
+    console.error('Missing stripe-signature header or STRIPE_WEBHOOK_SECRET');
+    return res.status(400).json({ error: 'Webhook signature missing' });
+  }
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return res.status(500).json({ error: 'Stripe not configured' });
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2024-12-18.acacia' as any,
+  });
+
+  let event: Stripe.Event;
+
+  try {
+    // Get raw body for signature verification
+    const rawBody = await getRawBody(req);
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+  } catch (err: any) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).json({ error: `Webhook Error: ${err.message}` });
+  }
+
+  console.log('Webhook event received:', event.type);
+
+  // Import pg for database operations
+  const pg = await import('pg');
+  const pool = new pg.default.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    max: 1,
+  });
+
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const { businessId, tier } = session.metadata || {};
+        const customerEmail = session.customer_email;
+
+        if (!businessId || !tier) {
+          console.error('Missing metadata in checkout session:', session.id);
+          break;
+        }
+
+        // Get business name for notification
+        const businessResult = await pool.query(
+          'SELECT name_ko, name_en FROM businesses WHERE id = $1',
+          [businessId]
+        );
+
+        const businessName = businessResult.rows[0]?.name_ko || businessResult.rows[0]?.name_en || 'Unknown Business';
+
+        // Update business_claims tier
+        await pool.query(
+          `UPDATE business_claims SET tier = $1 WHERE business_id = $2`,
+          [tier, businessId]
+        );
+
+        // Update businesses tier and featured status
+        const isFeatured = tier === 'elite';
+        await pool.query(
+          `UPDATE businesses SET tier = $1, featured = $2 WHERE id = $3`,
+          [tier, isFeatured, businessId]
+        );
+
+        // Send Telegram notification
+        const tierName = tier === 'premium' ? '프리미엄' : '엘리트';
+        const tierPrice = tier === 'premium' ? '$49' : '$99';
+        await sendTelegramAlert(
+          `💰 <b>새 ${tierName} 고객!</b>\n\n` +
+          `업체: ${businessName}\n` +
+          `플랜: ${tierName} ${tierPrice}/월\n` +
+          `이메일: ${customerEmail || 'N/A'}\n` +
+          `업체 ID: ${businessId}`
+        );
+
+        console.log(`Payment successful for business ${businessId} - tier: ${tier}`);
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId = subscription.customer as string;
+
+        // Find business by customer ID (stored in metadata during checkout)
+        // Note: We'll need to store customer_id in the database during checkout.session.completed
+        // For now, we'll try to find it via the subscription metadata
+        const metadata = subscription.metadata || {};
+        const businessId = metadata.businessId;
+
+        if (!businessId) {
+          console.error('Cannot find businessId for canceled subscription:', subscription.id);
+          break;
+        }
+
+        // Get business name for notification
+        const businessResult = await pool.query(
+          'SELECT name_ko, name_en, tier FROM businesses WHERE id = $1',
+          [businessId]
+        );
+
+        if (businessResult.rowCount === 0) {
+          console.error('Business not found:', businessId);
+          break;
+        }
+
+        const businessName = businessResult.rows[0].name_ko || businessResult.rows[0].name_en;
+        const previousTier = businessResult.rows[0].tier;
+
+        // Downgrade to free tier
+        await pool.query(
+          `UPDATE business_claims SET tier = 'free' WHERE business_id = $1`,
+          [businessId]
+        );
+
+        await pool.query(
+          `UPDATE businesses SET tier = 'free', featured = false WHERE id = $1`,
+          [businessId]
+        );
+
+        // Send Telegram notification
+        await sendTelegramAlert(
+          `⚠️ <b>구독 취소</b>\n\n` +
+          `업체: ${businessName}\n` +
+          `이전 플랜: ${previousTier}\n` +
+          `업체 ID: ${businessId}`
+        );
+
+        console.log(`Subscription canceled for business ${businessId}`);
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = invoice.customer as string;
+        const customerEmail = invoice.customer_email;
+
+        // Try to get business info from subscription metadata
+        const subscriptionId = invoice.subscription as string;
+        if (subscriptionId) {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const businessId = subscription.metadata?.businessId;
+
+          if (businessId) {
+            const businessResult = await pool.query(
+              'SELECT name_ko, name_en FROM businesses WHERE id = $1',
+              [businessId]
+            );
+
+            const businessName = businessResult.rows[0]?.name_ko || businessResult.rows[0]?.name_en || 'Unknown Business';
+
+            // Send Telegram notification
+            await sendTelegramAlert(
+              `🔴 <b>결제 실패</b>\n\n` +
+              `업체: ${businessName}\n` +
+              `이메일: ${customerEmail || 'N/A'}\n` +
+              `업체 ID: ${businessId}\n\n` +
+              `Stripe가 자동으로 재시도합니다.`
+            );
+          }
+        }
+
+        console.log(`Payment failed for customer ${customerId}`);
+        break;
+      }
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+  } catch (error: any) {
+    console.error('Error processing webhook:', error);
+    await pool.end();
+    return res.status(500).json({ error: 'Webhook processing failed' });
+  }
+
+  await pool.end();
+  return res.status(200).json({ received: true });
+}
+
+// Helper to get raw body for webhook signature verification
+async function getRawBody(req: VercelRequest): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req as any) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  }
+  return Buffer.concat(chunks).toString('utf-8');
+}
+
+// Main handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   
@@ -37,6 +263,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === 'POST') {
+    // Check if this is a webhook request (has stripe-signature header)
+    if (req.headers['stripe-signature']) {
+      return handleWebhook(req, res);
+    }
+
+    // Otherwise, it's a checkout session creation request
     try {
       if (!process.env.STRIPE_SECRET_KEY) {
         return res.status(500).json({ error: "Stripe not configured" });
@@ -52,9 +284,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: "Invalid tier" });
       }
 
-      // Import Stripe dynamically
-      const Stripe = await import('stripe');
-      const stripe = new Stripe.default(process.env.STRIPE_SECRET_KEY, {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: '2024-12-18.acacia' as any,
       });
 
@@ -84,6 +314,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         metadata: {
           businessId,
           tier,
+        },
+        subscription_data: {
+          metadata: {
+            businessId,
+            tier,
+          },
         },
         success_url: `${siteUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/pricing?canceled=true`,
