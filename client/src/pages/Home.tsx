@@ -1,13 +1,12 @@
 import { Link, useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFeaturedBusinesses, useNews, useBlogs } from "@/lib/api";
-import BusinessCard from "@/components/BusinessCard";
+import { useFeaturedBusinesses, useNews, useBlogs, useStats } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
 
@@ -28,11 +27,21 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
   const { data: newsItems, isLoading: loadingNews } = useNews();
-  const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 6 });
+  const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
+  const { data: stats, isLoading: loadingStats } = useStats();
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
   const recentNews = newsItems?.slice(0, 3) ?? [];
-  const recentBlogs = blogPosts?.slice(0, 6) ?? [];
+  const recentBlogs = blogPosts?.slice(0, 3) ?? [];
+  const trending = stats?.trending ?? [];
+  const recent = stats?.recent ?? [];
+
+  // Get count for each category
+  const getCategoryCount = (categoryId: string) => {
+    if (!stats?.categoryStats) return null;
+    const stat = stats.categoryStats.find(s => s.category === categoryId);
+    return stat ? stat.count : 0;
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +68,7 @@ export default function Home() {
             DFW 한인 커뮤니티의 모든 것
           </h1>
           <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-slate-200">
-            달라스-포트워스 지역 365개 한인 업체 정보와 최신 한인 뉴스
+            달라스-포트워스 지역 {stats?.totalBusinesses || '350+'}개 한인 업체 정보와 최신 한인 뉴스
           </p>
           
           {/* Big Search Bar */}
@@ -84,33 +93,39 @@ export default function Home() {
           <div className="mt-8 flex gap-8 justify-center text-white/90 text-sm">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              <span>350+ 업체</span>
+              <span>{stats?.totalBusinesses || '350+'}개 업체</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              <span>20+ 도시</span>
+              <span>{stats?.cityStats?.length || '20+'}개 도시</span>
             </div>
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4" />
-              <span>11개 카테고리</span>
+              <span>{stats?.categoryStats?.length || '11'}개 카테고리</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Categories Grid */}
+      {/* Categories Grid - WITH COUNTS */}
       <section className="py-20 bg-slate-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">카테고리</h2>
+          <h2 className="text-4xl font-bold text-center mb-12">인기 카테고리</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
             {CATEGORIES.map((category) => {
               const IconComponent = category.icon;
+              const count = getCategoryCount(category.id);
               return (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className="bg-white rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-4 group"
+                  className="bg-white rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-4 group relative"
                 >
+                  {count !== null && count > 0 && (
+                    <Badge className="absolute top-4 right-4 bg-primary">
+                      {count}+
+                    </Badge>
+                  )}
                   <div className={`${category.color} w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                     <IconComponent className="h-8 w-8 text-white" />
                   </div>
@@ -121,6 +136,93 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Trending Businesses - NEW */}
+      {trending.length > 0 && (
+        <section className="py-20 bg-gradient-to-b from-primary/5 to-white">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center mb-12">
+              <div className="flex items-center gap-3">
+                <Sparkles className="h-8 w-8 text-primary" />
+                <div>
+                  <h2 className="text-4xl font-bold">이번 주 인기 업체</h2>
+                  <p className="text-slate-600 mt-1">높은 평점과 많은 리뷰를 받은 업체들</p>
+                </div>
+              </div>
+              <Link href="/businesses?sort=rating">
+                <Button variant="ghost" className="gap-2">
+                  전체 보기 <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+
+            {loadingStats ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i}>
+                    <CardContent className="p-0">
+                      <Skeleton className="w-full h-48" />
+                      <div className="p-6 space-y-3">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {trending.slice(0, 6).map((business) => (
+                  <Link key={business.id} href={`/business/${business.id}`}>
+                    <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
+                      <CardContent className="p-0">
+                        {hasValidImage(business.cover_url) ? (
+                          <div 
+                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                            style={{ backgroundImage: `url(${business.cover_url})` }}
+                          />
+                        ) : (
+                          <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                            {(() => {
+                              const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
+                              const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
+                              return IconComponent ? <IconComponent className="w-16 h-16 text-white/80" /> : null;
+                            })()}
+                          </div>
+                        )}
+                        <div className="p-6">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors">
+                              {business.name_ko || business.name_en}
+                            </h3>
+                            <Badge variant="destructive" className="ml-2">🔥 HOT</Badge>
+                          </div>
+                          <p className="text-slate-600 mb-3">{business.category}</p>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                              <span className="font-semibold text-lg">{business.rating || 'N/A'}</span>
+                            </div>
+                            <span className="text-slate-500 text-sm">
+                              ({business.review_count || 0} 리뷰)
+                            </span>
+                          </div>
+                          {business.address && (
+                            <div className="flex items-start gap-2 text-sm text-slate-600">
+                              <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                              <span className="line-clamp-2">{business.address}</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Featured Businesses */}
       <section className="py-20">
@@ -158,9 +260,7 @@ export default function Home() {
                       {hasValidImage(business.cover_url) ? (
                         <div 
                           className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ 
-                            backgroundImage: `url(${business.cover_url})` 
-                          }}
+                          style={{ backgroundImage: `url(${business.cover_url})` }}
                         />
                       ) : (
                         <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
@@ -206,12 +306,99 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Latest Blog Section */}
+      {/* Recent Businesses - NEW */}
+      {recent.length > 0 && (
+        <section className="py-20 bg-slate-50">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center mb-12">
+              <div className="flex items-center gap-3">
+                <Clock className="h-8 w-8 text-primary" />
+                <div>
+                  <h2 className="text-4xl font-bold">신규 등록 업체</h2>
+                  <p className="text-slate-600 mt-1">최근 DalConnect에 추가된 업체들</p>
+                </div>
+              </div>
+              <Link href="/businesses?sort=recent">
+                <Button variant="ghost" className="gap-2">
+                  전체 보기 <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+
+            {loadingStats ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i}>
+                    <CardContent className="p-0">
+                      <Skeleton className="w-full h-48" />
+                      <div className="p-6 space-y-3">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recent.slice(0, 6).map((business) => (
+                  <Link key={business.id} href={`/business/${business.id}`}>
+                    <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
+                      <CardContent className="p-0">
+                        {hasValidImage(business.cover_url) ? (
+                          <div 
+                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                            style={{ backgroundImage: `url(${business.cover_url})` }}
+                          />
+                        ) : (
+                          <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                            {(() => {
+                              const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
+                              const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
+                              return IconComponent ? <IconComponent className="w-16 h-16 text-white/80" /> : null;
+                            })()}
+                          </div>
+                        )}
+                        <div className="p-6">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors">
+                              {business.name_ko || business.name_en}
+                            </h3>
+                            <Badge variant="secondary" className="ml-2">NEW</Badge>
+                          </div>
+                          <p className="text-slate-600 mb-3">{business.category}</p>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                              <span className="font-semibold">{business.rating || 'N/A'}</span>
+                            </div>
+                            <span className="text-slate-500 text-sm">
+                              ({business.review_count || 0} 리뷰)
+                            </span>
+                          </div>
+                          {business.address && (
+                            <div className="flex items-start gap-2 text-sm text-slate-600">
+                              <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                              <span className="line-clamp-2">{business.address}</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Blog Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
             <div>
-              <h2 className="text-4xl font-bold mb-2 font-ko">최신 블로그</h2>
+              <h2 className="text-4xl font-bold mb-2">블로그</h2>
               <p className="text-slate-600">DFW 한인 생활 가이드와 유용한 팁</p>
             </div>
             <Link href="/blog">
@@ -222,8 +409,8 @@ export default function Home() {
           </div>
 
           {loadingBlogs ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-0">
                     <Skeleton className="w-full h-48" />
@@ -236,49 +423,35 @@ export default function Home() {
               ))}
             </div>
           ) : recentBlogs.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {recentBlogs.map((blog) => (
                 <Link key={blog.id} href={`/blog/${blog.slug}`}>
-                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group h-full">
-                    <CardContent className="p-0 flex flex-col h-full">
-                      {blog.cover_url || blog.cover_image ? (
+                  <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
+                    <CardContent className="p-0">
+                      {blog.cover_image ? (
                         <div 
                           className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ backgroundImage: `url(${blog.cover_url || blog.cover_image})` }}
+                          style={{ backgroundImage: `url(${blog.cover_image})` }}
                         />
                       ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:from-primary/20 transition-all">
+                        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
                           <BookOpen className="h-16 w-16 text-primary/30" />
                         </div>
                       )}
-                      <div className="p-6 flex-1 flex flex-col">
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          {blog.category && (
-                            <Badge variant="secondary" className="text-xs">
-                              {blog.category}
-                            </Badge>
-                          )}
-                          {blog.target_age && blog.target_age !== 'all' && (
-                            <Badge variant="outline" className="text-xs">
-                              {blog.target_age === '20s' ? '20대' :
-                               blog.target_age === '30s' ? '30대' :
-                               blog.target_age === '40s' ? '40대' :
-                               blog.target_age === '50s+' ? '50대+' : blog.target_age}
-                            </Badge>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
+                      <div className="p-6">
+                        {blog.category && (
+                          <Badge variant="secondary" className="mb-3">
+                            {blog.category}
+                          </Badge>
+                        )}
+                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2">
                           {blog.title}
                         </h3>
                         {blog.excerpt && (
-                          <p className="text-sm text-slate-600 line-clamp-2 mb-3 flex-1">{blog.excerpt}</p>
+                          <p className="text-sm text-slate-600 line-clamp-2">{blog.excerpt}</p>
                         )}
-                        <p className="text-xs text-slate-400 mt-auto">
-                          {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
+                        <p className="text-xs text-slate-400 mt-3">
+                          {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR')}
                         </p>
                       </div>
                     </CardContent>
@@ -325,9 +498,7 @@ export default function Home() {
                       {hasValidImage(news.thumbnail_url) ? (
                         <div 
                           className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ 
-                            backgroundImage: `url(${news.thumbnail_url})` 
-                          }}
+                          style={{ backgroundImage: `url(${news.thumbnail_url})` }}
                         />
                       ) : (
                         <div className="w-full h-48 bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
