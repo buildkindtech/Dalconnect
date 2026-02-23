@@ -1,9 +1,19 @@
 import { useParams, Link } from "wouter";
-import { ArrowLeft, ExternalLink, Calendar, Building } from "lucide-react";
+import { ArrowLeft, ExternalLink, Calendar, Building, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useBusiness, type NewsItem } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+
+// Helper function to split content into paragraphs
+function splitIntoParagraphs(content: string): string[] {
+  return content.split('\n\n').filter(paragraph => paragraph.trim().length > 0);
+}
+
+// Helper function to calculate reading time
+function calculateReadingTime(content: string): number {
+  return Math.max(1, Math.round(content.length / 500));
+}
 
 export default function NewsDetail() {
   const params = useParams();
@@ -17,6 +27,20 @@ export default function NewsDetail() {
       return res.json();
     },
     enabled: !!params.id
+  });
+
+  // Fetch related news from same category
+  const { data: relatedNews } = useQuery<NewsItem[]>({
+    queryKey: ['related-news', newsItem?.category, params.id],
+    queryFn: async () => {
+      if (!newsItem?.category) return [];
+      const res = await fetch(`/api/news?category=${encodeURIComponent(newsItem.category)}&limit=4`);
+      if (!res.ok) return [];
+      const allNews = await res.json();
+      // Filter out current article and return only 3
+      return allNews.filter((item: NewsItem) => item.id !== params.id).slice(0, 3);
+    },
+    enabled: !!newsItem?.category
   });
 
   if (isLoading) {
@@ -75,15 +99,31 @@ export default function NewsDetail() {
                     : ''}
                 </span>
               </div>
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                <span>{calculateReadingTime(newsItem.content || '')}분 소요</span>
+              </div>
             </div>
           </div>
 
           {/* Content */}
           <div className="p-8 md:p-12">
             <div className="prose prose-lg max-w-none">
-              <p className="text-lg leading-relaxed text-slate-700 whitespace-pre-line">
-                {newsItem.content}
-              </p>
+              {(() => {
+                const paragraphs = splitIntoParagraphs(newsItem.content || '');
+                return paragraphs.map((paragraph, index) => (
+                  <p 
+                    key={index} 
+                    className={`leading-relaxed text-slate-700 mb-6 ${
+                      index === 0 
+                        ? 'text-xl font-medium text-slate-800' // Lead paragraph style
+                        : 'text-lg'
+                    }`}
+                  >
+                    {paragraph}
+                  </p>
+                ));
+              })()}
             </div>
 
             {/* Original Source Link */}
@@ -104,13 +144,54 @@ export default function NewsDetail() {
           </div>
         </article>
 
-        {/* Related News (Placeholder for future) */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6 font-ko">관련 뉴스</h2>
-          <p className="text-muted-foreground">
-            곧 관련 뉴스를 추천해드릴 예정입니다.
-          </p>
-        </div>
+        {/* Related News */}
+        {relatedNews && relatedNews.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6 font-ko">관련 뉴스</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              {relatedNews.map((relatedItem) => (
+                <Link key={relatedItem.id} href={`/news/${relatedItem.id}`}>
+                  <article className="bg-white rounded-xl border border-border hover:shadow-md transition-shadow cursor-pointer">
+                    {/* Thumbnail placeholder */}
+                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/20 rounded-t-xl flex items-center justify-center">
+                      {relatedItem.thumbnail_url ? (
+                        <img 
+                          src={relatedItem.thumbnail_url} 
+                          alt={relatedItem.title}
+                          className="w-full h-full object-cover rounded-t-xl"
+                        />
+                      ) : (
+                        <div className="text-primary/60 font-semibold text-sm">
+                          {relatedItem.source}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-4">
+                      <Badge className="text-xs mb-2 bg-primary/10 text-primary border-0">
+                        {relatedItem.category}
+                      </Badge>
+                      <h3 className="font-semibold text-sm leading-tight mb-2 line-clamp-2">
+                        {relatedItem.title}
+                      </h3>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        <span>
+                          {relatedItem.published_date 
+                            ? new Date(relatedItem.published_date).toLocaleDateString('ko-KR', {
+                                month: 'short',
+                                day: 'numeric'
+                              })
+                            : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
