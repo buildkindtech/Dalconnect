@@ -15,6 +15,8 @@ import BusinessDetail from "./pages/BusinessDetail";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import Pricing from "./pages/Pricing";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function Router() {
   return (
@@ -28,6 +30,8 @@ function Router() {
           <Route path="/news" component={News} />
           <Route path="/news/:id" component={NewsDetail} />
           <Route path="/pricing" component={Pricing} />
+          <Route path="/payment-success" component={PaymentSuccess} />
+          <Route path="/admin" component={AdminDashboard} />
           <Route component={NotFound} />
         </Switch>
       </main>

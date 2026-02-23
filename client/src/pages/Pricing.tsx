@@ -1,8 +1,53 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Pricing() {
+  const [loading, setLoading] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleCheckout = async (tier: "free" | "premium" | "elite") => {
+    if (tier === "free") {
+      // Redirect to signup
+      window.location.href = "/signup";
+      return;
+    }
+
+    setLoading(tier);
+
+    try {
+      // TODO: Get businessId and email from auth context
+      const businessId = "temp-business-id"; // Replace with actual
+      const email = "user@example.com"; // Replace with actual
+
+      const response = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier, businessId, email }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      const { url } = await response.json();
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast({
+        title: "결제 오류",
+        description: "결제 세션을 생성할 수 없습니다. 다시 시도해주세요.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const tiers = [
     {
       name: "무료",
@@ -15,7 +60,8 @@ export default function Pricing() {
         "커뮤니티 리뷰 받기"
       ],
       buttonText: "무료 등록하기",
-      variant: "outline" as const
+      variant: "outline" as const,
+      tier: "free" as const
     },
     {
       name: "프리미엄",
@@ -32,7 +78,8 @@ export default function Pricing() {
       ],
       buttonText: "프리미엄으로 업그레이드",
       variant: "default" as const,
-      popular: true
+      popular: true,
+      tier: "premium" as const
     },
     {
       name: "엘리트",
@@ -48,7 +95,8 @@ export default function Pricing() {
         "상세 방문 분석 대시보드"
       ],
       buttonText: "엘리트 멤버십 신청",
-      variant: "outline" as const
+      variant: "outline" as const,
+      tier: "elite" as const
     }
   ];
 
@@ -92,8 +140,10 @@ export default function Pricing() {
                 <Button 
                   className="w-full h-12 text-base font-semibold" 
                   variant={tier.variant}
+                  onClick={() => handleCheckout(tier.tier)}
+                  disabled={loading === tier.tier}
                 >
-                  {tier.buttonText}
+                  {loading === tier.tier ? "처리중..." : tier.buttonText}
                 </Button>
               </CardFooter>
             </Card>

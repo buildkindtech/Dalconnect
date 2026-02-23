@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { type Server } from "http";
 import { storage } from "./storage";
+import { createCheckoutSession, verifyWebhook, handleSubscriptionCreated, handleSubscriptionCanceled } from "./stripe";
 
 export async function registerRoutes(
   httpServer: Server | null,
@@ -83,6 +84,58 @@ export async function registerRoutes(
     } catch (error) {
       console.error("GET /api/news/:idOrCategory error:", error);
       res.status(500).json({ error: "Failed to fetch news" });
+    }
+  });
+
+  // Stripe: Create Checkout Session
+  app.post("/api/stripe/create-checkout", async (req, res) => {
+    try {
+      const { tier, businessId, email } = req.body;
+      
+      if (!tier || !businessId || !email) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (tier !== "premium" && tier !== "elite") {
+        return res.status(400).json({ error: "Invalid tier" });
+      }
+
+      const session = await createCheckoutSession(tier, businessId, email);
+      
+      res.json({ sessionId: session.id, url: session.url });
+    } catch (error) {
+      console.error("POST /api/stripe/create-checkout error:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  // Stripe: Webhook Handler
+  app.post("/api/stripe/webhook", async (req, res) => {
+    try {
+      const signature = req.headers["stripe-signature"] as string;
+      
+      if (!signature) {
+        return res.status(400).json({ error: "Missing signature" });
+      }
+
+      const event = verifyWebhook(req.rawBody as Buffer, signature);
+
+      // Handle different event types
+      switch (event.type) {
+        case "customer.subscription.created":
+          await handleSubscriptionCreated(event.data.object as any);
+          break;
+        case "customer.subscription.deleted":
+          await handleSubscriptionCanceled(event.data.object as any);
+          break;
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error("POST /api/stripe/webhook error:", error);
+      res.status(400).json({ error: "Webhook error" });
     }
   });
 
