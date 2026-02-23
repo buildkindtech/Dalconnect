@@ -14,6 +14,7 @@ interface ChartItem {
   description: string;
   score?: number;
   chart_date: string;
+  youtube_url?: string;
 }
 
 interface ApiResponse {
@@ -226,7 +227,21 @@ const Charts: React.FC = () => {
                               )}
                             </div>
                             <p className="text-gray-600 text-sm mb-2">{item.artist}</p>
-                            <p className="text-gray-500 text-sm">{item.description}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-gray-500 text-sm flex-1">{item.description}</p>
+                              {item.youtube_url && (
+                                <a
+                                  href={item.youtube_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-full transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                  영상
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
