@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         max: 1,
       });
 
-      const { category, limit, id } = req.query;
+      const { category, limit, id, offset } = req.query;
 
       // Single news detail
       if (id) {
@@ -52,6 +52,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         params.push(parseInt(limit as string));
       } else {
         query += ' LIMIT 50';
+      }
+
+      if (offset) {
+        paramCount++;
+        query += ` OFFSET $${paramCount}`;
+        params.push(parseInt(offset as string));
       }
 
       const result = await pool.query(query, params);

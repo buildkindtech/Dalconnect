@@ -66,7 +66,7 @@ export default function NewsDetail() {
     <div className="bg-slate-50 min-h-screen py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         <Link href="/news">
-          <Button variant="ghost" className="mb-6">
+          <Button variant="ghost" className="mb-6 md:mb-6">
             <ArrowLeft className="mr-2 h-4 w-4" />
             뉴스 목록으로
           </Button>
@@ -107,7 +107,7 @@ export default function NewsDetail() {
           </div>
 
           {/* Content */}
-          <div className="p-8 md:p-12">
+          <div className="p-6 md:p-12">
             <div className="prose prose-lg max-w-none">
               {(() => {
                 const paragraphs = splitIntoParagraphs(newsItem.content || '');
@@ -116,8 +116,8 @@ export default function NewsDetail() {
                     key={index} 
                     className={`leading-relaxed text-slate-700 mb-6 ${
                       index === 0 
-                        ? 'text-xl font-medium text-slate-800' // Lead paragraph style
-                        : 'text-lg'
+                        ? 'text-lg md:text-xl font-medium text-slate-800' // Lead paragraph style
+                        : 'text-base md:text-lg'
                     }`}
                   >
                     {paragraph}
@@ -148,7 +148,7 @@ export default function NewsDetail() {
         {relatedNews && relatedNews.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6 font-ko">관련 뉴스</h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               {relatedNews.map((relatedItem) => (
                 <Link key={relatedItem.id} href={`/news/${relatedItem.id}`}>
                   <article className="bg-white rounded-xl border border-border hover:shadow-md transition-shadow cursor-pointer">
@@ -171,7 +171,7 @@ export default function NewsDetail() {
                       <Badge className="text-xs mb-2 bg-primary/10 text-primary border-0">
                         {relatedItem.category}
                       </Badge>
-                      <h3 className="font-semibold text-sm leading-tight mb-2 line-clamp-2">
+                      <h3 className="font-semibold text-sm md:text-base leading-tight mb-2 line-clamp-2">
                         {relatedItem.title}
                       </h3>
                       <div className="flex items-center text-xs text-muted-foreground">
@@ -192,6 +192,16 @@ export default function NewsDetail() {
             </div>
           </div>
         )}
+        
+        {/* Fixed Back to News Button for Mobile */}
+        <div className="mt-12 text-center">
+          <Link href="/news">
+            <Button variant="outline" size="lg" className="font-ko">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              뉴스 목록으로 돌아가기
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
