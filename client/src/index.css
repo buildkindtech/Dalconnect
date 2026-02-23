@@ -106,4 +106,14 @@
   .font-ko {
     font-family: var(--font-korean);
   }
+  
+  /* Consistent section spacing */
+  .section-padding {
+    @apply py-16 md:py-20;
+  }
+  
+  /* Card hover effects */
+  .card-hover {
+    @apply hover:shadow-2xl hover:-translate-y-1 transition-all duration-300;
+  }
 }
