@@ -36,11 +36,7 @@ async function buildAll() {
   await rm("dist", { recursive: true, force: true });
 
   console.log("building client...");
-  await viteBuild({
-    build: {
-      outDir: "dist/public"
-    }
-  });
+  await viteBuild();
 
   console.log("building server app...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));
