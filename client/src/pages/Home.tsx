@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone } from "lucide-react";
-import { useState } from "react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,11 +31,34 @@ const POPULAR_SEARCH_TAGS = [
 export default function Home() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [visitorStats, setVisitorStats] = useState<{
+    todayViews: number;
+    todayUnique: number;
+    totalViews: number;
+    totalUnique: number;
+  } | null>(null);
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
   const { data: newsItems, isLoading: loadingNews } = useNews();
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
   const { data: categories } = useCategories();
+
+  // 방문자 카운터 API 호출
+  useEffect(() => {
+    const recordVisit = async () => {
+      try {
+        const response = await fetch('/api/categories?action=visit&page=/');
+        if (response.ok) {
+          const stats = await response.json();
+          setVisitorStats(stats);
+        }
+      } catch (error) {
+        console.error('Failed to record visit:', error);
+      }
+    };
+    
+    recordVisit();
+  }, []);
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
   const recentNews = newsItems?.slice(0, 3) ?? [];
@@ -97,22 +120,6 @@ export default function Home() {
               </Button>
             </div>
           </form>
-          
-          {/* Quick Stats */}
-          <div className="mt-8 flex gap-8 justify-center text-white/90 text-sm">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              <span>{1122}개 업체</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span>{25}개 도시</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Star className="h-4 w-4" />
-              <span>{11}개 카테고리</span>
-            </div>
-          </div>
 
           {/* Popular Search Tags */}
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
@@ -128,6 +135,30 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Visitor Counter */}
+      {visitorStats && (
+        <section className="py-4 bg-slate-100 border-y border-slate-200">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-wrap gap-6 justify-center items-center text-sm text-slate-700">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <span className="font-semibold">총 {(1122).toLocaleString()}개 업체</span>
+              </div>
+              <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-blue-600" />
+                <span>오늘 <span className="font-bold text-blue-600">{visitorStats.todayUnique.toLocaleString()}</span>명 방문</span>
+              </div>
+              <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
+              <div className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-orange-600" />
+                <span>총 <span className="font-bold text-orange-600">{visitorStats.totalViews.toLocaleString()}</span>회 방문</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Categories Grid - WITH COUNTS */}
       <section className="py-20 bg-slate-50">
