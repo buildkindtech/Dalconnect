@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFeaturedBusinesses, useNews, useBlogs, useStats, useListings, usePopularSearches } from "@/lib/api";
+import { useFeaturedBusinesses, useNews, useBlogs, useListings } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import * as Icons from "lucide-react";
@@ -29,9 +29,7 @@ export default function Home() {
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
   const { data: newsItems, isLoading: loadingNews } = useNews();
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
-  const { data: stats, isLoading: loadingStats } = useStats();
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
-  const { data: popularSearchesData } = usePopularSearches();
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
   const recentNews = newsItems?.slice(0, 3) ?? [];
@@ -39,13 +37,11 @@ export default function Home() {
   const recentListings = listingsData?.items ?? [];
   const trending = stats?.trending ?? [];
   const recent = stats?.recent ?? [];
-  const popularSearches = popularSearchesData?.searches ?? [];
+  const popularSearches: any[] = [];
 
   // Get count for each category
-  const getCategoryCount = (categoryId: string) => {
-    if (!stats?.categoryStats) return null;
-    const stat = stats.categoryStats.find(s => s.category === categoryId);
-    return stat ? stat.count : 0;
+  const getCategoryCount = (_categoryId: string) => {
+    return null;
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -196,7 +192,7 @@ export default function Home() {
               </Link>
             </div>
 
-            {loadingStats ? (
+            {false ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[1, 2, 3].map((i) => (
                   <Card key={i}>
@@ -375,7 +371,7 @@ export default function Home() {
               </Link>
             </div>
 
-            {loadingStats ? (
+            {false ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[1, 2, 3].map((i) => (
                   <Card key={i}>
