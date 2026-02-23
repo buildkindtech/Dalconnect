@@ -2,6 +2,9 @@ import type { Express } from "express";
 import { type Server } from "http";
 import { storage } from "./storage";
 import { createCheckoutSession, verifyWebhook, handleSubscriptionCreated, handleSubscriptionCanceled } from "./stripe";
+import { db } from "./db";
+import { blogs } from "../shared/schema";
+import { desc, sql } from "drizzle-orm";
 
 export async function registerRoutes(
   httpServer: Server | null,
@@ -151,6 +154,60 @@ export async function registerRoutes(
     } catch (error) {
       console.error("POST /api/stripe/webhook error:", error);
       res.status(400).json({ error: "Webhook error" });
+    }
+  });
+
+  // Blog routes
+  app.get("/api/blogs", async (req, res) => {
+    try {
+      const { category, search, limit = 20, offset = 0 } = req.query;
+
+      let query = db.select().from(blogs);
+
+      // Filter by category
+      if (category && typeof category === 'string') {
+        query = query.where(sql`${blogs.category} = ${category}`) as any;
+      }
+
+      // Search in title and content
+      if (search && typeof search === 'string') {
+        query = query.where(
+          sql`${blogs.title} ILIKE ${`%${search}%`} OR ${blogs.content} ILIKE ${`%${search}%`}`
+        ) as any;
+      }
+
+      // Apply pagination and ordering
+      const results = await query
+        .orderBy(desc(blogs.published_at))
+        .limit(Number(limit))
+        .offset(Number(offset));
+
+      res.json(results);
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+      res.status(500).json({ message: "Failed to fetch blogs" });
+    }
+  });
+
+  // Get single blog by slug
+  app.get("/api/blogs/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      
+      const [blog] = await db
+        .select()
+        .from(blogs)
+        .where(sql`${blogs.slug} = ${slug}`)
+        .limit(1);
+
+      if (!blog) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
+
+      res.json(blog);
+    } catch (error) {
+      console.error("Error fetching blog:", error);
+      res.status(500).json({ message: "Failed to fetch blog" });
     }
   });
 

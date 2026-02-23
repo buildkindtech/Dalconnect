@@ -57,6 +57,20 @@ export interface SearchResponse {
   query: string;
 }
 
+export interface Blog {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  category?: string;
+  cover_image?: string;
+  author: string;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 async function fetchApi<T>(endpoint: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`);
   if (!response.ok) {
@@ -131,5 +145,28 @@ export function useSearch(query: string) {
     queryKey: ['search', query],
     queryFn: () => fetchApi<SearchResponse>(`/api/search?q=${encodeURIComponent(query)}`),
     enabled: query.length > 0,
+  });
+}
+
+export function useBlogs(params?: { category?: string; search?: string; limit?: number }) {
+  const queryParams = new URLSearchParams();
+  if (params?.category) queryParams.append('category', params.category);
+  if (params?.search) queryParams.append('search', params.search);
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+  const queryString = queryParams.toString();
+  const endpoint = `/api/blogs${queryString ? `?${queryString}` : ''}`;
+
+  return useQuery<Blog[]>({
+    queryKey: ['blogs', params],
+    queryFn: () => fetchApi<Blog[]>(endpoint),
+  });
+}
+
+export function useBlog(slug: string) {
+  return useQuery<Blog>({
+    queryKey: ['blog', slug],
+    queryFn: () => fetchApi<Blog>(`/api/blogs/${slug}`),
+    enabled: !!slug,
   });
 }

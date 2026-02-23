@@ -28,17 +28,17 @@ export const businesses = pgTable("businesses", {
   city: varchar("city", { length: 100 }),
   phone: varchar("phone", { length: 50 }),
   email: varchar("email", { length: 255 }),
-  website: varchar("website", { length: 500 }),
+  website: varchar("website", { length: 1000 }),
   hours: json("hours").$type<Record<string, string>>(),
-  logo_url: varchar("logo_url", { length: 500 }),
-  cover_url: varchar("cover_url", { length: 500 }),
+  logo_url: varchar("logo_url", { length: 1000 }),
+  cover_url: varchar("cover_url", { length: 1000 }),
   photos: json("photos").$type<string[]>(),
   tier: varchar("tier", { length: 20 }).default('free'),
   featured: boolean("featured").default(false),
   claimed: boolean("claimed").default(false),
   rating: numeric("rating", { precision: 2, scale: 1 }).default('0'),
   review_count: integer("review_count").default(0),
-  google_place_id: varchar("google_place_id", { length: 500 }).unique(),
+  google_place_id: varchar("google_place_id", { length: 1000 }).unique(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow()
 });
@@ -55,12 +55,12 @@ export type Business = typeof businesses.$inferSelect;
 export const news = pgTable("news", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title", { length: 500 }).notNull(),
-  url: varchar("url", { length: 1000 }).notNull().unique(),
+  url: varchar("url", { length: 2000 }).notNull().unique(),
   content: text("content"),
   category: varchar("category", { length: 100 }),
   published_date: timestamp("published_date"),
   source: varchar("source", { length: 255 }),
-  thumbnail_url: varchar("thumbnail_url", { length: 500 }),
+  thumbnail_url: varchar("thumbnail_url", { length: 1000 }),
   created_at: timestamp("created_at").defaultNow()
 });
 

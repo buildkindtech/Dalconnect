@@ -78,3 +78,11 @@ export function getCategoryIcon(category: string | null | undefined): string {
 export function hasValidImage(url: string | null | undefined): boolean {
   return Boolean(url && url.trim().length > 0);
 }
+
+// Get category image - returns actual image or null (for fallback rendering)
+export function getCategoryImage(category: string | null | undefined, imageUrl: string | null | undefined): string | null {
+  if (hasValidImage(imageUrl)) {
+    return imageUrl!;
+  }
+  return null; // Let the component handle the fallback rendering
+}

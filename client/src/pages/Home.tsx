@@ -1,12 +1,13 @@
 import { Link, useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFeaturedBusinesses, useNews } from "@/lib/api";
+import { useFeaturedBusinesses, useNews, useBlogs } from "@/lib/api";
+import BusinessCard from "@/components/BusinessCard";
 import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
 
@@ -27,9 +28,11 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
   const { data: newsItems, isLoading: loadingNews } = useNews();
+  const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
   const recentNews = newsItems?.slice(0, 3) ?? [];
+  const recentBlogs = blogPosts?.slice(0, 3) ?? [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,23 +62,39 @@ export default function Home() {
             달라스-포트워스 지역 365개 한인 업체 정보와 최신 한인 뉴스
           </p>
           
-          {/* Search Bar */}
+          {/* Big Search Bar */}
           <form onSubmit={handleSearch} className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl p-2 flex gap-2 shadow-2xl">
-              <div className="flex-1 flex items-center px-4">
-                <Search className="h-6 w-6 text-slate-400 mr-3" />
+            <div className="bg-white rounded-2xl p-3 flex gap-3 shadow-2xl hover:shadow-3xl transition-shadow">
+              <div className="flex-1 flex items-center px-5">
+                <Search className="h-7 w-7 text-slate-400 mr-4 flex-shrink-0" />
                 <Input 
-                  className="border-0 shadow-none focus-visible:ring-0 text-lg text-slate-800 h-14" 
-                  placeholder="식당, 병원, 미용실... 무엇을 찾으시나요?"
+                  className="border-0 shadow-none focus-visible:ring-0 text-xl text-slate-800 h-16 placeholder:text-slate-400" 
+                  placeholder="달라스 한인 맛집 검색..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button type="submit" size="lg" className="h-14 px-8 text-lg">
+              <Button type="submit" size="lg" className="h-16 px-12 text-xl font-semibold">
                 검색
               </Button>
             </div>
           </form>
+          
+          {/* Quick Stats */}
+          <div className="mt-8 flex gap-8 justify-center text-white/90 text-sm">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              <span>350+ 업체</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span>20+ 도시</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              <span>11개 카테고리</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -177,6 +196,76 @@ export default function Home() {
                             <span className="line-clamp-2">{business.address}</span>
                           </div>
                         )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Blog Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-4xl font-bold mb-2">블로그</h2>
+              <p className="text-slate-600">DFW 한인 생활 가이드와 유용한 팁</p>
+            </div>
+            <Link href="/blog">
+              <Button variant="ghost" className="gap-2">
+                전체 보기 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {loadingBlogs ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-0">
+                    <Skeleton className="w-full h-48" />
+                    <div className="p-6 space-y-3">
+                      <Skeleton className="h-6 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : recentBlogs.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {recentBlogs.map((blog) => (
+                <Link key={blog.id} href={`/blog/${blog.slug}`}>
+                  <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
+                    <CardContent className="p-0">
+                      {blog.cover_image ? (
+                        <div 
+                          className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                          style={{ backgroundImage: `url(${blog.cover_image})` }}
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                          <BookOpen className="h-16 w-16 text-primary/30" />
+                        </div>
+                      )}
+                      <div className="p-6">
+                        {blog.category && (
+                          <Badge variant="secondary" className="mb-3">
+                            {blog.category}
+                          </Badge>
+                        )}
+                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2">
+                          {blog.title}
+                        </h3>
+                        {blog.excerpt && (
+                          <p className="text-sm text-slate-600 line-clamp-2">{blog.excerpt}</p>
+                        )}
+                        <p className="text-xs text-slate-400 mt-3">
+                          {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR')}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>

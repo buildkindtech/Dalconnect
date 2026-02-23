@@ -25,6 +25,9 @@ export default function Header() {
             <Link href="/news" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`}>
               뉴스
             </Link>
+            <Link href="/blog" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/blog' || location.startsWith('/blog/') ? 'text-primary' : 'text-muted-foreground'}`}>
+              블로그
+            </Link>
             <Link href="/about" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/about' ? 'text-primary' : 'text-muted-foreground'}`}>
               소개
             </Link>
@@ -68,6 +71,13 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               뉴스
+            </Link>
+            <Link 
+              href="/blog" 
+              className={`text-base font-medium transition-colors hover:text-primary ${location === '/blog' || location.startsWith('/blog/') ? 'text-primary' : 'text-muted-foreground'}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              블로그
             </Link>
             <Link 
               href="/about" 
