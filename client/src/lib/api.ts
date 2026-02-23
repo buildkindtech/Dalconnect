@@ -220,7 +220,10 @@ export function useBlogs(params?: {
 
   return useQuery<Blog[]>({
     queryKey: ['blogs', params],
-    queryFn: () => fetchApi<Blog[]>(endpoint),
+    queryFn: async () => {
+      const res = await fetchApi<any>(endpoint);
+      return Array.isArray(res) ? res : res?.items ?? [];
+    },
   });
 }
 
