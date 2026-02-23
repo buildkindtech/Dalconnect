@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame, MessageCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +66,26 @@ export default function Home() {
       }
     };
     fetchRandomRestaurant();
+  }, []);
+
+  // Fetch popular community posts
+  const [popularPosts, setPopularPosts] = useState<any[]>([]);
+  const [loadingCommunity, setLoadingCommunity] = useState(true);
+  useEffect(() => {
+    const fetchPopularPosts = async () => {
+      try {
+        const response = await fetch('/api/community?action=posts&sort=popular&limit=5');
+        if (response.ok) {
+          const data = await response.json();
+          setPopularPosts(data.posts || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch community posts:', error);
+      } finally {
+        setLoadingCommunity(false);
+      }
+    };
+    fetchPopularPosts();
   }, []);
 
   // 방문자 카운터 API 호출

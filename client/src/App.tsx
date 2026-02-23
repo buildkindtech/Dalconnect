@@ -27,6 +27,9 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import AdminDashboard from "./pages/AdminDashboard";
 import SetupRequired from "./pages/SetupRequired";
 import RegisterBusiness from "./pages/RegisterBusiness";
+import Community from "./pages/Community";
+import CommunityPost from "./pages/CommunityPost";
+import CommunityNew from "./pages/CommunityNew";
 
 function Router() {
   return (
@@ -45,6 +48,9 @@ function Router() {
           <Route path="/marketplace" component={Marketplace} />
           <Route path="/marketplace/new" component={MarketplaceNew} />
           <Route path="/marketplace/:id" component={MarketplaceDetail} />
+          <Route path="/community" component={Community} />
+          <Route path="/community/new" component={CommunityNew} />
+          <Route path="/community/:id" component={CommunityPost} />
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
           <Route path="/pricing" component={Pricing} />
