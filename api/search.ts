@@ -37,7 +37,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ORDER BY rating DESC NULLS LAST
         LIMIT 20
       `;
-      const businessResult = await pool.query(businessQuery, [searchPattern]);
+      let businessResult = await pool.query(businessQuery, [searchPattern]);
+
+      // Auto-scrape from Google Places if 0 results
+      if (businessResult.rowCount === 0 && process.env.GOOGLE_MAPS_API_KEY) {
+        try {
+          const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+          const gRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': apiKey,
+              'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.regularOpeningHours'
+            },
+            body: JSON.stringify({
+              textQuery: `${q} Dallas Fort Worth TX`,
+              locationBias: { circle: { center: { latitude: 32.95, longitude: -96.89 }, radius: 50000 } },
+              maxResultCount: 5
+            })
+          });
+          const gData = await gRes.json();
+          if (gData.places?.length > 0) {
+            for (const p of gData.places) {
+              const addr = p.formattedAddress || '';
+              if (!addr.includes('TX')) continue;
+              const existCheck = await pool.query('SELECT id FROM businesses WHERE google_place_id = $1', [p.id]);
+              if (existCheck.rowCount && existCheck.rowCount > 0) continue;
+              const name = p.displayName?.text || '';
+              const cityMatch = addr.match(/,\s*([^,]+),\s*TX/);
+              const city = cityMatch ? cityMatch[1].trim() : 'Dallas';
+              await pool.query(
+                `INSERT INTO businesses (id, name_en, category, address, city, phone, website, rating, review_count, google_place_id, tier)
+                 VALUES (gen_random_uuid(), $1, '기타', $2, $3, $4, $5, $6, $7, $8, 'free')
+                 ON CONFLICT (google_place_id) DO NOTHING`,
+                [name, addr, city, p.nationalPhoneNumber || null, p.websiteUri || null, p.rating || 0, p.userRatingCount || 0, p.id]
+              );
+            }
+            // Re-search
+            businessResult = await pool.query(businessQuery, [searchPattern]);
+          }
+        } catch (e) { /* auto-scrape failed silently */ }
+      }
+
+      // Log search
+      try {
+        await pool.query('INSERT INTO search_logs (id, query, results_count) VALUES (gen_random_uuid(), $1, $2)', [q, businessResult.rowCount]);
+      } catch(e) {}
 
       // Search news
       const newsQuery = `
