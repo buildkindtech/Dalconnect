@@ -117,7 +117,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const total = parseInt(countResult.rows[0].count);
 
       // Add ordering and pagination
-      query += ' ORDER BY rating DESC NULLS LAST, created_at DESC';
+      query += ' ORDER BY (CASE WHEN name_ko IS NOT NULL AND name_ko != \'\' THEN 0 WHEN name_en ~ \'[가-힣]\' THEN 0 ELSE 1 END), rating DESC NULLS LAST, review_count DESC NULLS LAST';
       paramCount++;
       query += ` LIMIT $${paramCount}`;
       params.push(limitNum);
