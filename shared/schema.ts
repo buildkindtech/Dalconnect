@@ -38,6 +38,7 @@ export const businesses = pgTable("businesses", {
   claimed: boolean("claimed").default(false),
   rating: numeric("rating", { precision: 2, scale: 1 }).default('0'),
   review_count: integer("review_count").default(0),
+  google_place_id: varchar("google_place_id", { length: 500 }).unique(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow()
 });

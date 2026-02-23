@@ -1,0 +1,32 @@
+[dotenv@17.3.1] injecting env (3) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+🚀 Starting Korean business scraping for Dallas area...
+
+📍 DATABASE_URL: postgresql://neondb_owner:npg_4PuSVOLIE0Gw@ep-prou...
+🔑 API Key: AIzaSyAzcujFS2IfcaxV...
+
+🔍 Searching: Korean restaurant Dallas Texas
+   Found 20 results
+🔍 Searching: Korean BBQ Dallas Texas
+   Found 20 results
+🔍 Searching: Korean food Carrollton Texas
+   Found 20 results
+🔍 Searching: Korean restaurant Plano Texas
+   Found 20 results
+🔍 Searching: Korean food Irving Texas
+   Found 20 results
+🔍 Searching: Korean grocery store Dallas Texas
+   Found 5 results
+🔍 Searching: H Mart Dallas Texas
+   Found 2 results
+🔍 Searching: Korean supermarket Carrollton Texas
+   Found 20 results
+🔍 Searching: Asian supermarket Dallas Texas
+   Found 20 results
+🔍 Searching: Korean church Dallas Texas
+   Found 20 results
+🔍 Searching: Korean church Plano Texas
+   Found 12 results
+🔍 Searching: Korean church Carrollton Texas
+   Found 19 results
+🔍 Searching: Korean church Irving Texas
+   Found 20 results

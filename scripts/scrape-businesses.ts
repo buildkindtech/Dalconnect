@@ -1,11 +1,26 @@
 import * as dotenv from "dotenv";
-// Load environment variables FIRST before importing db
-dotenv.config();
-
 import axios from "axios";
-import { db } from "../server/db";
+import pg from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { businesses } from "../shared/schema";
 import { eq } from "drizzle-orm";
+
+// Load environment variables FIRST
+dotenv.config();
+
+if (!process.env.DATABASE_URL) {
+  console.error("❌ DATABASE_URL not found in environment!");
+  process.exit(1);
+}
+
+if (!process.env.GOOGLE_MAPS_API_KEY) {
+  console.error("❌ GOOGLE_MAPS_API_KEY not found in environment!");
+  process.exit(1);
+}
+
+// Create DB connection directly
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const db = drizzle(pool);
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 const PLACES_API_URL = "https://places.googleapis.com/v1/places:searchText";
@@ -126,6 +141,8 @@ async function searchPlaces(query: string) {
 
 async function main() {
   console.log("🚀 Starting Korean business scraping for Dallas area...\n");
+  console.log(`📍 DATABASE_URL: ${process.env.DATABASE_URL.substring(0, 50)}...`);
+  console.log(`🔑 API Key: ${GOOGLE_MAPS_API_KEY.substring(0, 20)}...\n`);
   
   const allBusinesses = new Map(); // id를 키로 중복 제거
   
@@ -156,7 +173,7 @@ async function main() {
   for (const [placeId, place] of allBusinesses) {
     try {
       // DB에 이미 존재하는지 확인
-      const existing = await db.select().from(businesses).where(eq(businesses.googlePlaceId, placeId)).limit(1);
+      const existing = await db.select().from(businesses).where(eq(businesses.google_place_id, placeId)).limit(1);
       
       if (existing.length > 0) {
         skipped++;
@@ -206,14 +223,15 @@ async function main() {
         featured: false,
         claimed: false,
         rating: place.rating?.toString() || '0',
-        review_count: place.userRatingCount || 0
+        review_count: place.userRatingCount || 0,
+        google_place_id: placeId
       });
       
       added++;
       console.log(`✅ Added: ${place.displayName?.text} (${category})`);
-    } catch (error) {
+    } catch (error: any) {
       errors++;
-      console.error(`❌ Error saving ${place.displayName?.text}:`, error);
+      console.error(`❌ Error saving ${place.displayName?.text}:`, error.message);
     }
   }
   
@@ -222,6 +240,7 @@ async function main() {
   console.log(`⏭️  Skipped: ${skipped} (already in database)`);
   console.log(`❌ Errors: ${errors}`);
   
+  await pool.end();
   process.exit(0);
 }
 
