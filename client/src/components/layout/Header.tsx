@@ -22,6 +22,9 @@ export default function Header() {
             <Link href="/businesses" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/businesses' ? 'text-primary' : 'text-muted-foreground'}`}>
               업체
             </Link>
+            <Link href="/marketplace" className={`text-sm font-medium transition-colors hover:text-primary ${location.startsWith('/marketplace') ? 'text-primary' : 'text-muted-foreground'}`}>
+              사고팔기
+            </Link>
             <Link href="/news" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`}>
               뉴스
             </Link>
@@ -64,6 +67,13 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               업체
+            </Link>
+            <Link 
+              href="/marketplace" 
+              className={`text-base font-medium transition-colors hover:text-primary ${location.startsWith('/marketplace') ? 'text-primary' : 'text-muted-foreground'}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              사고팔기
             </Link>
             <Link 
               href="/news" 

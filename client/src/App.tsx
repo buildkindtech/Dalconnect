@@ -17,6 +17,9 @@ import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
+import Marketplace from "./pages/Marketplace";
+import MarketplaceDetail from "./pages/MarketplaceDetail";
+import MarketplaceNew from "./pages/MarketplaceNew";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Pricing from "./pages/Pricing";
@@ -37,6 +40,9 @@ function Router() {
           <Route path="/news/:id" component={NewsDetail} />
           <Route path="/blog" component={Blog} />
           <Route path="/blog/:slug" component={BlogDetail} />
+          <Route path="/marketplace" component={Marketplace} />
+          <Route path="/marketplace/new" component={MarketplaceNew} />
+          <Route path="/marketplace/:id" component={MarketplaceDetail} />
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
           <Route path="/pricing" component={Pricing} />

@@ -1,12 +1,12 @@
 import { Link, useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFeaturedBusinesses, useNews, useBlogs, useStats } from "@/lib/api";
+import { useFeaturedBusinesses, useNews, useBlogs, useStats, useListings } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
 
@@ -29,10 +29,12 @@ export default function Home() {
   const { data: newsItems, isLoading: loadingNews } = useNews();
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
   const { data: stats, isLoading: loadingStats } = useStats();
+  const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
 
   const featured = featuredBusinesses?.slice(0, 6) ?? [];
   const recentNews = newsItems?.slice(0, 3) ?? [];
   const recentBlogs = blogPosts?.slice(0, 3) ?? [];
+  const recentListings = listingsData?.items ?? [];
   const trending = stats?.trending ?? [];
   const recent = stats?.recent ?? [];
 
@@ -470,6 +472,107 @@ export default function Home() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Recent Marketplace Listings */}
+      <section className="py-20 bg-gradient-to-b from-green-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-12">
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="h-8 w-8 text-green-600" />
+              <div>
+                <h2 className="text-4xl font-bold">최근 올라온 매물</h2>
+                <p className="text-slate-600 mt-1">DFW 한인 커뮤니티 사고팔기</p>
+              </div>
+            </div>
+            <Link href="/marketplace">
+              <Button variant="ghost" className="gap-2">
+                전체 보기 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {loadingListings ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <Skeleton className="h-6 w-full mb-3" />
+                    <Skeleton className="h-8 w-1/2 mb-2" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : recentListings.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentListings.map((listing) => (
+                <Link key={listing.id} href={`/marketplace/${listing.id}`}>
+                  <Card className="hover:shadow-xl transition-shadow cursor-pointer group h-full">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge variant="secondary" className="text-xs">
+                          {listing.category}
+                        </Badge>
+                        {listing.price_type === 'free' && (
+                          <Badge className="bg-green-600 text-xs">무료</Badge>
+                        )}
+                      </div>
+                      
+                      <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors min-h-[3.5rem]">
+                        {listing.title}
+                      </h3>
+                      
+                      <div className="text-2xl font-bold text-primary mb-3">
+                        {listing.price_type === 'free' ? '무료나눔' : 
+                         listing.price_type === 'contact' ? '가격문의' :
+                         listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의'}
+                      </div>
+                      
+                      <p className="text-sm text-slate-600 line-clamp-2 mb-4 min-h-[2.5rem]">
+                        {listing.description || '설명 없음'}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {listing.location || '위치 미정'}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            {listing.views || 0}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {(() => {
+                              const date = new Date(listing.created_at);
+                              const now = new Date();
+                              const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+                              if (diffDays === 0) return '오늘';
+                              if (diffDays === 1) return '어제';
+                              if (diffDays < 7) return `${diffDays}일 전`;
+                              return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-8">
+            <Link href="/marketplace/new">
+              <Button size="lg" className="gap-2">
+                <ShoppingBag className="h-5 w-5" />
+                무료로 올리기
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

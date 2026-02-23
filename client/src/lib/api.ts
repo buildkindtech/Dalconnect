@@ -92,6 +92,37 @@ export interface Stats {
   recent: Business[];
 }
 
+export interface Listing {
+  id: string;
+  title: string;
+  description?: string;
+  price?: string;
+  price_type: string;
+  category: string;
+  condition?: string;
+  photos?: string[];
+  contact_method: string;
+  contact_info?: string;
+  author_name?: string;
+  author_phone?: string;
+  location?: string;
+  status: string;
+  views: number;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+}
+
+export interface ListingsResponse {
+  items: Listing[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 async function fetchApi<T>(endpoint: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`);
   if (!response.ok) {
@@ -205,5 +236,40 @@ export function useStats() {
     queryKey: ['stats'],
     queryFn: () => fetchApi<Stats>('/api/stats'),
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}
+
+export function useListings(params?: {
+  category?: string;
+  location?: string;
+  search?: string;
+  price_type?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const queryParams = new URLSearchParams();
+  if (params?.category) queryParams.append('category', params.category);
+  if (params?.location) queryParams.append('location', params.location);
+  if (params?.search) queryParams.append('search', params.search);
+  if (params?.price_type) queryParams.append('price_type', params.price_type);
+  if (params?.status) queryParams.append('status', params.status);
+  if (params?.page) queryParams.append('page', params.page.toString());
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+  const queryString = queryParams.toString();
+  const endpoint = `/api/listings${queryString ? `?${queryString}` : ''}`;
+
+  return useQuery<ListingsResponse>({
+    queryKey: ['listings', params],
+    queryFn: () => fetchApi<ListingsResponse>(endpoint),
+  });
+}
+
+export function useListing(id: string) {
+  return useQuery<Listing>({
+    queryKey: ['listing', id],
+    queryFn: () => fetchApi<Listing>(`/api/listings/${id}`),
+    enabled: !!id,
   });
 }

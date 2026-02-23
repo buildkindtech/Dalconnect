@@ -96,3 +96,35 @@ export const insertBlogSchema = createInsertSchema(blogs).omit({
 });
 export type InsertBlog = z.infer<typeof insertBlogSchema>;
 export type Blog = typeof blogs.$inferSelect;
+
+// Listings table (Marketplace)
+export const listings = pgTable("listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  price: numeric("price", { precision: 10, scale: 2 }),
+  price_type: varchar("price_type", { length: 20 }).default('fixed'), // fixed, negotiable, free, contact
+  category: varchar("category", { length: 50 }).notNull(),
+  condition: varchar("condition", { length: 20 }), // new, like_new, good, fair
+  photos: json("photos").$type<string[]>().default(sql`'[]'`),
+  contact_method: varchar("contact_method", { length: 20 }).default('phone'), // phone, email, kakao, message
+  contact_info: varchar("contact_info", { length: 200 }),
+  author_name: varchar("author_name", { length: 100 }),
+  author_phone: varchar("author_phone", { length: 20 }),
+  location: varchar("location", { length: 100 }),
+  status: varchar("status", { length: 20 }).default('active'), // active, sold, expired, removed
+  views: integer("views").default(0),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+  expires_at: timestamp("expires_at").default(sql`NOW() + INTERVAL '30 days'`)
+});
+
+export const insertListingSchema = createInsertSchema(listings).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  expires_at: true,
+  views: true,
+});
+export type InsertListing = z.infer<typeof insertListingSchema>;
+export type Listing = typeof listings.$inferSelect;
