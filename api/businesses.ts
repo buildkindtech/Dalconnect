@@ -22,8 +22,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         max: 1,
       });
 
-      // Step 3: Raw query (no drizzle, no ORM)
-      const result = await pool.query('SELECT * FROM businesses LIMIT 20');
+      // Step 3: Parse query parameters for filtering
+      const { category, city, search, featured, limit } = req.query;
+      
+      let query = 'SELECT * FROM businesses WHERE 1=1';
+      const params: any[] = [];
+      let paramCount = 0;
+
+      if (category) {
+        paramCount++;
+        query += ` AND category = $${paramCount}`;
+        params.push(category);
+      }
+
+      if (city) {
+        paramCount++;
+        query += ` AND city = $${paramCount}`;
+        params.push(city);
+      }
+
+      if (search) {
+        paramCount++;
+        query += ` AND (name_en ILIKE $${paramCount} OR name_ko ILIKE $${paramCount} OR description ILIKE $${paramCount})`;
+        params.push(`%${search}%`);
+      }
+
+      if (featured === 'true') {
+        query += ` AND featured = true`;
+      }
+
+      // Add ordering by rating and created_at
+      query += ' ORDER BY rating DESC NULLS LAST, created_at DESC';
+
+      // Optional limit
+      if (limit) {
+        paramCount++;
+        query += ` LIMIT $${paramCount}`;
+        params.push(parseInt(limit as string));
+      }
+
+      const result = await pool.query(query, params);
       await pool.end();
       
       return res.status(200).json(result.rows);

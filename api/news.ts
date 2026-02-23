@@ -1,7 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from './_db';
-import { news } from '../shared/schema';
-import { eq, desc } from 'drizzle-orm';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,24 +9,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'GET') {
     try {
-      const db = getDb();
+      if (!process.env.DATABASE_URL) {
+        return res.status(500).json({ error: "DATABASE_URL not set" });
+      }
+
+      const pg = await import('pg');
+      const pool = new pg.default.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+        max: 1,
+      });
+
       const { category, limit } = req.query;
       const limitNum = limit ? Number(limit) : 20;
       
-      const results = category
-        ? await db
-            .select()
-            .from(news)
-            .where(eq(news.category, category as string))
-            .orderBy(desc(news.published_date))
-            .limit(limitNum)
-        : await db
-            .select()
-            .from(news)
-            .orderBy(desc(news.published_date))
-            .limit(limitNum);
+      let query = 'SELECT * FROM news WHERE 1=1';
+      const params: any[] = [];
+      let paramCount = 0;
+
+      if (category) {
+        paramCount++;
+        query += ` AND category = $${paramCount}`;
+        params.push(category);
+      }
+
+      query += ' ORDER BY published_date DESC';
       
-      return res.status(200).json(results);
+      paramCount++;
+      query += ` LIMIT $${paramCount}`;
+      params.push(limitNum);
+
+      const result = await pool.query(query, params);
+      await pool.end();
+      
+      return res.status(200).json(result.rows);
     } catch (error: any) {
       console.error("GET /api/news error:", error);
       return res.status(500).json({ 
