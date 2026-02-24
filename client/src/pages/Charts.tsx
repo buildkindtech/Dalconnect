@@ -197,12 +197,35 @@ const Charts: React.FC = () => {
                         {getRankIcon(item.rank)}
                       </div>
 
-                      {/* Thumbnail placeholder */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
-                        {activeTab === 'music' && <Music className="w-6 h-6 text-gray-500" />}
-                        {activeTab === 'drama' && <Tv className="w-6 h-6 text-gray-500" />}
-                        {activeTab === 'movie' && <Film className="w-6 h-6 text-gray-500" />}
-                        {activeTab === 'netflix' && <Tv className="w-6 h-6 text-gray-500" />}
+                      {/* Thumbnail */}
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        {item.thumbnail_url ? (
+                          <img
+                            src={item.thumbnail_url}
+                            alt={item.title_ko}
+                            className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => item.youtube_url && window.open(item.youtube_url, '_blank')}
+                            onError={(e) => {
+                              // Fallback to gradient if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.parentElement!.innerHTML = `
+                                <div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
+                                  ${activeTab === 'music' ? '<svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>' : 
+                                   activeTab === 'drama' || activeTab === 'netflix' ? '<svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zm-10-7.15l6 3.15-6 3.15V8.85z"/></svg>' :
+                                   '<svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>'}
+                                </div>
+                              `;
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
+                            {activeTab === 'music' && <Music className="w-6 h-6 text-gray-500" />}
+                            {activeTab === 'drama' && <Tv className="w-6 h-6 text-gray-500" />}
+                            {activeTab === 'movie' && <Film className="w-6 h-6 text-gray-500" />}
+                            {activeTab === 'netflix' && <Tv className="w-6 h-6 text-gray-500" />}
+                          </div>
+                        )}
                       </div>
 
                       {/* Content */}
