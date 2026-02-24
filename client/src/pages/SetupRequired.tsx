@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
 export default function SetupRequired() {
-  const databaseUrl = "postgresql://neondb_owner:npg_ySbZeC5J9wIs@ep-square-boat-ain9gi5m-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+  const databaseUrl = "configured-via-env";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(databaseUrl);

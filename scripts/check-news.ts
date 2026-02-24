@@ -5,7 +5,7 @@ import { news } from "../shared/schema";
 import { sql } from "drizzle-orm";
 
 const DATABASE_URL = process.env.DATABASE_URL || 
-  "postgresql://neondb_owner:npg_4PuSVOLIE0Gw@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require";
+  process.env.DATABASE_URL!;
 
 const pool = new pg.Pool({ 
   connectionString: DATABASE_URL,

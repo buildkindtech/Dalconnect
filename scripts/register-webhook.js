@@ -11,7 +11,8 @@
  *   STRIPE_SECRET_KEY - Your Stripe secret key (starts with sk_live_...)
  */
 
-const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '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';
+const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;
+if (!STRIPE_KEY) { console.error('ERROR: Set STRIPE_SECRET_KEY env variable'); process.exit(1); }
 const WEBHOOK_URL = 'https://dalconnect.buildkind.tech/api/stripe-checkout';
 
 const EVENTS = [
