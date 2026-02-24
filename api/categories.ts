@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               id, chart_type, rank, title_ko, title_en, artist, platform, 
               thumbnail_url, description, score, chart_date, youtube_url
             FROM charts
-            WHERE chart_date = CURRENT_DATE
+            WHERE chart_date = (SELECT MAX(chart_date) FROM charts)
           `;
           let params: any[] = [];
 
