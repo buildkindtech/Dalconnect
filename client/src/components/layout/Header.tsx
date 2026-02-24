@@ -18,24 +18,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-
-type City = {
-  id: string;
-  name: string;
-  active: boolean;
-};
-
-const CITIES: City[] = [
-  { id: "dallas", name: "달라스-포트워스", active: true },
-  { id: "houston", name: "휴스턴", active: false },
-  { id: "austin", name: "어스틴", active: false },
-  { id: "san_antonio", name: "샌안토니오", active: false },
-];
+import { useCityContext, City, CITIES } from "@/contexts/CityContext";
 
 export default function Header() {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
+  const { currentCity, setCurrentCity, activeCities } = useCityContext();
   const [comingSoonCity, setComingSoonCity] = useState<City | null>(null);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -44,7 +32,7 @@ export default function Header() {
 
   const handleCityClick = (city: City) => {
     if (city.active) {
-      setSelectedCity(city);
+      setCurrentCity(city);
     } else {
       setComingSoonCity(city);
     }
@@ -113,7 +101,7 @@ export default function Header() {
                   className="gap-2 border-muted-foreground/20 hover:bg-accent/50"
                 >
                   <MapPin className="h-4 w-4" />
-                  <span className="hidden md:inline">{selectedCity.name}</span>
+                  <span className="hidden md:inline">{currentCity.name}</span>
                   <span className="md:hidden">지역</span>
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
@@ -128,7 +116,7 @@ export default function Header() {
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      {city.active && selectedCity.id === city.id && "📍"}
+                      {city.active && currentCity.id === city.id && "📍"}
                       {city.name}
                     </span>
                     {!city.active && (

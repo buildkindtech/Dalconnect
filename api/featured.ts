@@ -21,28 +21,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   try {
-    const { action, category, hot, id } = req.query as Record<string, string>;
+    const { action, category, city, hot, id } = req.query as Record<string, string>;
 
     if (req.method === 'GET') {
       // Deal endpoints
       if (action === 'deals') {
         let query = `
-          SELECT * FROM deals 
-          WHERE (expires_at IS NULL OR expires_at > NOW())
-          AND is_verified = true
+          SELECT * FROM listings 
+          WHERE category = 'deals' 
+          AND (expires_at IS NULL OR expires_at > NOW())
+          AND status = 'active'
         `;
         
         const params: any[] = [];
+        let paramCount = 0;
+
+        // Default to dallas if no city specified (backward compatibility)
+        const targetCity = city || 'dallas';
+        paramCount++;
+        query += ` AND city = $${paramCount}`;
+        params.push(targetCity);
         
         // Category filter
-        if (category) {
-          query += ` AND category = $${params.length + 1}`;
-          params.push(category);
+        if (category && category !== 'deals') {
+          paramCount++;
+          query += ` AND description ILIKE $${paramCount}`;
+          params.push(`%${category}%`);
         }
         
-        // Hot deals (sorted by likes)
+        // Hot deals (sorted by views)
         if (hot === 'true') {
-          query += ` ORDER BY likes DESC, created_at DESC`;
+          query += ` ORDER BY views DESC, created_at DESC`;
         } else {
           query += ` ORDER BY created_at DESC`;
         }
@@ -56,14 +65,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       // Original featured businesses endpoint
       if (!action) {
+        // Default to dallas if no city specified (backward compatibility)
+        const targetCity = city || 'dallas';
+        
         const query = `
           SELECT * FROM businesses 
           WHERE featured = true 
+          AND city = $1
           ORDER BY rating DESC NULLS LAST, created_at DESC
           LIMIT 12
         `;
 
-        const result = await pool.query(query);
+        const result = await pool.query(query, [targetCity]);
         await pool.end();
         return res.status(200).json(result.rows);
       }

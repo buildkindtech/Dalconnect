@@ -61,6 +61,7 @@ export const news = pgTable("news", {
   published_date: timestamp("published_date"),
   source: varchar("source", { length: 255 }),
   thumbnail_url: varchar("thumbnail_url", { length: 1000 }),
+  city: varchar("city", { length: 50 }).default('dallas'),
   created_at: timestamp("created_at").defaultNow()
 });
 
@@ -84,6 +85,7 @@ export const blogs = pgTable("blogs", {
   cover_url: varchar("cover_url", { length: 500 }),
   cover_image: varchar("cover_image", { length: 500 }),
   author: varchar("author", { length: 255 }).default('DalConnect'),
+  city: varchar("city", { length: 50 }).default('dallas'),
   published_at: timestamp("published_at").defaultNow(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow()
@@ -112,6 +114,7 @@ export const listings = pgTable("listings", {
   author_name: varchar("author_name", { length: 100 }),
   author_phone: varchar("author_phone", { length: 20 }),
   location: varchar("location", { length: 100 }),
+  city: varchar("city", { length: 50 }).default('dallas'),
   status: varchar("status", { length: 20 }).default('active'), // active, sold, expired, removed
   views: integer("views").default(0),
   created_at: timestamp("created_at").defaultNow(),
@@ -150,6 +153,7 @@ export const newsletterSubscribers = pgTable("newsletter_subscribers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
+  city: varchar("city", { length: 50 }).default('dallas'),
   active: boolean("active").default(true),
   subscribed_at: timestamp("subscribed_at").defaultNow(),
   unsubscribed_at: timestamp("unsubscribed_at"),
@@ -196,6 +200,7 @@ export const communityPosts = pgTable("community_posts", {
   content: text("content").notNull(),
   category: varchar("category", { length: 50 }).default('자유게시판'),
   tags: json("tags").$type<string[]>().default(sql`'[]'`),
+  city: varchar("city", { length: 50 }).default('dallas'),
   views: integer("views").default(0),
   likes: integer("likes").default(0),
   comment_count: integer("comment_count").default(0),
@@ -266,6 +271,7 @@ export const charts = pgTable("charts", {
   thumbnail_url: text("thumbnail_url"),
   description: text("description"), // 장르, 한줄 설명
   score: numeric("score", { precision: 3, scale: 1 }), // 평점 (있으면)
+  city: varchar("city", { length: 50 }).default('dallas'),
   chart_date: timestamp("chart_date").default(sql`CURRENT_DATE`),
   created_at: timestamp("created_at").defaultNow()
 });

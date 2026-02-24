@@ -109,7 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 // Get posts list
 async function handleGetPosts(db: any, req: VercelRequest, res: VercelResponse) {
-  const { category, page = 1, limit = 20, sort = 'latest' } = req.query;
+  const { category, city, page = 1, limit = 20, sort = 'latest' } = req.query;
   const offset = (Number(page) - 1) * Number(limit);
 
   let query = db.select({
@@ -124,8 +124,16 @@ async function handleGetPosts(db: any, req: VercelRequest, res: VercelResponse) 
     created_at: communityPosts.created_at,
   }).from(communityPosts);
 
+  // Default to dallas if no city specified (backward compatibility)
+  const targetCity = city || 'dallas';
+  const filters = [eq(communityPosts.city, targetCity)];
+
   if (category && category !== 'all') {
-    query = query.where(eq(communityPosts.category, category as string));
+    filters.push(eq(communityPosts.category, category as string));
+  }
+
+  if (filters.length > 0) {
+    query = query.where(and(...filters));
   }
 
   // Sorting
@@ -356,7 +364,7 @@ async function handleGetTrending(db: any, req: VercelRequest, res: VercelRespons
 
 // Search posts
 async function handleSearch(db: any, req: VercelRequest, res: VercelResponse) {
-  const { q: query, category, page = 1, limit = 20 } = req.query;
+  const { q: query, category, city, page = 1, limit = 20 } = req.query;
   
   if (!query) {
     return res.status(400).json({ error: 'Search query required' });
@@ -381,13 +389,15 @@ async function handleSearch(db: any, req: VercelRequest, res: VercelResponse) {
     ilike(communityPosts.content, `%${query}%`)
   );
 
+  // Default to dallas if no city specified (backward compatibility)
+  const targetCity = city || 'dallas';
+  const filters = [searchCondition, eq(communityPosts.city, targetCity)];
+
   if (category && category !== 'all') {
-    searchQuery = searchQuery.where(
-      and(searchCondition, eq(communityPosts.category, category as string))
-    );
-  } else {
-    searchQuery = searchQuery.where(searchCondition);
+    filters.push(eq(communityPosts.category, category as string));
   }
+
+  searchQuery = searchQuery.where(and(...filters));
 
   const posts = await searchQuery
     .orderBy(desc(communityPosts.created_at))

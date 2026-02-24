@@ -4,7 +4,7 @@ import pg from 'pg';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { category, target_age, search, page = '1', limit = '12' } = req.query;
+  const { category, city, target_age, search, page = '1', limit = '12' } = req.query;
   const pageNum = parseInt(page as string);
   const limitNum = parseInt(limit as string);
   const offset = (pageNum - 1) * limitNum;
@@ -14,6 +14,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const conditions: string[] = [];
     const params: any[] = [];
     let paramIdx = 1;
+
+    // Default to dallas if no city specified (backward compatibility)
+    const targetCity = city || 'dallas';
+    conditions.push(`city = $${paramIdx++}`);
+    params.push(targetCity);
 
     if (category && category !== 'all') {
       conditions.push(`category = $${paramIdx++}`);

@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         max: 1,
       });
 
-      const { category, limit, id, offset } = req.query;
+      const { category, city, limit, id, offset } = req.query;
 
       // Single news detail
       if (id) {
@@ -37,6 +37,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let query = 'SELECT * FROM news WHERE 1=1';
       const params: any[] = [];
       let paramCount = 0;
+
+      // Default to dallas if no city specified (backward compatibility)
+      const targetCity = city || 'dallas';
+      paramCount++;
+      query += ` AND city = $${paramCount}`;
+      params.push(targetCity);
 
       if (category) {
         paramCount++;
