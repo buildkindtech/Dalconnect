@@ -27,13 +27,13 @@ interface Deal {
 
 const categories = [
   { value: 'all', label: '전체', icon: '🏷️' },
-  { value: 'grocery', label: '식료품', icon: '🛒' },
-  { value: 'flight', label: '항공권', icon: '✈️' },
-  { value: 'restaurant', label: '맛집', icon: '🍜' },
-  { value: 'beauty', label: '뷰티', icon: '💄' },
-  { value: 'tech', label: '테크', icon: '💻' },
-  { value: 'shopping', label: '쇼핑', icon: '🛍️' },
-  { value: 'coupon', label: '쿠폰', icon: '🎟️' }
+  { value: '식료품', label: '식료품', icon: '🛒' },
+  { value: '항공권', label: '항공권', icon: '✈️' },
+  { value: '맛집', label: '맛집', icon: '🍜' },
+  { value: '뷰티', label: '뷰티', icon: '💄' },
+  { value: '테크', label: '테크', icon: '💻' },
+  { value: '쇼핑', label: '쇼핑', icon: '🛍️' },
+  { value: '쿠폰', label: '쿠폰', icon: '🎟️' }
 ];
 
 const fetchDeals = async (category?: string, hot?: boolean): Promise<Deal[]> => {
