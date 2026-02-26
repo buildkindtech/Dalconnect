@@ -3,7 +3,7 @@ import axios from "axios";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { businesses } from "../shared/schema";
-import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 // Load environment variables FIRST
 dotenv.config();
@@ -165,21 +165,12 @@ async function main() {
   
   console.log(`\n✅ Found ${allBusinesses.size} unique businesses\n`);
   
-  let added = 0;
-  let skipped = 0;
+  let upserted = 0;
   let errors = 0;
   
-  // 각 업체 DB 저장
+  // 각 업체 DB 저장/업데이트 (Upsert)
   for (const [placeId, place] of allBusinesses) {
     try {
-      // DB에 이미 존재하는지 확인
-      const existing = await db.select().from(businesses).where(eq(businesses.google_place_id, placeId)).limit(1);
-      
-      if (existing.length > 0) {
-        skipped++;
-        continue;
-      }
-      
       // 카테고리 결정
       const category = categorizeByName(place.displayName?.text || "", place.types || []);
       
@@ -204,7 +195,7 @@ async function main() {
         }
       }
       
-      // DB에 저장
+      // Upsert: 없으면 추가, 있으면 최신 정보로 업데이트
       await db.insert(businesses).values({
         name_en: place.displayName?.text || "Unknown",
         name_ko: null, // 한글 이름은 나중에 추가
@@ -225,10 +216,22 @@ async function main() {
         rating: place.rating?.toString() || '0',
         review_count: place.userRatingCount || 0,
         google_place_id: placeId
+      }).onConflictDoUpdate({
+        target: businesses.google_place_id,
+        set: {
+          rating: sql`excluded.rating`,
+          review_count: sql`excluded.review_count`,
+          phone: sql`excluded.phone`,
+          website: sql`excluded.website`,
+          hours: sql`excluded.hours`,
+          address: sql`excluded.address`,
+          city: sql`excluded.city`,
+          updated_at: sql`NOW()`
+        }
       });
       
-      added++;
-      console.log(`✅ Added: ${place.displayName?.text} (${category})`);
+      upserted++;
+      console.log(`✅ Upserted: ${place.displayName?.text} (${category})`);
     } catch (error: any) {
       errors++;
       console.error(`❌ Error saving ${place.displayName?.text}:`, error.message);
@@ -236,8 +239,7 @@ async function main() {
   }
   
   console.log(`\n🎉 Scraping complete!`);
-  console.log(`📊 Added: ${added} businesses`);
-  console.log(`⏭️  Skipped: ${skipped} (already in database)`);
+  console.log(`📊 Upserted: ${upserted} businesses (added new or updated existing)`);
   console.log(`❌ Errors: ${errors}`);
   
   await pool.end();
