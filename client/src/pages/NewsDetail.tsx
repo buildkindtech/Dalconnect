@@ -120,19 +120,37 @@ export default function NewsDetail() {
             <div className="prose prose-lg max-w-none">
               {(() => {
                 const paragraphs = splitIntoParagraphs(newsItem.content || '');
-                return paragraphs.map((paragraph, index) => (
-                  <p 
-                    key={index} 
-                    className={`leading-relaxed text-slate-700 mb-6 ${
-                      index === 0 
-                        ? 'text-lg md:text-xl font-medium text-slate-800' // Lead paragraph style
-                        : 'text-base md:text-lg'
-                    }`}
-                  >
-                    {paragraph}
-                  </p>
-                ));
+                return paragraphs.map((paragraph, index) => {
+                  // Check if paragraph ends abruptly (incomplete sentence)
+                  const endsAbruptly = !paragraph.match(/[.!?…。]$/);
+                  const displayText = endsAbruptly ? `${paragraph}...` : paragraph;
+                  
+                  return (
+                    <p 
+                      key={index} 
+                      className={`leading-relaxed text-slate-700 mb-6 ${
+                        index === 0 
+                          ? 'text-lg md:text-xl font-medium text-slate-800' // Lead paragraph style
+                          : 'text-base md:text-lg'
+                      }`}
+                    >
+                      {displayText}
+                    </p>
+                  );
+                });
               })()}
+              
+              {/* Content too short indicator */}
+              {newsItem.content && newsItem.content.length < 500 && (
+                <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border-l-4 border-blue-500">
+                  <p className="text-blue-900 font-medium mb-2">
+                    📖 요약본만 제공됩니다
+                  </p>
+                  <p className="text-sm text-blue-800">
+                    전체 기사 내용은 아래 "원문 기사 보기" 버튼을 클릭하여 확인하세요.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Original Source Link - Prominent for short content */}
