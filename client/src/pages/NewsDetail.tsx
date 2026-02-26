@@ -108,6 +108,15 @@ export default function NewsDetail() {
 
           {/* Content */}
           <div className="p-6 md:p-12">
+            {/* Short content warning */}
+            {newsItem.content && newsItem.content.length < 500 && (
+              <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-900">
+                  ⚠️ 이 뉴스는 요약본입니다. 전체 내용은 아래 원문 링크에서 확인하세요.
+                </p>
+              </div>
+            )}
+
             <div className="prose prose-lg max-w-none">
               {(() => {
                 const paragraphs = splitIntoParagraphs(newsItem.content || '');
@@ -126,20 +135,31 @@ export default function NewsDetail() {
               })()}
             </div>
 
-            {/* Original Source Link */}
-            <div className="mt-12 pt-8 border-t">
-              <p className="text-sm text-muted-foreground mb-4">
-                더 자세한 내용은 원문 기사를 확인하세요:
-              </p>
-              <a 
-                href={newsItem.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-primary hover:underline font-medium"
-              >
-                원문 기사 보기
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </a>
+            {/* Original Source Link - Prominent for short content */}
+            <div className={`mt-8 pt-6 border-t ${newsItem.content && newsItem.content.length < 500 ? 'bg-blue-50 -mx-6 -mb-6 md:-mx-12 md:-mb-12 px-6 py-8 md:px-12' : ''}`}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-700 mb-1">
+                    📰 출처: <span className="text-primary">{newsItem.source}</span>
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    전문 기사는 원문에서 확인하세요
+                  </p>
+                </div>
+                <a 
+                  href={newsItem.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  <Button 
+                    className={newsItem.content && newsItem.content.length < 500 ? 'bg-primary hover:bg-primary/90 shadow-md' : ''}
+                    variant={newsItem.content && newsItem.content.length < 500 ? 'default' : 'outline'}
+                  >
+                    원문 기사 보기
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+              </div>
             </div>
           </div>
         </article>

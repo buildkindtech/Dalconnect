@@ -29,7 +29,15 @@ async function searchNews(query) {
     const url = `http://localhost:8080/search?q=${encodeURIComponent(query)}&format=json&time_range=day&categories=news`;
     const res = await fetch(url);
     const data = await res.json();
-    return (data.results || []).filter(r => r.url && r.title).slice(0, 5);
+    // Filter results and extract content from available fields
+    return (data.results || [])
+      .filter(r => r.url && r.title)
+      .map(r => ({
+        ...r,
+        // Use content or fallback to snippet or description
+        content: r.content || r.snippet || r.description || r.title
+      }))
+      .slice(0, 5);
   } catch (e) {
     console.error('Search error:', query, e.message);
     return [];
