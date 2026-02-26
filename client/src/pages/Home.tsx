@@ -106,21 +106,51 @@ function ChartsPreview() {
             return (
               <Card key={chart.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer">
                 <CardContent className="p-0">
-                  <div className={`bg-gradient-to-r ${chart.color} p-6 text-white relative overflow-hidden`}>
-                    <div className="absolute -top-4 -right-4 opacity-20 transform group-hover:scale-110 transition-transform">
-                      <IconComponent className="w-20 h-20" />
-                    </div>
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium opacity-90">{chart.label}</span>
-                        <div className="bg-white/20 rounded-full px-3 py-1">
-                          <span className="text-lg font-bold">#1</span>
-                        </div>
+                  {/* YouTube Thumbnail */}
+                  {chartItem.thumbnail_url && (
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={chartItem.thumbnail_url} 
+                        alt={chartItem.title_ko}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          // Fallback to gradient background if image fails
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent`}></div>
+                      <div className="absolute top-4 right-4 bg-white/90 rounded-full px-3 py-1">
+                        <span className="text-lg font-bold text-slate-800">#1</span>
                       </div>
-                      <h3 className="font-bold text-lg line-clamp-2 mb-1">{chartItem.title_ko}</h3>
-                      <p className="text-sm opacity-90 line-clamp-1">{chartItem.artist}</p>
+                      <div className="absolute bottom-4 left-4 right-4 text-white">
+                        <div className="flex items-center gap-2 mb-2">
+                          <IconComponent className="w-5 h-5" />
+                          <span className="text-sm font-medium">{chart.label}</span>
+                        </div>
+                        <h3 className="font-bold text-lg line-clamp-2 mb-1">{chartItem.title_ko}</h3>
+                        <p className="text-sm opacity-90 line-clamp-1">{chartItem.artist}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  
+                  {/* Fallback gradient if no thumbnail */}
+                  {!chartItem.thumbnail_url && (
+                    <div className={`bg-gradient-to-r ${chart.color} p-6 text-white relative overflow-hidden`}>
+                      <div className="absolute -top-4 -right-4 opacity-20 transform group-hover:scale-110 transition-transform">
+                        <IconComponent className="w-20 h-20" />
+                      </div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium opacity-90">{chart.label}</span>
+                          <div className="bg-white/20 rounded-full px-3 py-1">
+                            <span className="text-lg font-bold">#1</span>
+                          </div>
+                        </div>
+                        <h3 className="font-bold text-lg line-clamp-2 mb-1">{chartItem.title_ko}</h3>
+                        <p className="text-sm opacity-90 line-clamp-1">{chartItem.artist}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="p-4">
                     <div className="flex items-center justify-between text-sm text-slate-600">
                       <span className="bg-slate-100 px-2 py-1 rounded-full text-xs font-medium">
