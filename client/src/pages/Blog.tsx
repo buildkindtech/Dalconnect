@@ -114,109 +114,80 @@ export default function Blog() {
 
       {/* Blog List */}
       <section className="py-12">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 max-w-5xl">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-0">
-                    <Skeleton className="w-full h-48" />
-                    <div className="p-6 space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-1/2" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
+              <div className="divide-y">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="p-4 md:p-6 space-y-2">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : blogs && blogs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogs.map((blog) => {
-                const categoryStyle = getBlogCategoryStyle(blog.category);
-                return (
-                  <Link key={blog.id} href={`/blog/${blog.slug}`}>
-                    <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl">
-                      <CardContent className="p-0 flex flex-col h-full">
-                        {blog.cover_url || blog.cover_image ? (
-                          <div 
-                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                            style={{ backgroundImage: `url(${blog.cover_url || blog.cover_image})` }}
-                          />
-                        ) : (
-                          <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center group-hover:scale-105 transition-all`}>
-                            <span className="text-7xl">{categoryStyle.emoji}</span>
+            <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
+              <div className="divide-y">
+                {blogs.map((blog) => {
+                  return (
+                    <Link key={blog.id} href={`/blog/${blog.slug}`}>
+                      <div className="p-4 md:p-6 hover:bg-slate-50 transition-colors cursor-pointer group">
+                        <div className="w-full">
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 font-ko">
+                              {blog.title}
+                            </h3>
+                            {blog.category && (
+                              <Badge variant="secondary" className="flex-shrink-0">
+                                {blog.category}
+                              </Badge>
+                            )}
                           </div>
                         )}
                       
                       <div className="p-6 flex-1 flex flex-col">
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          {blog.category && (
-                            <Badge variant="secondary" className="w-fit">
-                              {blog.category}
-                            </Badge>
+                          
+                          {blog.excerpt && (
+                            <p className="text-slate-600 line-clamp-2 mb-3 text-sm">
+                              {blog.excerpt}
+                            </p>
                           )}
-                          {blog.target_age && blog.target_age !== 'all' && (
-                            <Badge variant="outline" className="w-fit">
-                              {blog.target_age === '20s' ? '20대' :
-                               blog.target_age === '30s' ? '30대' :
-                               blog.target_age === '40s' ? '40대' :
-                               blog.target_age === '50s+' ? '50대+' : blog.target_age}
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors mb-3 line-clamp-2 font-ko">
-                          {blog.title}
-                        </h3>
-                        
-                        {blog.excerpt && (
-                          <p className="text-slate-600 line-clamp-3 mb-4 flex-1 text-sm">
-                            {blog.excerpt}
-                          </p>
-                        )}
 
-                        {/* Tags */}
-                        {blog.tags && Array.isArray(blog.tags) && blog.tags.length > 0 && (
-                          <div className="flex items-center gap-1 mb-4 flex-wrap">
-                            <Tag className="h-3 w-3 text-slate-400" />
-                            {blog.tags.slice(0, 3).map((tag: string, idx: number) => (
-                              <span key={idx} className="text-xs text-slate-500">
-                                #{tag}
-                              </span>
-                            ))}
+                          <div className="flex items-center justify-between text-xs text-slate-500">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1.5">
+                                <User className="h-3.5 w-3.5" />
+                                <span>{blog.author}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5" />
+                                <span>
+                                  {new Date(blog.published_at).toLocaleDateString('ko-KR', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {blog.target_age && blog.target_age !== 'all' && (
+                              <Badge variant="outline" className="text-xs">
+                                {blog.target_age === '20s' ? '20대' :
+                                 blog.target_age === '30s' ? '30대' :
+                                 blog.target_age === '40s' ? '40대' :
+                                 blog.target_age === '50s+' ? '50대+' : blog.target_age}
+                              </Badge>
+                            )}
                           </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t">
-                          <div className="flex items-center gap-2">
-                            <User className="h-3.5 w-3.5" />
-                            <span>{blog.author}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>
-                              {new Date(blog.published_at).toLocaleDateString('ko-KR', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <Button variant="ghost" size="sm" className="gap-2 group-hover:gap-3 transition-all w-full">
-                            자세히 보기 <ArrowRight className="h-4 w-4" />
-                          </Button>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-              })}
+                    </Link>
+                );
+                })}
+              </div>
             </div>
           ) : (
             <div className="text-center py-20">
