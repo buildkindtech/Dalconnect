@@ -129,32 +129,32 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <nav className="hidden md:flex gap-6">
-              <Link href="/businesses" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/businesses' ? 'text-primary' : 'text-muted-foreground'}`}>
+            <nav className="hidden xl:flex gap-6">
+              <Link href="/businesses" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/businesses' ? 'text-primary' : 'text-muted-foreground'}`}>
                 업체
               </Link>
-              <Link href="/deals" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/deals' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Link href="/deals" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/deals' ? 'text-primary' : 'text-muted-foreground'}`}>
                 딜 🔥
               </Link>
-              <Link href="/marketplace" className={`text-sm font-medium transition-colors hover:text-primary ${location.startsWith('/marketplace') ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Link href="/marketplace" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location.startsWith('/marketplace') ? 'text-primary' : 'text-muted-foreground'}`}>
                 사고팔기
               </Link>
-              <Link href="/community" className={`text-sm font-medium transition-colors hover:text-primary ${location.startsWith('/community') ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Link href="/community" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location.startsWith('/community') ? 'text-primary' : 'text-muted-foreground'}`}>
                 커뮤니티
               </Link>
-              <Link href="/charts" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/charts' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Link href="/charts" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/charts' ? 'text-primary' : 'text-muted-foreground'}`}>
                 차트 🏆
               </Link>
-              <Link href="/news" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Link href="/news" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/news' ? 'text-primary' : 'text-muted-foreground'}`}>
                 뉴스
               </Link>
-              <Link href="/blog" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/blog' || location.startsWith('/blog/') ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Link href="/blog" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/blog' || location.startsWith('/blog/') ? 'text-primary' : 'text-muted-foreground'}`}>
                 블로그
               </Link>
-              <Link href="/about" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/about' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Link href="/about" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/about' ? 'text-primary' : 'text-muted-foreground'}`}>
                 소개
               </Link>
-              <Link href="/contact" className={`text-sm font-medium transition-colors hover:text-primary ${location === '/contact' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Link href="/contact" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/contact' ? 'text-primary' : 'text-muted-foreground'}`}>
                 문의
               </Link>
             </nav>
@@ -162,14 +162,14 @@ export default function Header() {
 
           <div className="flex items-center gap-4">
             <Link href="/register-business">
-              <Button className="hidden md:flex bg-primary hover:bg-primary/90 rounded-full">
+              <Button className="hidden xl:flex bg-primary hover:bg-primary/90 rounded-full">
                 업체 등록
               </Button>
             </Link>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="md:hidden"
+              className="xl:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -179,7 +179,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t bg-background">
+          <div className="xl:hidden border-t bg-background">
             <nav className="container mx-auto flex flex-col gap-4 p-4">
               <Link 
                 href="/businesses" 
