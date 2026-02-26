@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let query = `
       SELECT 
         id, chart_type, rank, title_ko, title_en,
-        artist, platform, thumbnail_url, description,
+        artist, platform, youtube_url, thumbnail_url, description,
         score, chart_date, created_at
       FROM charts
       ORDER BY chart_date DESC, rank ASC
@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       query = `
         SELECT 
           id, chart_type, rank, title_ko, title_en,
-          artist, platform, thumbnail_url, description,
+          artist, platform, youtube_url, thumbnail_url, description,
           score, chart_date, created_at
         FROM charts
         WHERE chart_type = $1
