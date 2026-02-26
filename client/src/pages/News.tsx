@@ -9,23 +9,24 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { NewsSubmissionDialog } from "@/components/NewsSubmissionDialog";
 import { getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
 
+// 이민 사회 관심사 우선 정렬
 const CATEGORIES = [
-  { id: 'all', label: '전체', emoji: '📰' },
-  { id: '로컬뉴스', label: '로컬뉴스', emoji: '🏙️' },
-  { id: '한국뉴스', label: '한국뉴스', emoji: '🇰🇷' },
-  { id: '미국뉴스', label: '미국뉴스', emoji: '🇺🇸' },
-  { id: '월드뉴스', label: '월드뉴스', emoji: '🌍' },
-  { id: '연예/드라마', label: '연예/드라마', emoji: '🎬' },
-  { id: 'K-POP', label: 'K-POP', emoji: '🎤' },
-  { id: '스포츠', label: '스포츠', emoji: '⚽' },
-  { id: '패션/뷰티', label: '패션/뷰티', emoji: '👗' },
-  { id: '건강', label: '건강', emoji: '💪' },
-  { id: '육아', label: '육아', emoji: '👶' },
-  { id: '부동산/숙소', label: '부동산/숙소', emoji: '🏠' },
-  { id: '이민/비자', label: '이민/비자', emoji: '✈️' },
-  { id: '세금/재정', label: '세금/재정', emoji: '💰' },
-  { id: '취업/사업', label: '취업/사업', emoji: '💼' },
-  { id: '생활정보', label: '생활정보', emoji: '📋' },
+  { id: 'all', label: '전체' },
+  { id: '이민/비자', label: '이민/비자' },
+  { id: '세금/재정', label: '세금/재정' },
+  { id: '취업/사업', label: '취업/사업' },
+  { id: '생활정보', label: '생활정보' },
+  { id: '부동산/숙소', label: '부동산/숙소' },
+  { id: '육아', label: '육아' },
+  { id: '건강', label: '건강' },
+  { id: '로컬뉴스', label: '로컬뉴스' },
+  { id: '한국뉴스', label: '한국뉴스' },
+  { id: '미국뉴스', label: '미국뉴스' },
+  { id: '월드뉴스', label: '월드뉴스' },
+  { id: '연예/드라마', label: '연예/드라마' },
+  { id: 'K-POP', label: 'K-POP' },
+  { id: '스포츠', label: '스포츠' },
+  { id: '패션/뷰티', label: '패션/뷰티' },
 ];
 
 // Helper function to format relative time
@@ -127,7 +128,6 @@ export default function News() {
                 onClick={() => handleCategoryChange(cat.id)}
                 className="font-ko flex-shrink-0"
               >
-                <span className="mr-1.5">{cat.emoji}</span>
                 {cat.label}
               </Button>
             ))}
@@ -170,33 +170,11 @@ export default function News() {
                     className="block"
                   >
                     <div 
-                      className="p-4 md:p-6 hover:bg-slate-50 transition-colors cursor-pointer flex gap-4 items-start group"
+                      className="p-4 md:p-6 hover:bg-slate-50 transition-colors cursor-pointer group"
                       data-testid={`news-item-${news.id}`}
                     >
-                      {/* Thumbnail */}
-                      {news.thumbnail_url ? (
-                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-border">
-                          <img 
-                            src={news.thumbnail_url} 
-                            alt={news.title} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const parent = e.currentTarget.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center text-3xl">${categoryStyle.emoji}</div>`;
-                              }
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className={`w-20 h-20 rounded-lg bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center flex-shrink-0 text-3xl`}>
-                          {categoryStyle.emoji}
-                        </div>
-                      )}
-
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
+                    <div className="w-full">
                       <div className="flex items-start justify-between gap-4 mb-2">
                         <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 font-ko">
                           {news.title}
