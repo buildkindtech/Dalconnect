@@ -155,7 +155,7 @@ export default function Businesses() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             className="pl-10 h-11 border-slate-200 focus-visible:ring-primary"
-            placeholder="업체명, 키워드..."
+            placeholder="업체명 검색 (한/영 모두 가능)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
