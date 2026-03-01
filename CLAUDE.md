@@ -12,3 +12,6 @@ DFW Korean community directory & resource hub. Business listings, guides, deals.
 2. `npx vercel --prod` 배포 실행
 3. 배포 URL 확인 후 알려주기
 4. 작업 요약: 뭘 만들었는지, 뭐가 바뀌었는지, 다음에 할 일
+
+## 모델 규칙
+- 기본: Sonnet. 복잡한 아키텍처, 디버깅, 새 시스템 설계 시 Opus 필요하면 Aaron에게 물어볼 것.
