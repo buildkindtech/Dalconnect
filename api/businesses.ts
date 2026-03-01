@@ -2,8 +2,32 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
 
 // ─── Inline Korean↔English transliteration (no external import for Vercel) ───
+
+// Algorithmic Korean → Romanized English (handles ANY Korean syllable)
+const INITIALS = ['g','kk','n','d','tt','r','m','b','pp','s','ss','','j','jj','ch','k','t','p','h'];
+const MEDIALS = ['a','ae','ya','yae','eo','e','yeo','ye','o','wa','wae','oe','yo','u','wo','we','wi','yu','eu','ui','i'];
+const FINALS = ['','k','k','k','n','n','n','t','l','l','l','l','l','l','l','l','m','p','p','t','t','ng','t','t','k','t','p','t'];
+
+function koreanToRoman(text: string): string {
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    if (code >= 0xAC00 && code <= 0xD7A3) {
+      const offset = code - 0xAC00;
+      result += INITIALS[Math.floor(offset / (21 * 28))];
+      result += MEDIALS[Math.floor((offset % (21 * 28)) / 28)];
+      result += FINALS[offset % 28];
+    } else {
+      result += text[i];
+    }
+  }
+  return result;
+}
+
+// Common name/word overrides (romanization doesn't always match how people actually spell names)
 const KOREAN_TO_ENGLISH: [RegExp, string][] = [
-  [/해나/g,'hanna'],[/한나/g,'hanna'],[/신/g,'shin'],[/김/g,'kim'],[/이/g,'lee'],
+  [/해나/g,'hanna'],[/한나/g,'hanna'],[/제니/g,'jenny'],[/제니퍼/g,'jennifer'],
+  [/신/g,'shin'],[/김/g,'kim'],[/이/g,'lee'],
   [/박/g,'park'],[/정/g,'jung'],[/최/g,'choi'],[/조/g,'cho'],[/윤/g,'yoon'],
   [/장/g,'jang'],[/임/g,'lim'],[/한/g,'han'],[/오/g,'oh'],[/서/g,'seo'],
   [/송/g,'song'],[/강/g,'kang'],[/황/g,'hwang'],[/안/g,'ahn'],[/류/g,'ryu'],
@@ -17,9 +41,18 @@ const KOREAN_TO_ENGLISH: [RegExp, string][] = [
   [/선/g,'sun'],[/필/g,'phil'],[/라/g,'ra'],[/마/g,'ma'],[/나/g,'na'],
   [/다/g,'da'],[/사/g,'sa'],[/가/g,'ga'],[/바/g,'ba'],[/아/g,'ah'],
   [/자/g,'ja'],[/타/g,'ta'],[/카/g,'ka'],[/파/g,'pa'],
+  [/니/g,'ni'],[/리/g,'ri'],[/시/g,'si'],[/비/g,'bi'],[/피/g,'pi'],
+  [/기/g,'gi'],[/디/g,'di'],[/티/g,'ti'],[/키/g,'ki'],[/히/g,'hi'],
+  [/세/g,'se'],[/네/g,'ne'],[/레/g,'re'],[/메/g,'me'],[/베/g,'be'],
+  [/제/g,'je'],[/케/g,'ke'],[/테/g,'te'],[/페/g,'pe'],[/헤/g,'he'],
+  [/소/g,'so'],[/고/g,'go'],[/도/g,'do'],[/로/g,'ro'],[/모/g,'mo'],
+  [/보/g,'bo'],[/토/g,'to'],[/코/g,'ko'],[/포/g,'po'],
+  [/루/g,'ru'],[/무/g,'mu'],[/부/g,'bu'],[/두/g,'du'],[/투/g,'tu'],
+  [/쿠/g,'ku'],[/푸/g,'pu'],[/후/g,'hu'],[/누/g,'nu'],[/그/g,'gu'],
 ];
 const ENGLISH_TO_KOREAN: [RegExp, string][] = [
-  [/hanna/gi,'한나'],[/hannah/gi,'한나'],[/shin/gi,'신'],[/kim/gi,'김'],[/lee/gi,'이'],
+  [/hanna/gi,'한나'],[/hannah/gi,'한나'],[/jenny/gi,'제니'],[/jennifer/gi,'제니퍼'],
+  [/shin/gi,'신'],[/kim/gi,'김'],[/lee/gi,'이'],
   [/park/gi,'박'],[/jung/gi,'정'],[/jeong/gi,'정'],[/choi/gi,'최'],[/cho/gi,'조'],
   [/yoon/gi,'윤'],[/jang/gi,'장'],[/chang/gi,'장'],[/lim/gi,'임'],[/han/gi,'한'],
   [/seo/gi,'서'],[/song/gi,'송'],[/kang/gi,'강'],[/gang/gi,'강'],[/hwang/gi,'황'],
@@ -30,6 +63,7 @@ const ENGLISH_TO_KOREAN: [RegExp, string][] = [
   [/soo/gi,'수'],[/young/gi,'영'],[/hyun/gi,'현'],[/eun/gi,'은'],[/hye/gi,'혜'],
   [/yeon/gi,'연'],[/kyung/gi,'경'],[/dong/gi,'동'],[/sang/gi,'상'],[/jun/gi,'준'],
   [/jae/gi,'재'],[/seung/gi,'승'],[/tae/gi,'태'],[/won/gi,'원'],[/phil/gi,'필'],
+  [/jenny/gi,'제니'],[/jennifer/gi,'제니퍼'],
 ];
 
 function getSearchAlternatives(query: string): string[] {
@@ -41,13 +75,22 @@ function getSearchAlternatives(query: string): string[] {
   const hasEn = /[a-zA-Z]/.test(q);
 
   if (hasCompleteSyllable) {
+    // 1. Algorithmic romanization (handles ANY syllable: 제니→jeni)
+    const roman = koreanToRoman(q);
+    if (roman && roman !== q) alts.push(roman);
+
+    // 2. Common name overrides (제니→jenny, 김→kim, etc.)
     let mapped = q;
     for (const [p, r] of KOREAN_TO_ENGLISH) mapped = mapped.replace(new RegExp(p.source, 'g'), r);
-    if (mapped !== q) alts.push(mapped);
+    if (mapped !== q && mapped !== roman) alts.push(mapped);
+
+    // 3. Individual words
     q.split(/\s+/).forEach(w => {
+      const wRoman = koreanToRoman(w);
+      if (wRoman && wRoman !== w && !alts.includes(wRoman)) alts.push(wRoman);
       let m = w;
       for (const [p, r] of KOREAN_TO_ENGLISH) m = m.replace(new RegExp(p.source, 'g'), r);
-      if (m !== w && !alts.includes(m)) alts.push(m);
+      if (m !== w && m !== wRoman && !alts.includes(m)) alts.push(m);
     });
   }
   if (hasEn) {
