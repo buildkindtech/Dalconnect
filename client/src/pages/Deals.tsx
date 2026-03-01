@@ -163,14 +163,26 @@ const DealCard: React.FC<{ deal: Deal; onLike: (id: string) => void }> = ({ deal
                 {deal.likes}
               </Button>
               
-              <Button
-                size="sm"
-                onClick={() => window.open(deal.deal_url, '_blank')}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                딜 보러가기
-                <ExternalLink className="w-3 h-3 ml-1" />
-              </Button>
+              {deal.deal_url ? (
+                <Button
+                  size="sm"
+                  onClick={() => window.open(deal.deal_url, '_blank')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  딜 보러가기
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-gray-500 cursor-default"
+                  disabled
+                >
+                  매장 방문
+                  <Store className="w-3 h-3 ml-1" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -214,14 +226,26 @@ const HotDealBanner: React.FC<{ hotDeal?: Deal; onLike: (id: string) => void }> 
                 {hotDeal.likes}
               </Button>
               
-              <Button
-                size="lg"
-                onClick={() => window.open(hotDeal.deal_url, '_blank')}
-                className="bg-white text-red-500 hover:bg-gray-100 font-bold"
-              >
-                지금 구매하기
-                <ExternalLink className="w-4 h-4 ml-2" />
-              </Button>
+              {hotDeal.deal_url ? (
+                <Button
+                  size="lg"
+                  onClick={() => window.open(hotDeal.deal_url, '_blank')}
+                  className="bg-white text-red-500 hover:bg-gray-100 font-bold"
+                >
+                  지금 구매하기
+                  <ExternalLink className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="font-bold cursor-default"
+                  disabled
+                >
+                  매장 방문
+                  <Store className="w-4 h-4 ml-2" />
+                </Button>
+              )}
             </div>
           </div>
           
