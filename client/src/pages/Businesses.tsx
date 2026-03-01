@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { Search, MapPin, Star, Phone, Globe, SlidersHorizontal, X, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,19 +41,34 @@ export default function Businesses() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [isAutoScraping, setIsAutoScraping] = useState(false);
   const [autoScrapeComplete, setAutoScrapeComplete] = useState(false);
+  const isComposingRef = useRef(false);
 
-  // Debounced search - skip incomplete Korean jamo (ㄱ-ㅎ, ㅏ-ㅣ)
+  // Debounced search - waits for IME composition to finish
   useEffect(() => {
     const timer = setTimeout(() => {
+      if (isComposingRef.current) return; // still composing Korean
       const trimmed = searchQuery.trim();
       // Skip if query is only incomplete Korean jamo characters
       const isIncompleteKorean = /^[ㄱ-ㅎㅏ-ㅣ]+$/.test(trimmed);
       if (trimmed && isIncompleteKorean) return;
       setDebouncedSearch(trimmed);
       setCurrentPage(1);
-    }, 400);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
+
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback((e: React.CompositionEvent<HTMLInputElement>) => {
+    isComposingRef.current = false;
+    setSearchQuery((e.target as HTMLInputElement).value);
+  }, []);
 
   const { data: categoriesData } = useCategories();
   const { data, isLoading } = useBusinesses({
@@ -161,7 +176,9 @@ export default function Businesses() {
             className="pl-10 h-11 border-slate-200 focus-visible:ring-primary"
             placeholder="업체명 검색 (한/영 모두 가능)"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
           />
         </div>
       </div>
