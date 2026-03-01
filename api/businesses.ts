@@ -1,5 +1,69 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
+
+// ─── Inline Korean↔English transliteration (no external import for Vercel) ───
+const KOREAN_TO_ENGLISH: [RegExp, string][] = [
+  [/해나/g,'hanna'],[/한나/g,'hanna'],[/신/g,'shin'],[/김/g,'kim'],[/이/g,'lee'],
+  [/박/g,'park'],[/정/g,'jung'],[/최/g,'choi'],[/조/g,'cho'],[/윤/g,'yoon'],
+  [/장/g,'jang'],[/임/g,'lim'],[/한/g,'han'],[/오/g,'oh'],[/서/g,'seo'],
+  [/송/g,'song'],[/강/g,'kang'],[/황/g,'hwang'],[/안/g,'ahn'],[/류/g,'ryu'],
+  [/전/g,'jeon'],[/홍/g,'hong'],[/문/g,'moon'],[/양/g,'yang'],[/배/g,'bae'],
+  [/백/g,'baek'],[/권/g,'kwon'],[/남/g,'nam'],[/유/g,'yoo'],[/차/g,'cha'],
+  [/주/g,'joo'],[/우/g,'woo'],[/구/g,'goo'],[/노/g,'noh'],[/민/g,'min'],
+  [/성/g,'sung'],[/하/g,'ha'],[/지/g,'ji'],[/수/g,'soo'],[/영/g,'young'],
+  [/미/g,'mi'],[/진/g,'jin'],[/현/g,'hyun'],[/은/g,'eun'],[/혜/g,'hye'],
+  [/연/g,'yeon'],[/경/g,'kyung'],[/동/g,'dong'],[/상/g,'sang'],[/준/g,'jun'],
+  [/재/g,'jae'],[/승/g,'seung'],[/태/g,'tae'],[/원/g,'won'],[/호/g,'ho'],
+  [/선/g,'sun'],[/필/g,'phil'],[/라/g,'ra'],[/마/g,'ma'],[/나/g,'na'],
+  [/다/g,'da'],[/사/g,'sa'],[/가/g,'ga'],[/바/g,'ba'],[/아/g,'ah'],
+  [/자/g,'ja'],[/타/g,'ta'],[/카/g,'ka'],[/파/g,'pa'],
+];
+const ENGLISH_TO_KOREAN: [RegExp, string][] = [
+  [/hanna/gi,'한나'],[/hannah/gi,'한나'],[/shin/gi,'신'],[/kim/gi,'김'],[/lee/gi,'이'],
+  [/park/gi,'박'],[/jung/gi,'정'],[/jeong/gi,'정'],[/choi/gi,'최'],[/cho/gi,'조'],
+  [/yoon/gi,'윤'],[/jang/gi,'장'],[/chang/gi,'장'],[/lim/gi,'임'],[/han/gi,'한'],
+  [/seo/gi,'서'],[/song/gi,'송'],[/kang/gi,'강'],[/gang/gi,'강'],[/hwang/gi,'황'],
+  [/ahn/gi,'안'],[/ryu/gi,'류'],[/jeon/gi,'전'],[/hong/gi,'홍'],[/moon/gi,'문'],
+  [/yang/gi,'양'],[/bae/gi,'배'],[/baek/gi,'백'],[/kwon/gi,'권'],[/nam/gi,'남'],
+  [/yoo/gi,'유'],[/cha/gi,'차'],[/joo/gi,'주'],[/woo/gi,'우'],[/goo/gi,'구'],
+  [/noh/gi,'노'],[/min/gi,'민'],[/sung/gi,'성'],[/ha/gi,'하'],[/ji/gi,'지'],
+  [/soo/gi,'수'],[/young/gi,'영'],[/hyun/gi,'현'],[/eun/gi,'은'],[/hye/gi,'혜'],
+  [/yeon/gi,'연'],[/kyung/gi,'경'],[/dong/gi,'동'],[/sang/gi,'상'],[/jun/gi,'준'],
+  [/jae/gi,'재'],[/seung/gi,'승'],[/tae/gi,'태'],[/won/gi,'원'],[/phil/gi,'필'],
+];
+
+function getSearchAlternatives(query: string): string[] {
+  const q = query.trim();
+  if (!q) return [];
+  const alts: string[] = [];
+  const hasKo = /[가-힣]/.test(q);
+  const hasEn = /[a-zA-Z]/.test(q);
+
+  if (hasKo) {
+    let mapped = q;
+    for (const [p, r] of KOREAN_TO_ENGLISH) mapped = mapped.replace(p, r);
+    if (mapped !== q) alts.push(mapped);
+    // individual words
+    q.split(/\s+/).forEach(w => {
+      let m = w;
+      for (const [p, r] of KOREAN_TO_ENGLISH) m = m.replace(p, r);
+      if (m !== w && !alts.includes(m)) alts.push(m);
+    });
+  }
+  if (hasEn) {
+    let mapped = q.toLowerCase();
+    const sorted = [...ENGLISH_TO_KOREAN].sort((a, b) => b[0].source.length - a[0].source.length);
+    for (const [p, r] of sorted) mapped = mapped.replace(p, r);
+    if (mapped !== q.toLowerCase()) alts.push(mapped);
+    q.split(/\s+/).forEach(w => {
+      let m = w.toLowerCase();
+      for (const [p, r] of sorted) m = m.replace(p, r);
+      if (m !== w.toLowerCase() && !alts.includes(m)) alts.push(m);
+    });
+  }
+  return [...new Set(alts)];
+}
+
 function handleCors(req: any, res: any): boolean {
   const origin = (req.headers?.origin) || '';
   const allowed = ['https://dalconnect.vercel.app','https://dalconnect.buildkind.tech','https://dalconnect.com','https://www.dalconnect.com','http://localhost:5000','http://localhost:5173'];
@@ -134,9 +198,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (search) {
-        paramCount++;
-        query += ` AND (name_en ILIKE $${paramCount} OR name_ko ILIKE $${paramCount} OR description ILIKE $${paramCount})`;
-        params.push(`%${search}%`);
+        const searchStr = typeof search === 'string' ? search : String(search);
+        const alternatives = getSearchAlternatives(searchStr);
+
+        // Build OR conditions for original + transliterated terms
+        const searchTerms = [searchStr, ...alternatives];
+        const orClauses: string[] = [];
+
+        for (const term of searchTerms) {
+          paramCount++;
+          orClauses.push(`name_en ILIKE $${paramCount} OR name_ko ILIKE $${paramCount} OR description ILIKE $${paramCount}`);
+          params.push(`%${term}%`);
+        }
+
+        query += ` AND (${orClauses.join(' OR ')})`;
       }
 
       if (featured === 'true') {
