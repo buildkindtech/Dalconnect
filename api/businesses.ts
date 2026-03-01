@@ -34,30 +34,30 @@ const ENGLISH_TO_KOREAN: [RegExp, string][] = [
 
 function getSearchAlternatives(query: string): string[] {
   const q = query.trim();
-  if (!q) return [];
+  if (!q || q.length < 2) return []; // skip single chars like ㅈ, ㅋ
   const alts: string[] = [];
-  const hasKo = /[가-힣]/.test(q);
+  // Only process complete Korean syllables (가-힣), not loose jamo (ㄱ-ㅎ,ㅏ-ㅣ)
+  const hasCompleteSyllable = /[가-힣]/.test(q);
   const hasEn = /[a-zA-Z]/.test(q);
 
-  if (hasKo) {
+  if (hasCompleteSyllable) {
     let mapped = q;
-    for (const [p, r] of KOREAN_TO_ENGLISH) mapped = mapped.replace(p, r);
+    for (const [p, r] of KOREAN_TO_ENGLISH) mapped = mapped.replace(new RegExp(p.source, 'g'), r);
     if (mapped !== q) alts.push(mapped);
-    // individual words
     q.split(/\s+/).forEach(w => {
       let m = w;
-      for (const [p, r] of KOREAN_TO_ENGLISH) m = m.replace(p, r);
+      for (const [p, r] of KOREAN_TO_ENGLISH) m = m.replace(new RegExp(p.source, 'g'), r);
       if (m !== w && !alts.includes(m)) alts.push(m);
     });
   }
   if (hasEn) {
     let mapped = q.toLowerCase();
     const sorted = [...ENGLISH_TO_KOREAN].sort((a, b) => b[0].source.length - a[0].source.length);
-    for (const [p, r] of sorted) mapped = mapped.replace(p, r);
+    for (const [p, r] of sorted) mapped = mapped.replace(new RegExp(p.source, 'gi'), r);
     if (mapped !== q.toLowerCase()) alts.push(mapped);
     q.split(/\s+/).forEach(w => {
       let m = w.toLowerCase();
-      for (const [p, r] of sorted) m = m.replace(p, r);
+      for (const [p, r] of sorted) m = m.replace(new RegExp(p.source, 'gi'), r);
       if (m !== w.toLowerCase() && !alts.includes(m)) alts.push(m);
     });
   }
