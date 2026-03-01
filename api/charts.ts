@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -8,14 +9,7 @@ const pool = new pg.Pool({
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -58,9 +52,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error: any) {
     console.error('Charts API error:', error);
-    return res.status(500).json({ 
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    return res.status(500).json({
+      error: "서버 오류가 발생했습니다"
     });
   }
 }

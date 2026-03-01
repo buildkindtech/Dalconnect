@@ -77,7 +77,7 @@ password authentication failed for user 'neondb_owner'
 
 **현재 DATABASE_URL:**
 ```
-postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
+[DATABASE_URL from .env]
 ```
 
 **테스트 결과:**
@@ -336,7 +336,7 @@ openclaw cron list
 
 ### ✅ 해결 완료 (2026-02-25 오후)
 - ✅ **Neon PostgreSQL 연결 복구** - 1,161개 비즈니스 데이터 안전 확인
-  - **근본 원인**: 시스템 환경 변수 `DATABASE_URL=npg_i0WIuEK3jtvd` (비밀번호만) → `.env` 파일 덮어씀
+  - **근본 원인**: 시스템 환경 변수 `DATABASE_URL=<password-only>` (비밀번호만) → `.env` 파일 덮어씀
   - **해결**: `unset DATABASE_URL` 실행
   - **교훈**: Opus 4.6이 근본 원인 찾음 (Sonnet 4.5는 표면적 해결책만 제시)
 

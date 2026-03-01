@@ -1,10 +1,21 @@
 import { Link } from "wouter";
-import { MapPin, Star, Phone } from "lucide-react";
+import { MapPin, Star, Phone, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Business } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
+
+function getRelativeTime(date: string): string {
+  const now = new Date();
+  const d = new Date(date);
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (diffDays === 0) return '오늘 업데이트';
+  if (diffDays === 1) return '어제 업데이트';
+  if (diffDays < 7) return `${diffDays}일 전 업데이트`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전 업데이트`;
+  return `${Math.floor(diffDays / 30)}개월 전 업데이트`;
+}
 
 interface BusinessCardProps {
   business: Business;
@@ -81,12 +92,20 @@ export default function BusinessCard({ business }: BusinessCardProps) {
             )}
           </div>
           
-          {business.city && (
-            <div className="flex items-center gap-2 text-sm text-slate-600 mb-3">
-              <MapPin className="h-4 w-4 text-primary" />
-              <span className="font-medium">{business.city}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3 text-sm text-slate-500 mb-3">
+            {business.city && (
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5 text-primary" />
+                <span>{business.city}</span>
+              </div>
+            )}
+            {business.updated_at && (
+              <div className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" />
+                <span>{getRelativeTime(business.updated_at)}</span>
+              </div>
+            )}
+          </div>
           
           {business.phone && (
             <a 

@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 const PRICING_TIERS = {
   premium: {
@@ -85,7 +86,7 @@ async function handleWebhook(req: VercelRequest, res: VercelResponse) {
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).json({ error: `Webhook Error: ${err.message}` });
+    return res.status(400).json({ error: "Webhook 서명 검증에 실패했습니다" });
   }
 
   console.log('Webhook event received:', event.type);
@@ -256,11 +257,7 @@ async function getRawBody(req: VercelRequest): Promise<string> {
 
 // Main handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
 
   if (req.method === 'POST') {
     // Check if this is a webhook request (has stripe-signature header)
@@ -328,9 +325,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ sessionId: session.id, url: session.url });
     } catch (error: any) {
       console.error("POST /api/stripe-checkout error:", error);
-      return res.status(500).json({ 
-        error: "Failed to create checkout session",
-        message: error.message 
+      return res.status(500).json({
+        error: "결제 처리 중 오류가 발생했습니다"
       });
     }
   }

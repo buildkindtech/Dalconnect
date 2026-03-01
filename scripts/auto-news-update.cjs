@@ -8,7 +8,13 @@
  */
 
 const pg = require('pg');
-const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
+require('dotenv').config();
+
+const DB_URL = process.env.DATABASE_URL;
+if (!DB_URL) {
+  console.error('DATABASE_URL 환경변수가 설정되지 않았습니다.');
+  process.exit(1);
+}
 
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 

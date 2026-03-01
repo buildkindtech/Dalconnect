@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 1 });
   try {
     if (req.method === 'GET') {
@@ -45,7 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (e: any) {
-    res.status(500).json({ error: e.message });
+    console.error('listings error:', e);
+    res.status(500).json({ error: "서버 오류가 발생했습니다" });
   } finally {
     await pool.end();
   }

@@ -4,6 +4,7 @@ import { communityPosts, communityComments, communityTrends } from '../shared/sc
 import { eq, desc, sql, and, like, or, ilike } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 // Rate limiting storage (in-memory for simplicity)
 const rateLimits = new Map<string, { posts: number[], comments: number[] }>();
@@ -58,14 +59,7 @@ function extractKeywords(content: string): string[] {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
 
   const db = getDb();
   const { action } = req.query;
@@ -103,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } catch (error) {
     console.error('Community API error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: "서버 오류가 발생했습니다" });
   }
 }
 

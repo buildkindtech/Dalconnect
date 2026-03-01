@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   
   const { slug } = req.query;
@@ -13,7 +15,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (r.rowCount === 0) return res.status(404).json({ error: 'Not found' });
     res.json(r.rows[0]);
   } catch (e: any) {
-    res.status(500).json({ error: e.message });
+    console.error('blog-detail error:', e);
+    res.status(500).json({ error: "서버 오류가 발생했습니다" });
   } finally {
     await pool.end();
   }

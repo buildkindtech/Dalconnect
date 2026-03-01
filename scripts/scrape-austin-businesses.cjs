@@ -2,7 +2,8 @@ require('dotenv').config();
 const axios = require('axios');
 const pg = require('pg');
 
-const DATABASE_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) { console.error('DATABASE_URL not set'); process.exit(1); }
 const API_KEY = process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyAzcujFS2IfcaxVmtYvFEb4omQhVlOQCOE';
 
 const pool = new pg.Pool({

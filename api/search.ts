@@ -1,13 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
 
   if (req.method === 'GET') {
     try {
@@ -111,8 +106,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         query: q
       });
     } catch (error: any) {
-      return res.status(500).json({ 
-        error: error.message
+      console.error('search error:', error);
+      return res.status(500).json({
+        error: "서버 오류가 발생했습니다"
       });
     }
   }
