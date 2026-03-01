@@ -1,6 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
-import { handleCorsPreflightOrSetHeaders } from './_cors';
+function handleCors(req: any, res: any): boolean {
+  const origin = (req.headers?.origin) || '';
+  const allowed = ['https://dalconnect.vercel.app','https://dalconnect.buildkind.tech','https://dalconnect.com','https://www.dalconnect.com','http://localhost:5000','http://localhost:5173'];
+  if (allowed.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(200).end(); return true; }
+  return false;
+}
 
 const PRICING_TIERS = {
   premium: {
@@ -257,7 +265,7 @@ async function getRawBody(req: VercelRequest): Promise<string> {
 
 // Main handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (handleCorsPreflightOrSetHeaders(req, res)) return;
+  if (handleCors(req, res)) return;
 
   if (req.method === 'POST') {
     // Check if this is a webhook request (has stripe-signature header)
