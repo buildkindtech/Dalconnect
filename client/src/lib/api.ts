@@ -23,6 +23,8 @@ export interface Business {
   rating?: string;
   review_count?: number;
   google_place_id?: string;
+  updated_at?: string;
+  created_at?: string;
 }
 
 export interface NewsItem {
@@ -154,6 +156,7 @@ export function useBusinesses(params?: {
   return useQuery<BusinessesResponse>({
     queryKey: ['businesses', params],
     queryFn: () => fetchApi<BusinessesResponse>(endpoint),
+    staleTime: 10 * 60 * 1000, // 10분 — 업체 정보는 자주 안 변함
   });
 }
 
@@ -176,13 +179,15 @@ export function useCategories() {
   return useQuery<Category[]>({
     queryKey: ['categories'],
     queryFn: () => fetchApi<Category[]>('/api/categories'),
+    staleTime: 30 * 60 * 1000, // 30분 — 카테고리는 거의 안 변함
   });
 }
 
-export function useNews(params?: { category?: string; limit?: number }) {
+export function useNews(params?: { category?: string; limit?: number; offset?: number }) {
   const queryParams = new URLSearchParams();
   if (params?.category) queryParams.append('category', params.category);
   if (params?.limit) queryParams.append('limit', params.limit.toString());
+  if (params?.offset != null) queryParams.append('offset', params.offset.toString());
 
   const queryString = queryParams.toString();
   const endpoint = `/api/news${queryString ? `?${queryString}` : ''}`;
@@ -190,6 +195,7 @@ export function useNews(params?: { category?: string; limit?: number }) {
   return useQuery<NewsItem[]>({
     queryKey: ['news', params],
     queryFn: () => fetchApi<NewsItem[]>(endpoint),
+    staleTime: 2 * 60 * 1000, // 2분 — 뉴스는 빠른 갱신 필요
   });
 }
 
@@ -239,7 +245,7 @@ export function useStats() {
   return useQuery<Stats>({
     queryKey: ['stats'],
     queryFn: () => fetchApi<Stats>('/api/stats'),
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 30 * 60 * 1000, // 30분 — 통계 데이터는 자주 안 변함
   });
 }
 

@@ -145,10 +145,7 @@ export default function Blog() {
                               </Badge>
                             )}
                           </div>
-                        )}
-                      
-                      <div className="p-6 flex-1 flex flex-col">
-                          
+
                           {blog.excerpt && (
                             <p className="text-slate-600 line-clamp-2 mb-3 text-sm">
                               {blog.excerpt}
@@ -172,7 +169,7 @@ export default function Blog() {
                                 </span>
                               </div>
                             </div>
-                            
+
                             {blog.target_age && blog.target_age !== 'all' && (
                               <Badge variant="outline" className="text-xs">
                                 {blog.target_age === '20s' ? '20대' :
@@ -185,7 +182,7 @@ export default function Blog() {
                         </div>
                       </div>
                     </Link>
-                );
+                  );
                 })}
               </div>
             </div>

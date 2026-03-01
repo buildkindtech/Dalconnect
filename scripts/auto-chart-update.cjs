@@ -4,8 +4,10 @@
  * SearXNG로 최신 차트 데이터 수집 → DB 업데이트
  */
 
+require('dotenv').config();
 const pg = require('pg');
-const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const DB_URL = process.env.DATABASE_URL;
+if (!DB_URL) { console.error('DATABASE_URL not set'); process.exit(1); }
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 
 async function updateChartDate() {

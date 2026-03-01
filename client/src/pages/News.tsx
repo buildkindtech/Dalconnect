@@ -3,8 +3,8 @@ import { useNews, type NewsItem } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Calendar, Building2, Plus, Filter } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { ChevronRight, Calendar, Building2, Plus, Loader2 } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { NewsSubmissionDialog } from "@/components/NewsSubmissionDialog";
 import { getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
@@ -29,6 +29,8 @@ const CATEGORIES = [
   { id: '패션/뷰티', label: '패션/뷰티' },
 ];
 
+const PAGE_SIZE = 20;
+
 // Helper function to format relative time
 function getRelativeTime(date: string | Date): string {
   const now = new Date();
@@ -45,9 +47,9 @@ function getRelativeTime(date: string | Date): string {
   } else if (diffDays < 7) {
     return `${diffDays}일 전`;
   } else {
-    return published.toLocaleDateString('ko-KR', { 
+    return published.toLocaleDateString('ko-KR', {
       year: 'numeric',
-      month: 'short', 
+      month: 'short',
       day: 'numeric'
     });
   }
@@ -55,51 +57,81 @@ function getRelativeTime(date: string | Date): string {
 
 export default function News() {
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [displayedItems, setDisplayedItems] = useState(20);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [allItems, setAllItems] = useState<NewsItem[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const categoryTabsRef = useRef<HTMLDivElement>(null);
-  
-  const { data: allNewsItems, isLoading } = useNews(
-    selectedCategory === 'all' ? undefined : { category: selectedCategory }
+
+  // 첫 페이지 로드
+  const { data: firstPageData, isLoading, isFetching } = useNews({
+    category: selectedCategory === 'all' ? undefined : selectedCategory,
+    limit: PAGE_SIZE,
+    offset: 0,
+  });
+
+  // 추가 페이지 로드
+  const { isFetching: isLoadingMore } = useNews(
+    page > 0 ? {
+      category: selectedCategory === 'all' ? undefined : selectedCategory,
+      limit: PAGE_SIZE,
+      offset: page * PAGE_SIZE,
+    } : undefined
   );
 
-  // Get items to display (pagination)
-  const newsItems = allNewsItems ? allNewsItems.slice(0, displayedItems) : [];
-  const hasMoreItems = allNewsItems ? allNewsItems.length > displayedItems : false;
+  // 첫 페이지 데이터가 변경되면 전체 리스트 초기화
+  const prevCategory = useRef(selectedCategory);
+  if (firstPageData && (prevCategory.current !== selectedCategory || allItems.length === 0)) {
+    prevCategory.current = selectedCategory;
+    setAllItems(firstPageData);
+    setHasMore(firstPageData.length >= PAGE_SIZE);
+  }
 
-  // Handle load more
-  const handleLoadMore = async () => {
-    setIsLoadingMore(true);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate loading
-    setDisplayedItems(prev => prev + 20);
-    setIsLoadingMore(false);
-  };
+  // 더보기 핸들러
+  const handleLoadMore = useCallback(async () => {
+    const nextPage = page + 1;
+    const offset = nextPage * PAGE_SIZE;
 
-  // Handle category change with scroll to view
+    try {
+      const queryParams = new URLSearchParams();
+      if (selectedCategory !== 'all') queryParams.append('category', selectedCategory);
+      queryParams.append('limit', PAGE_SIZE.toString());
+      queryParams.append('offset', offset.toString());
+
+      const res = await fetch(`/api/news?${queryParams.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const newItems: NewsItem[] = await res.json();
+
+      setAllItems(prev => [...prev, ...newItems]);
+      setPage(nextPage);
+      setHasMore(newItems.length >= PAGE_SIZE);
+    } catch (e) {
+      console.error('Failed to load more news:', e);
+    }
+  }, [page, selectedCategory]);
+
+  // 카테고리 변경
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    setDisplayedItems(20); // Reset pagination
-    
-    // Scroll selected category into view
+    setPage(0);
+    setAllItems([]);
+    setHasMore(true);
+
     setTimeout(() => {
       if (categoryTabsRef.current) {
         const selectedButton = categoryTabsRef.current.querySelector(`[data-category="${categoryId}"]`) as HTMLElement;
         if (selectedButton) {
-          selectedButton.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'nearest', 
-            inline: 'center' 
+          selectedButton.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
           });
         }
       }
     }, 100);
   };
 
-  const getCategoryEmoji = (category: string | null) => {
-    if (!category) return '📰';
-    const found = CATEGORIES.find(c => c.id === category);
-    return found ? found.emoji : '📰';
-  };
+  // 표시할 아이템: 첫 페이지 데이터 또는 축적된 전체
+  const newsItems = allItems.length > 0 ? allItems : (firstPageData || []);
 
   return (
     <div className="bg-slate-50 min-h-screen py-12">
@@ -115,7 +147,7 @@ export default function News() {
         {/* Category Filter */}
         <div className="mb-6">
           {/* Categories with horizontal scroll on mobile */}
-          <div 
+          <div
             ref={categoryTabsRef}
             className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4 md:flex-wrap md:overflow-visible"
           >
@@ -132,7 +164,7 @@ export default function News() {
               </Button>
             ))}
           </div>
-          
+
           {/* Submit News Button - Separated on mobile */}
           <div className="flex justify-center md:justify-end">
             <NewsSubmissionDialog>
@@ -164,12 +196,12 @@ export default function News() {
               {newsItems.map((news: NewsItem) => {
                 const categoryStyle = getNewsCategoryStyle(news.category);
                 return (
-                  <Link 
+                  <Link
                     href={`/news/${news.id}`}
                     key={news.id}
                     className="block"
                   >
-                    <div 
+                    <div
                       className="p-4 md:p-6 hover:bg-slate-50 transition-colors cursor-pointer group"
                       data-testid={`news-item-${news.id}`}
                     >
@@ -185,13 +217,13 @@ export default function News() {
                           </Badge>
                         )}
                       </div>
-                      
+
                       {news.content && (
                         <p className="text-sm text-slate-600 line-clamp-1 md:line-clamp-2 mb-3">
                           {news.content}
                         </p>
                       )}
-                      
+
                       <div className="flex items-center gap-4 text-xs text-slate-500">
                         {news.source && (
                           <div className="flex items-center gap-1">
@@ -220,8 +252,8 @@ export default function News() {
             <div className="p-12 text-center text-slate-500">
               <div className="text-4xl mb-4">📰</div>
               <p className="text-lg font-ko">
-                {selectedCategory === 'all' 
-                  ? '뉴스가 없습니다' 
+                {selectedCategory === 'all'
+                  ? '뉴스가 없습니다'
                   : `"${CATEGORIES.find(c => c.id === selectedCategory)?.label}" 카테고리에 뉴스가 없습니다`
                 }
               </p>
@@ -230,15 +262,20 @@ export default function News() {
         </div>
 
         {/* Load More Button */}
-        {hasMoreItems && (
+        {hasMore && newsItems.length > 0 && (
           <div className="text-center mb-8">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleLoadMore}
               disabled={isLoadingMore}
               className="font-ko"
             >
-              {isLoadingMore ? '로딩 중...' : '더보기'}
+              {isLoadingMore ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  로딩 중...
+                </>
+              ) : '더보기'}
             </Button>
           </div>
         )}

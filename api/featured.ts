@@ -1,13 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
 
   if (!process.env.DATABASE_URL) {
     return res.status(500).json({ error: "DATABASE_URL not set" });
@@ -110,8 +105,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error: any) {
     await pool.end();
-    return res.status(500).json({ 
-      error: error.message
+    console.error('featured error:', error);
+    return res.status(500).json({
+      error: "서버 오류가 발생했습니다"
     });
   }
 }

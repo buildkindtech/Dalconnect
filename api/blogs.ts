@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const { category, city, target_age, search, page = '1', limit = '12' } = req.query;
@@ -49,7 +51,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       pagination: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) }
     });
   } catch (e: any) {
-    res.status(500).json({ error: e.message });
+    console.error('blogs error:', e);
+    res.status(500).json({ error: "서버 오류가 발생했습니다" });
   } finally {
     await pool.end();
   }

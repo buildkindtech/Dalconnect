@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
+import { handleCorsPreflightOrSetHeaders } from './_cors';
 
 // Rate limiting (in-memory, simple IP-based)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -78,13 +79,7 @@ function validateOrigin(req: VercelRequest): boolean {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
 
   if (req.method === 'GET') {
     try {
@@ -185,9 +180,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         no_results: total === 0 && !!search
       });
     } catch (error: any) {
-      return res.status(500).json({ 
-        error: error.message,
-        stack: error.stack?.split('\n').slice(0, 5)
+      console.error('businesses GET error:', error);
+      return res.status(500).json({
+        error: "서버 오류가 발생했습니다"
       });
     }
   }
@@ -464,9 +459,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Invalid action" });
 
     } catch (error: any) {
-      return res.status(500).json({ 
-        error: error.message,
-        stack: error.stack?.split('\n').slice(0, 5)
+      console.error('businesses POST error:', error);
+      return res.status(500).json({
+        error: "서버 오류가 발생했습니다"
       });
     }
   }

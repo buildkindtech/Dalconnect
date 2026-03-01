@@ -308,6 +308,12 @@ export default function BusinessDetail() {
                     </span>
                   </div>
                 </div>
+                {business.updated_at && (
+                  <p className="text-xs text-slate-400 mb-3">
+                    <Clock className="h-3 w-3 inline mr-1" />
+                    정보 업데이트: {new Date(business.updated_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                )}
                 {business.description && (
                   <p className="text-slate-700 leading-relaxed">{business.description}</p>
                 )}
