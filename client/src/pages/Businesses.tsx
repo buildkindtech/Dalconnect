@@ -42,12 +42,16 @@ export default function Businesses() {
   const [isAutoScraping, setIsAutoScraping] = useState(false);
   const [autoScrapeComplete, setAutoScrapeComplete] = useState(false);
 
-  // Debounced search
+  // Debounced search - skip incomplete Korean jamo (ㄱ-ㅎ, ㅏ-ㅣ)
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
+      const trimmed = searchQuery.trim();
+      // Skip if query is only incomplete Korean jamo characters
+      const isIncompleteKorean = /^[ㄱ-ㅎㅏ-ㅣ]+$/.test(trimmed);
+      if (trimmed && isIncompleteKorean) return;
+      setDebouncedSearch(trimmed);
       setCurrentPage(1);
-    }, 300);
+    }, 400);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
