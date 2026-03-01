@@ -4,7 +4,15 @@ import { communityPosts, communityComments, communityTrends } from '../shared/sc
 import { eq, desc, sql, and, like, or, ilike } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { handleCorsPreflightOrSetHeaders } from './_cors';
+function handleCors(req: any, res: any): boolean {
+  const origin = (req.headers?.origin) || '';
+  const allowed = ['https://dalconnect.vercel.app','https://dalconnect.buildkind.tech','https://dalconnect.com','https://www.dalconnect.com','http://localhost:5000','http://localhost:5173'];
+  if (allowed.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(200).end(); return true; }
+  return false;
+}
 
 // Rate limiting storage (in-memory for simplicity)
 const rateLimits = new Map<string, { posts: number[], comments: number[] }>();
@@ -59,7 +67,7 @@ function extractKeywords(content: string): string[] {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (handleCorsPreflightOrSetHeaders(req, res)) return;
+  if (handleCors(req, res)) return;
 
   const db = getDb();
   const { action } = req.query;
