@@ -127,8 +127,8 @@ async function handleGetPosts(db: any, req: VercelRequest, res: VercelResponse) 
   }).from(communityPosts);
 
   // Default to dallas if no city specified (backward compatibility)
-  const targetCity = (Array.isArray(city) ? city[0] : city) || 'dallas';
-  const filters = [eq(communityPosts.city, targetCity as string)];
+  const targetCity: string = (Array.isArray(city) ? city[0] : String(city)) || 'dallas';
+  const filters = [eq(communityPosts.city, targetCity)];
 
   if (category && category !== 'all') {
     filters.push(eq(communityPosts.category, category as string));
@@ -392,8 +392,8 @@ async function handleSearch(db: any, req: VercelRequest, res: VercelResponse) {
   );
 
   // Default to dallas if no city specified (backward compatibility)
-  const targetCity2 = (Array.isArray(city) ? city[0] : city) || 'dallas';
-  const filters = [searchCondition, eq(communityPosts.city, targetCity2 as string)];
+  const targetCity2: string = (Array.isArray(city) ? city[0] : String(city)) || 'dallas';
+  const filters = [searchCondition, eq(communityPosts.city, targetCity2)];
 
   if (category && category !== 'all') {
     filters.push(eq(communityPosts.category, category as string));
