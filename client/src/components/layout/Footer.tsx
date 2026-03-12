@@ -58,80 +58,38 @@ export default function Footer() {
               >
                 <Twitter className="h-4 w-4" />
               </a>
+            </div>
           </div>
-        </div>
         
-        <div>
-          <h4 className="font-semibold text-white mb-4">빠른 링크</h4>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link href="/">
-                <a className="hover:text-primary transition-colors">홈</a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/businesses">
-                <a className="hover:text-primary transition-colors">업체 찾기</a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/news">
-                <a className="hover:text-primary transition-colors">커뮤니티 뉴스</a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/about">
-                <a className="hover:text-primary transition-colors">소개</a>
-              </Link>
-            </li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 className="font-semibold text-white mb-4">비즈니스</h4>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link href="/pricing">
-                <a className="hover:text-primary transition-colors">업체 등록</a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/pricing">
-                <a className="hover:text-primary transition-colors">가격 플랜</a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact">
-                <a className="hover:text-primary transition-colors">광고 문의</a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact">
-                <a className="hover:text-primary transition-colors">파트너십</a>
-              </Link>
-            </li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 className="font-semibold text-white mb-4">지원</h4>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link href="/contact">
-                <a className="hover:text-primary transition-colors">문의하기</a>
-              </Link>
-            </li>
-            <li>
-              <a href="#" className="hover:text-primary transition-colors">FAQ</a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-primary transition-colors">이용약관</a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-primary transition-colors">개인정보처리방침</a>
-            </li>
-          </ul>
-        </div>
+          <div>
+            <h4 className="font-semibold text-white mb-4">빠른 링크</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/" className="hover:text-primary transition-colors">홈</Link></li>
+              <li><Link href="/businesses" className="hover:text-primary transition-colors">업체 찾기</Link></li>
+              <li><Link href="/news" className="hover:text-primary transition-colors">커뮤니티 뉴스</Link></li>
+              <li><Link href="/about" className="hover:text-primary transition-colors">소개</Link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold text-white mb-4">비즈니스</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/pricing" className="hover:text-primary transition-colors">업체 등록</Link></li>
+              <li><Link href="/pricing" className="hover:text-primary transition-colors">가격 플랜</Link></li>
+              <li><Link href="/contact" className="hover:text-primary transition-colors">광고 문의</Link></li>
+              <li><Link href="/contact" className="hover:text-primary transition-colors">파트너십</Link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold text-white mb-4">지원</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/contact" className="hover:text-primary transition-colors">문의하기</Link></li>
+              <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">이용약관</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">개인정보처리방침</a></li>
+            </ul>
+          </div>
         </div>
         
         <div className="mt-12 pt-8 border-t border-slate-800">

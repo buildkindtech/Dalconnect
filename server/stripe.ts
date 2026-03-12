@@ -7,10 +7,10 @@ import Stripe from "stripe";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const SITE_URL = process.env.SITE_URL || "http://localhost:5000";
 
-export const stripe = new Stripe(STRIPE_SECRET_KEY, {
+export const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY, {
   // @ts-ignore - Stripe API version
   apiVersion: "2024-12-18.acacia" as any,
-});
+}) : null as any;
 
 // Pricing tiers
 export const PRICING_TIERS = {

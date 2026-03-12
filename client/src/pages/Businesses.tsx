@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { Search, MapPin, Star, Phone, Globe, SlidersHorizontal, X, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,188 +27,123 @@ const SORT_OPTIONS = [
   { value: 'recent', label: '최신순' },
 ];
 
-// ─── FilterSidebar: extracted as a separate component to prevent re-mount ───
+// ── FilterSidebar must live OUTSIDE Businesses to prevent remount on re-render (IME fix) ──
 interface FilterSidebarProps {
-  searchQuery: string;
-  onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onCompositionStart: () => void;
-  onCompositionEnd: (e: React.CompositionEvent<HTMLInputElement>) => void;
-  debouncedSearch: string;
-  selectedCategory: string;
-  selectedCity: string;
+  searchInputRef: React.RefObject<HTMLInputElement>;
+  composingRef: React.MutableRefObject<boolean>;
+  defaultSearchValue: string;
+  onSearchChange: (val: string) => void;
   hasActiveFilters: boolean;
   activeFilterCount: number;
-  categoriesData: { category: string; count: number }[] | undefined;
-  onCategoryClick: (category: string) => void;
-  onCityClick: (city: string) => void;
+  selectedCategory: string;
+  selectedCity: string;
+  debouncedSearch: string;
   onRemoveFilter: (type: 'category' | 'city' | 'search') => void;
   onClearAll: () => void;
+  categoriesData: any[] | undefined;
+  onCategoryClick: (cat: string) => void;
+  onCityClick: (city: string) => void;
 }
 
-function FilterSidebar({
-  searchQuery,
-  onSearchChange,
-  onCompositionStart,
-  onCompositionEnd,
-  debouncedSearch,
-  selectedCategory,
-  selectedCity,
-  hasActiveFilters,
-  activeFilterCount,
-  categoriesData,
-  onCategoryClick,
-  onCityClick,
-  onRemoveFilter,
-  onClearAll,
-}: FilterSidebarProps) {
-  return (
-    <div className="space-y-6">
-      {/* Search */}
-      <div>
-        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">
-          검색
-        </label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            className="pl-10 h-11 border-slate-200 focus-visible:ring-primary"
-            placeholder="업체명 검색 (한/영 모두 가능)"
-            value={searchQuery}
-            onChange={onSearchChange}
-            onCompositionStart={onCompositionStart}
-            onCompositionEnd={onCompositionEnd}
-          />
-        </div>
-      </div>
-
-      {/* Active Filters Tags */}
-      {hasActiveFilters && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              적용 중 ({activeFilterCount})
-            </label>
-            <button
-              onClick={onClearAll}
-              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-            >
-              전체 해제
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {selectedCategory && (
-              <Badge
-                variant="secondary"
-                className="gap-1.5 pl-3 pr-2 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
-              >
-                <span className="font-medium">{selectedCategory}</span>
-                <X
-                  className="h-3.5 w-3.5 cursor-pointer hover:text-primary/70"
-                  onClick={() => onRemoveFilter('category')}
-                />
-              </Badge>
-            )}
-            {selectedCity && (
-              <Badge
-                variant="secondary"
-                className="gap-1.5 pl-3 pr-2 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
-              >
-                <MapPin className="h-3 w-3" />
-                <span className="font-medium">{selectedCity}</span>
-                <X
-                  className="h-3.5 w-3.5 cursor-pointer hover:text-blue-600"
-                  onClick={() => onRemoveFilter('city')}
-                />
-              </Badge>
-            )}
-            {debouncedSearch && (
-              <Badge
-                variant="secondary"
-                className="gap-1.5 pl-3 pr-2 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200"
-              >
-                <Search className="h-3 w-3" />
-                <span className="font-medium">"{debouncedSearch}"</span>
-                <X
-                  className="h-3.5 w-3.5 cursor-pointer hover:text-slate-600"
-                  onClick={() => onRemoveFilter('search')}
-                />
-              </Badge>
-            )}
-          </div>
-        </div>
-      )}
-
-      <Separator />
-
-      {/* Categories */}
-      <div>
-        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">
-          카테고리
-        </label>
-        <ScrollArea className="h-[300px] pr-4">
-          <div className="space-y-1">
-            {categoriesData?.map((cat) => {
-              const isSelected = selectedCategory === cat.category;
-              return (
-                <button
-                  key={cat.category}
-                  onClick={() => onCategoryClick(cat.category)}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                    isSelected
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="truncate flex-1 text-left">{cat.category}</span>
-                  <span
-                    className={`text-xs ml-3 px-2 py-0.5 rounded-full flex-shrink-0 ${
-                      isSelected
-                        ? 'bg-white/20 text-white'
-                        : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
-                    }`}
-                  >
-                    {cat.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </div>
-
-      <Separator />
-
-      {/* Cities */}
-      <div>
-        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">
-          지역
-        </label>
-        <ScrollArea className="h-[280px] pr-4">
-          <div className="space-y-1">
-            {CITIES.map((city) => {
-              const isSelected = selectedCity === city;
-              return (
-                <button
-                  key={city}
-                  onClick={() => onCityClick(city)}
-                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    isSelected
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  {city}
-                </button>
-              );
-            })}
-          </div>
-        </ScrollArea>
+const FilterSidebar = ({
+  searchInputRef, composingRef, defaultSearchValue, onSearchChange,
+  hasActiveFilters, activeFilterCount, selectedCategory, selectedCity,
+  debouncedSearch, onRemoveFilter, onClearAll, categoriesData,
+  onCategoryClick, onCityClick,
+}: FilterSidebarProps) => (
+  <div className="space-y-6">
+    {/* Search */}
+    <div>
+      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">검색</label>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <input
+          ref={searchInputRef}
+          defaultValue={defaultSearchValue}
+          className="pl-10 h-11 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          placeholder="업체명, 키워드..."
+          onChange={(e) => { if (!composingRef.current) onSearchChange(e.target.value); }}
+          onCompositionStart={() => { composingRef.current = true; }}
+          onCompositionEnd={(e) => { composingRef.current = false; onSearchChange(e.currentTarget.value); }}
+        />
       </div>
     </div>
-  );
-}
 
-// ─── Main Businesses Page ───────────────────────────────────────────
+    {/* Active Filters */}
+    {hasActiveFilters && (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">적용 중 ({activeFilterCount})</label>
+          <button onClick={onClearAll} className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">전체 해제</button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {selectedCategory && (
+            <Badge variant="secondary" className="gap-1.5 pl-3 pr-2 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
+              <span className="font-medium">{selectedCategory}</span>
+              <X className="h-3.5 w-3.5 cursor-pointer" onClick={() => onRemoveFilter('category')} />
+            </Badge>
+          )}
+          {selectedCity && (
+            <Badge variant="secondary" className="gap-1.5 pl-3 pr-2 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+              <MapPin className="h-3 w-3" />
+              <span className="font-medium">{selectedCity}</span>
+              <X className="h-3.5 w-3.5 cursor-pointer" onClick={() => onRemoveFilter('city')} />
+            </Badge>
+          )}
+          {debouncedSearch && (
+            <Badge variant="secondary" className="gap-1.5 pl-3 pr-2 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200">
+              <Search className="h-3 w-3" />
+              <span className="font-medium">"{debouncedSearch}"</span>
+              <X className="h-3.5 w-3.5 cursor-pointer" onClick={() => onRemoveFilter('search')} />
+            </Badge>
+          )}
+        </div>
+      </div>
+    )}
+
+    <Separator />
+
+    {/* Categories */}
+    <div>
+      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">카테고리</label>
+      <ScrollArea className="h-[300px] pr-4">
+        <div className="space-y-1">
+          {categoriesData?.map((cat) => {
+            const isSelected = selectedCategory === cat.category;
+            return (
+              <button key={cat.category} onClick={() => onCategoryClick(cat.category)}
+                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${isSelected ? 'bg-primary text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'}`}>
+                <span className="truncate flex-1 text-left">{cat.category}</span>
+                <span className={`text-xs ml-3 px-2 py-0.5 rounded-full flex-shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'}`}>{cat.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      </ScrollArea>
+    </div>
+
+    <Separator />
+
+    {/* Cities */}
+    <div>
+      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">지역</label>
+      <ScrollArea className="h-[280px] pr-4">
+        <div className="space-y-1">
+          {CITIES.map((city) => {
+            const isSelected = selectedCity === city;
+            return (
+              <button key={city} onClick={() => onCityClick(city)}
+                className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${isSelected ? 'bg-primary text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'}`}>
+                {city}
+              </button>
+            );
+          })}
+        </div>
+      </ScrollArea>
+    </div>
+  </div>
+);
+
 export default function Businesses() {
   const [, setLocation] = useLocation();
   const searchParams = useSearch();
@@ -216,6 +151,8 @@ export default function Businesses() {
 
   const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || '');
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  const composingRef = useRef(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategory, setSelectedCategory] = useState(urlParams.get('category') || '');
   const [selectedCity, setSelectedCity] = useState(urlParams.get('city') || '');
   const [sortBy, setSortBy] = useState(urlParams.get('sort') || 'featured');
@@ -223,33 +160,15 @@ export default function Businesses() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [isAutoScraping, setIsAutoScraping] = useState(false);
   const [autoScrapeComplete, setAutoScrapeComplete] = useState(false);
-  const isComposingRef = useRef(false);
 
-  // Debounced search - waits for IME composition to finish
+  // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isComposingRef.current) return;
-      const trimmed = searchQuery.trim();
-      const isIncompleteKorean = /^[ㄱ-ㅎㅏ-ㅣ]+$/.test(trimmed);
-      if (trimmed && isIncompleteKorean) return;
-      setDebouncedSearch(trimmed);
+      setDebouncedSearch(searchQuery);
       setCurrentPage(1);
-    }, 500);
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  }, []);
-
-  const handleCompositionStart = useCallback(() => {
-    isComposingRef.current = true;
-  }, []);
-
-  const handleCompositionEnd = useCallback((e: React.CompositionEvent<HTMLInputElement>) => {
-    isComposingRef.current = false;
-    setSearchQuery((e.target as HTMLInputElement).value);
-  }, []);
 
   const { data: categoriesData } = useCategories();
   const { data, isLoading } = useBusinesses({
@@ -276,12 +195,13 @@ export default function Businesses() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: debouncedSearch })
           });
-
+          
           if (response.ok) {
             const result = await response.json();
             console.log('Auto-scrape result:', result);
             if (result.added > 0) {
               setAutoScrapeComplete(true);
+              // Refresh the search after 1 second
               setTimeout(() => {
                 window.location.reload();
               }, 1000);
@@ -293,7 +213,7 @@ export default function Businesses() {
           setIsAutoScraping(false);
         }
       };
-
+      
       performAutoScrape();
     }
   }, [noResults, debouncedSearch, isAutoScraping, autoScrapeComplete]);
@@ -310,55 +230,39 @@ export default function Businesses() {
     setLocation(`/businesses${newSearch ? `?${newSearch}` : ''}`, { replace: true });
   }, [debouncedSearch, selectedCategory, selectedCity, sortBy, currentPage, setLocation]);
 
-  const handleCategoryClick = useCallback((category: string) => {
-    setSelectedCategory(prev => prev === category ? '' : category);
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(selectedCategory === category ? '' : category);
     setCurrentPage(1);
-  }, []);
+  };
 
-  const handleCityClick = useCallback((city: string) => {
-    setSelectedCity(prev => prev === city ? '' : city);
+  const handleCityClick = (city: string) => {
+    setSelectedCity(selectedCity === city ? '' : city);
     setCurrentPage(1);
-  }, []);
+  };
 
-  const handleRemoveFilter = useCallback((type: 'category' | 'city' | 'search') => {
+  const handleRemoveFilter = (type: 'category' | 'city' | 'search') => {
     if (type === 'category') setSelectedCategory('');
     if (type === 'city') setSelectedCity('');
     if (type === 'search') {
       setSearchQuery('');
       setDebouncedSearch('');
+      if (searchInputRef.current) searchInputRef.current.value = '';
     }
     setCurrentPage(1);
-  }, []);
+  };
 
-  const clearAllFilters = useCallback(() => {
+  const clearAllFilters = () => {
     setSearchQuery('');
     setDebouncedSearch('');
     setSelectedCategory('');
     setSelectedCity('');
     setSortBy('featured');
     setCurrentPage(1);
-  }, []);
+  };
 
   const hasActiveFilters = debouncedSearch || selectedCategory || selectedCity;
   const activeFilterCount = [debouncedSearch, selectedCategory, selectedCity].filter(Boolean).length;
 
-  // Shared props for FilterSidebar
-  const filterProps = {
-    searchQuery,
-    onSearchChange: handleSearchChange,
-    onCompositionStart: handleCompositionStart,
-    onCompositionEnd: handleCompositionEnd,
-    debouncedSearch,
-    selectedCategory,
-    selectedCity,
-    hasActiveFilters: !!hasActiveFilters,
-    activeFilterCount,
-    categoriesData,
-    onCategoryClick: handleCategoryClick,
-    onCityClick: handleCityClick,
-    onRemoveFilter: handleRemoveFilter,
-    onClearAll: clearAllFilters,
-  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -401,7 +305,15 @@ export default function Businesses() {
                   <SheetTitle className="text-xl font-bold">필터</SheetTitle>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100vh-80px)] px-6 py-6">
-                  <FilterSidebar {...filterProps} />
+                  <FilterSidebar
+                    searchInputRef={searchInputRef} composingRef={composingRef}
+                    defaultSearchValue={searchQuery} onSearchChange={setSearchQuery}
+                    hasActiveFilters={!!hasActiveFilters} activeFilterCount={activeFilterCount}
+                    selectedCategory={selectedCategory} selectedCity={selectedCity}
+                    debouncedSearch={debouncedSearch} onRemoveFilter={handleRemoveFilter}
+                    onClearAll={clearAllFilters} categoriesData={categoriesData}
+                    onCategoryClick={handleCategoryClick} onCityClick={handleCityClick}
+                  />
                 </ScrollArea>
               </SheetContent>
             </Sheet>
@@ -438,7 +350,15 @@ export default function Businesses() {
                 <SlidersHorizontal className="h-5 w-5 text-primary" />
                 필터
               </h2>
-              <FilterSidebar {...filterProps} />
+              <FilterSidebar
+                searchInputRef={searchInputRef} composingRef={composingRef}
+                defaultSearchValue={searchQuery} onSearchChange={setSearchQuery}
+                hasActiveFilters={!!hasActiveFilters} activeFilterCount={activeFilterCount}
+                selectedCategory={selectedCategory} selectedCity={selectedCity}
+                debouncedSearch={debouncedSearch} onRemoveFilter={handleRemoveFilter}
+                onClearAll={clearAllFilters} categoriesData={categoriesData}
+                onCategoryClick={handleCategoryClick} onCityClick={handleCityClick}
+              />
             </div>
           </aside>
 
@@ -489,7 +409,7 @@ export default function Businesses() {
                     <Search className="h-10 w-10 text-slate-400" />
                   )}
                 </div>
-
+                
                 {isAutoScraping ? (
                   <>
                     <h3 className="text-2xl font-bold text-slate-800 mb-2">
@@ -546,6 +466,15 @@ export default function Businesses() {
                               src={business.cover_url!}
                               alt={business.name_ko || business.name_en}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  const iconName = getCategoryIcon(business.category);
+                                  parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center"><span class="text-white text-xl">🏢</span></div>`;
+                                }
+                              }}
                             />
                           ) : (
                             <div

@@ -3,7 +3,7 @@ import { type Server } from "http";
 import { storage } from "./storage";
 import { createCheckoutSession, verifyWebhook, handleSubscriptionCreated, handleSubscriptionCanceled } from "./stripe";
 import { db } from "./db";
-import { blogs, newsletterSubscribers, newsSubmissions } from "../shared/schema";
+import { blogs, newsletterSubscribers, newsSubmissions, listings } from "../shared/schema";
 import { desc, sql, eq } from "drizzle-orm";
 
 export async function registerRoutes(
@@ -28,7 +28,14 @@ export async function registerRoutes(
       return res.status(503).json({ error: "Database not configured" });
     }
     try {
-      const { category, city, search, featured } = req.query;
+      const { category, city, search, featured, id } = req.query;
+
+      // Single business lookup by id
+      if (id) {
+        const business = await storage.getBusiness(id as string);
+        if (!business) return res.status(404).json({ error: "Business not found" });
+        return res.json(business);
+      }
       
       const results = await storage.getBusinesses({
         category: category as string | undefined,
@@ -37,7 +44,8 @@ export async function registerRoutes(
         featured: featured === 'true' ? true : undefined,
       });
       
-      res.json(results);
+      // Return { businesses, total } shape expected by frontend
+      res.json({ businesses: results, total: results.length });
     } catch (error) {
       console.error("GET /api/businesses error:", error);
       res.status(500).json({ error: "Failed to fetch businesses" });
@@ -317,6 +325,107 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error submitting news:", error);
       res.status(500).json({ message: "제보에 실패했습니다" });
+    }
+  });
+
+  // 사고팔기 (Listings)
+  app.get("/api/listings", async (req, res) => {
+    try {
+      const { category, city, limit = "50" } = req.query as Record<string, string>;
+      let query = db.select().from(listings).where(eq(listings.status, 'active'));
+      const results = await db.select().from(listings)
+        .where(eq(listings.status, 'active'))
+        .orderBy(desc(listings.created_at))
+        .limit(parseInt(limit));
+      const filtered = results.filter(r => {
+        if (category && r.category !== category) return false;
+        if (city && r.city !== city) return false;
+        return true;
+      });
+      res.json(filtered);
+    } catch (error) {
+      console.error("Listings error:", error);
+      res.status(500).json({ error: "Failed to fetch listings" });
+    }
+  });
+
+  app.post("/api/listings", async (req, res) => {
+    try {
+      const { title, description, price, category, condition, contact_method, contact_info, author_name, author_phone, location, city } = req.body;
+      const result = await db.insert(listings).values({
+        id: `listing_${Date.now()}`,
+        title, description,
+        price: price ? String(price) : null,
+        category, condition,
+        contact_method: contact_method || '카카오톡',
+        contact_info: contact_info || null,
+        author_name, author_phone: author_phone || null,
+        location, city,
+        status: 'active',
+        views: 0,
+        created_at: new Date(),
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      }).returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Create listing error:", error);
+      res.status(500).json({ error: "Failed to create listing" });
+    }
+  });
+
+  // /api/community - stub (future feature)
+  app.get("/api/community", async (req, res) => {
+    const { action } = req.query;
+    if (action === 'posts') {
+      return res.json({ success: true, posts: [], total: 0 });
+    }
+    return res.json({ success: true, data: [] });
+  });
+
+  app.post("/api/community", async (req, res) => {
+    return res.json({ success: true });
+  });
+
+  // /api/search - search across businesses, news, listings
+  app.get("/api/search", async (req, res) => {
+    const { q } = req.query;
+    if (!q) return res.json({ businesses: [], news: [], listings: [] });
+    try {
+      const term = `%${q}%`;
+      const [bizResults, newsResults, listingResults] = await Promise.all([
+        db.execute(sql`SELECT id, name_en as name, name_ko, category, address, city, rating FROM businesses WHERE name_en ILIKE ${term} OR name_ko ILIKE ${term} OR category ILIKE ${term} LIMIT 5`),
+        db.execute(sql`SELECT id, title, category, source, published_at FROM news WHERE title ILIKE ${term} LIMIT 5`),
+        db.execute(sql`SELECT id, title, category, price, location FROM listings WHERE title ILIKE ${term} AND status = 'active' LIMIT 5`),
+      ]);
+      return res.json({
+        businesses: bizResults.rows || [],
+        news: newsResults.rows || [],
+        listings: listingResults.rows || [],
+      });
+    } catch (e) {
+      return res.json({ businesses: [], news: [], listings: [] });
+    }
+  });
+
+  // /api/categories - stub for charts, visit tracking, category list
+  app.get("/api/categories", async (req, res) => {
+    const { action, type } = req.query;
+    if (action === 'charts') {
+      // Return empty chart data (future feature)
+      return res.json({ success: false, data: [] });
+    }
+    if (action === 'visit') {
+      // Track visit (no-op for now)
+      return res.json({ success: true });
+    }
+    // Default: return category counts from businesses
+    try {
+      const result = await db.execute(
+        sql`SELECT category, COUNT(*) as count FROM businesses GROUP BY category ORDER BY count DESC`
+      );
+      return res.json(result.rows || []);
+    } catch (e) {
+      return res.json([]);
     }
   });
 

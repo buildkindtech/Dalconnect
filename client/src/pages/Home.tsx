@@ -271,7 +271,10 @@ export default function Home() {
         const response = await fetch('/api/categories?action=visit&page=/');
         if (response.ok) {
           const stats = await response.json();
-          setVisitorStats(stats);
+          // Only set if it has the expected shape
+          if (stats && typeof stats.todayUnique === 'number') {
+            setVisitorStats(stats);
+          }
         }
       } catch (error) {
         console.error('Failed to record visit:', error);
@@ -975,7 +978,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {hotDeals.slice(0, 3).map((deal) => {
                 const isHot = deal.likes > 200;
-                const isFree = deal.discount.includes('FREE') || deal.deal_price === 'FREE';
+                const isFree = (deal.discount ?? '').includes('FREE') || deal.deal_price === 'FREE';
                 const getTimeRemaining = (expiresAt: string | null): { text: string; isUrgent: boolean } => {
                   if (!expiresAt) return { text: '', isUrgent: false };
                   
