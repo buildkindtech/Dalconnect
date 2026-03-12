@@ -213,7 +213,7 @@ async function handleWebhook(req: VercelRequest, res: VercelResponse) {
         const customerEmail = invoice.customer_email;
 
         // Try to get business info from subscription metadata
-        const subscriptionId = invoice.subscription as string;
+        const subscriptionId = (invoice as any).subscription as string;
         if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
           const businessId = subscription.metadata?.businessId;

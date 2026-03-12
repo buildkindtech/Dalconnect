@@ -127,8 +127,8 @@ async function handleGetPosts(db: any, req: VercelRequest, res: VercelResponse) 
   }).from(communityPosts);
 
   // Default to dallas if no city specified (backward compatibility)
-  const targetCity = city || 'dallas';
-  const filters = [eq(communityPosts.city, targetCity)];
+  const targetCity = (Array.isArray(city) ? city[0] : city) || 'dallas';
+  const filters = [eq(communityPosts.city, targetCity as string)];
 
   if (category && category !== 'all') {
     filters.push(eq(communityPosts.category, category as string));
@@ -179,14 +179,14 @@ async function handleGetPost(db: any, req: VercelRequest, res: VercelResponse) {
 
   // Organize comments into tree structure
   const commentMap = new Map();
-  const topLevelComments = [];
+  const topLevelComments: any[] = [];
 
-  comments.forEach(comment => {
+  comments.forEach((comment: any) => {
     comment.replies = [];
     commentMap.set(comment.id, comment);
   });
 
-  comments.forEach(comment => {
+  comments.forEach((comment: any) => {
     if (comment.parent_id) {
       const parent = commentMap.get(comment.parent_id);
       if (parent) {
@@ -392,8 +392,8 @@ async function handleSearch(db: any, req: VercelRequest, res: VercelResponse) {
   );
 
   // Default to dallas if no city specified (backward compatibility)
-  const targetCity = city || 'dallas';
-  const filters = [searchCondition, eq(communityPosts.city, targetCity)];
+  const targetCity2 = (Array.isArray(city) ? city[0] : city) || 'dallas';
+  const filters = [searchCondition, eq(communityPosts.city, targetCity2 as string)];
 
   if (category && category !== 'all') {
     filters.push(eq(communityPosts.category, category as string));
