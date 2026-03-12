@@ -514,9 +514,21 @@ export async function registerRoutes(
       const w = parseInt(maxWidth) || 800;
       const h = parseInt(maxHeight) || 800;
       const googleUrl = `https://places.googleapis.com/v1/${ref}?maxHeightPx=${h}&maxWidthPx=${w}&key=${API_KEY}`;
-      const response = await fetch(googleUrl, { headers: { 'Accept': 'image/*' } });
-      if (!response.ok) {
+      const response = await fetch(googleUrl, { headers: { 'Accept': 'image/*' }, redirect: 'follow' });
+      if (!response.ok && response.status !== 302) {
         return res.status(response.status).json({ error: `Google API ${response.status}` });
+      }
+      // Handle redirect manually if needed
+      if (response.status === 302) {
+        const location = response.headers.get('location');
+        if (location) {
+          const imgResponse = await fetch(location);
+          const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
+          const buffer = Buffer.from(await imgResponse.arrayBuffer());
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Cache-Control', 'public, max-age=604800');
+          return res.status(200).send(buffer);
+        }
       }
       const contentType = response.headers.get('content-type') || 'image/jpeg';
       const buffer = Buffer.from(await response.arrayBuffer());
