@@ -407,6 +407,58 @@ export async function registerRoutes(
     }
   });
 
+  // /api/deals
+  app.get("/api/deals", async (req, res) => {
+    try {
+      const { limit = "50", category } = req.query as Record<string, string>;
+      let query = `SELECT id, title, description, discount, category, expires_at, store,
+        original_price, deal_price, coupon_code, deal_url, image_url, is_verified,
+        likes, views, source, created_at FROM deals ORDER BY created_at DESC LIMIT $1`;
+      const params: any[] = [parseInt(limit)];
+      
+      if (category) {
+        query = `SELECT id, title, description, discount, category, expires_at, store,
+          original_price, deal_price, coupon_code, deal_url, image_url, is_verified,
+          likes, views, source, created_at FROM deals WHERE category = $2 ORDER BY created_at DESC LIMIT $1`;
+        params.push(category);
+      }
+      
+      const result = await db.execute(sql.raw(query.replace(/\$1/g, params[0].toString()).replace(/\$2/g, `'${params[1] || ''}'`)));
+      res.json(result.rows || []);
+    } catch (e) {
+      console.error("Deals error:", e);
+      res.json([]);
+    }
+  });
+
+  // /api/charts
+  app.get("/api/charts", async (req, res) => {
+    try {
+      const { type, limit = "20" } = req.query as Record<string, string>;
+      const lim = parseInt(limit);
+      let result;
+      
+      if (type) {
+        result = await db.execute(
+          sql`SELECT id, chart_type, rank, title_ko, title_en, artist, platform,
+            youtube_url, thumbnail_url, description, score, chart_date, created_at
+            FROM charts WHERE chart_type = ${type} ORDER BY rank ASC LIMIT ${lim}`
+        );
+      } else {
+        result = await db.execute(
+          sql`SELECT id, chart_type, rank, title_ko, title_en, artist, platform,
+            youtube_url, thumbnail_url, description, score, chart_date, created_at
+            FROM charts ORDER BY chart_date DESC, rank ASC LIMIT ${lim}`
+        );
+      }
+      
+      res.json(result.rows || []);
+    } catch (e) {
+      console.error("Charts error:", e);
+      res.json([]);
+    }
+  });
+
   // /api/categories - stub for charts, visit tracking, category list
   app.get("/api/categories", async (req, res) => {
     const { action, type } = req.query;

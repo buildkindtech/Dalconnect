@@ -17,12 +17,12 @@ const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 // RSS 피드 소스
 const RSS_FEEDS = [
   // DFW 로컬 뉴스
-  { url: 'https://www.fox4news.com/rss.xml', category: '로컬뉴스', source: 'Fox 4 DFW', city: 'Dallas' },
-  { url: 'https://www.wfaa.com/feeds/syndication/rss/news', category: '로컬뉴스', source: 'WFAA', city: 'Dallas' },
-  { url: 'https://dfw.cbslocal.com/feed/', category: '로컬뉴스', source: 'CBS DFW', city: 'Dallas' },
-  { url: 'https://www.nbcdfw.com/news/feed/', category: '로컬뉴스', source: 'NBC DFW', city: 'Dallas' },
-  { url: 'https://starlocalmedia.com/dallasnews/feed/', category: '로컬뉴스', source: 'Star Local Media', city: 'Dallas' },
-  { url: 'https://www.dallasobserver.com/dallas/Rss.xml', category: '로컬뉴스', source: 'Dallas Observer', city: 'Dallas' },
+  { url: 'https://www.fox4news.com/rss.xml', category: '로컬뉴스', source: 'Fox 4 DFW', city: 'dallas' },
+  { url: 'https://www.wfaa.com/feeds/syndication/rss/news', category: '로컬뉴스', source: 'WFAA', city: 'dallas' },
+  { url: 'https://dfw.cbslocal.com/feed/', category: '로컬뉴스', source: 'CBS DFW', city: 'dallas' },
+  { url: 'https://www.nbcdfw.com/news/feed/', category: '로컬뉴스', source: 'NBC DFW', city: 'dallas' },
+  { url: 'https://starlocalmedia.com/dallasnews/feed/', category: '로컬뉴스', source: 'Star Local Media', city: 'dallas' },
+  { url: 'https://www.dallasobserver.com/dallas/Rss.xml', category: '로컬뉴스', source: 'Dallas Observer', city: 'dallas' },
 
   // 한국 뉴스 (간추린 — 한인 관심사)
   { url: 'https://www.yonhapnewstv.co.kr/browse/feed/', category: '한국뉴스', source: '연합뉴스TV', city: null },
@@ -154,7 +154,7 @@ async function insertIfNew(article) {
         article.url,
         article.thumbnail || null,
         article.pubDate || new Date(),
-        article.city || 'Dallas',
+        article.city || 'dallas',
       ]
     );
     return true;
