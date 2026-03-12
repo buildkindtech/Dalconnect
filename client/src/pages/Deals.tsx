@@ -38,11 +38,11 @@ const categories = [
 
 const fetchDeals = async (category?: string, hot?: boolean): Promise<Deal[]> => {
   const params = new URLSearchParams();
-  params.append('action', 'deals');
   if (category && category !== 'all') params.append('category', category);
   if (hot) params.append('hot', 'true');
+  params.append('limit', '50');
   
-  const response = await fetch(`/api/featured?${params}`);
+  const response = await fetch(`/api/deals?${params}`);
   if (!response.ok) throw new Error('Failed to fetch deals');
   return response.json();
 };
@@ -390,7 +390,7 @@ export default function Deals() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🔥 DalConnect 딜 & 쿠폰
+            🔥 DalKonnect 딜 & 쿠폰
           </h1>
           <p className="text-lg text-gray-600">
             달라스 한인들을 위한 최고의 딜과 쿠폰 정보

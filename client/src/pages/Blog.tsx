@@ -50,7 +50,7 @@ export default function Blog() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <BookOpen className="h-14 w-14 mx-auto mb-4" />
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-ko">DalConnect 블로그</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-ko">DalKonnect 블로그</h1>
             <p className="text-lg md:text-xl opacity-90">
               달라스 한인 커뮤니티 생활 가이드와 유용한 정보
             </p>
@@ -208,7 +208,7 @@ export default function Blog() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 font-ko">더 많은 정보가 필요하신가요?</h2>
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            DalConnect에서 350개 이상의 한인 업체 정보를 확인하세요
+            DalKonnect에서 350개 이상의 한인 업체 정보를 확인하세요
           </p>
           <Link href="/businesses">
             <Button size="lg" variant="secondary" className="h-12 px-8 text-lg">

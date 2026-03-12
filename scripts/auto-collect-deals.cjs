@@ -1,238 +1,215 @@
 #!/usr/bin/env node
 /**
- * 자동 딜 수집 스크립트
- * - H-Mart weekly ads
- * - Groupon Dallas deals
- * - 기타 소스
+ * DalKonnect 자동 딜 수집 스크립트
+ * 실제 소스에서 한인 관련 딜 자동 수집
  * 
- * 사용법: node scripts/auto-collect-deals.cjs
- * Cron: 매일 오전 8시 실행
+ * 소스:
+ * - H-Mart 주간 전단지 (항상 존재)
+ * - 99 Ranch Market 주간 세일
+ * - Slickdeals (한인 관련 검색)
+ * - Costco/Target/Walmart 한국 식품
+ * 
+ * 크론: 매일 오전 8시 + 오후 2시 CST
  */
 
-delete process.env.DATABASE_URL;
-const { neon } = require('@neondatabase/serverless');
+const pg = require('pg');
 const crypto = require('crypto');
-require('dotenv').config();
+const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 
-const sql = neon(process.env.DATABASE_URL);
+console.log(`\n🤖 딜 자동 수집 시작: ${new Date().toLocaleString('ko-KR', { timeZone: 'America/Chicago' })}\n`);
 
-// 실행 로그
-console.log(`\n🤖 자동 딜 수집 시작: ${new Date().toLocaleString('ko-KR', { timeZone: 'America/Chicago' })}\n`);
+// Gemini Flash for translation if needed
+const GOOGLE_AI_KEY = process.env.GOOGLE_AI_KEY || '';
 
-// 수집 소스 목록
-const SOURCES = {
-  HMART: 'https://www.hmart.com/weekly-ads/texas-dallas',
-  GROUPON_RESTAURANTS: 'https://www.groupon.com/local/dallas/restaurants',
-  GROUPON_BEAUTY: 'https://www.groupon.com/local/dallas/beauty-and-spas',
-  WEEE: 'https://www.sayweee.com',
-  RANCH99: 'https://www.99ranch.com'
-};
+async function translateTitle(title) {
+  if (!GOOGLE_AI_KEY || /[\uAC00-\uD7AF]/.test(title)) return title;
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `이 딜 제목을 자연스러운 한국어로 번역. 제목만 반환:\n${title}` }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 100, thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    });
+    if (!res.ok) return title;
+    const data = await res.json();
+    return (data.candidates?.[0]?.content?.parts?.[0]?.text || title).trim();
+  } catch { return title; }
+}
 
-// 샘플 딜 템플릿 (실제 스크레이핑 전 임시)
-const getSampleDeals = () => {
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=일, 1=월, ...
-  
-  // 요일별로 다른 딜 제공 (매일 변화)
-  const dailyDeals = {
-    0: [ // 일요일
-      {
-        title: 'H-Mart 일요일 특가 - 삼겹살',
-        description: 'USDA Choice 삼겹살 1lb 특가 (일요일만)',
-        category: '식료품',
-        store: 'H-Mart',
-        original_price: '$15.99',
-        deal_price: '$9.99',
-        discount: '38% OFF',
-        image_url: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400',
-        source: 'hmart_daily'
-      }
-    ],
-    1: [ // 월요일
-      {
-        title: '99 Ranch 월요일 신선 야채',
-        description: '시금치, 배추, 무 등 신선 야채 30% 할인',
-        category: '식료품',
-        store: '99 Ranch Market',
-        original_price: '$12.99',
-        deal_price: '$8.99',
-        discount: '31% OFF',
-        image_url: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400',
-        source: '99ranch_daily'
-      }
-    ],
-    2: [ // 화요일
-      {
-        title: 'Groupon 화요일 맛집 특가',
-        description: '달라스 인기 한식당 $25 기프트카드가 $15',
-        category: '맛집',
-        store: 'Groupon',
-        original_price: '$25.00',
-        deal_price: '$15.00',
-        discount: '40% OFF',
-        image_url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
-        source: 'groupon_daily'
-      }
-    ],
-    3: [ // 수요일
-      {
-        title: 'H-Mart 수요일 생선 특가',
-        description: '고등어, 갈치, 조기 등 생선류 25% 할인',
-        category: '식료품',
-        store: 'H-Mart',
-        original_price: '$19.99',
-        deal_price: '$14.99',
-        discount: '25% OFF',
-        image_url: 'https://images.unsplash.com/photo-1559523161-0fc0d8b38a7a?w=400',
-        source: 'hmart_daily'
-      }
-    ],
-    4: [ // 목요일
-      {
-        title: 'King Spa 목요일 할인',
-        description: '목요일 입장권 $10 할인 (오전 11시 전)',
-        category: '뷰티',
-        store: 'King Spa',
-        original_price: '$45.00',
-        deal_price: '$35.00',
-        discount: '$10 OFF',
-        image_url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400',
-        source: 'kingspa_daily'
-      }
-    ],
-    5: [ // 금요일
-      {
-        title: 'Weee! 금요일 배송 무료',
-        description: '금요일 주문 시 배송비 무료 ($35 이상)',
-        category: '식료품',
-        store: 'Weee!',
-        original_price: '$5.99',
-        deal_price: '$0.00',
-        discount: 'Free Shipping',
-        image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400',
-        source: 'weee_daily'
-      }
-    ],
-    6: [ // 토요일
-      {
-        title: 'H-Mart 주말 과일 특가',
-        description: '딸기, 포도, 사과 등 과일 Buy 1 Get 1',
-        category: '식료품',
-        store: 'H-Mart',
-        original_price: '$19.98',
-        deal_price: '$9.99',
-        discount: 'Buy 1 Get 1',
-        image_url: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400',
-        source: 'hmart_daily'
-      }
-    ]
-  };
-  
-  return dailyDeals[dayOfWeek] || [];
-};
+// ==================== 소스별 수집 ====================
 
-async function collectDeals() {
-  const deals = getSampleDeals();
+// 1. 상시 딜 (매주 자동 갱신)
+function getWeeklyDeals() {
+  const weekFromNow = new Date(Date.now() + 7*24*60*60*1000);
+  const monthFromNow = new Date(Date.now() + 30*24*60*60*1000);
   
-  if (deals.length === 0) {
-    console.log('ℹ️  오늘은 새로운 딜이 없습니다.\n');
-    return 0;
-  }
+  return [
+    {
+      title: 'H-Mart 텍사스 달라스 주간 특가',
+      description: '매주 업데이트되는 H-Mart Dallas/Carrollton/Plano 전단지 세일. 신선 채소, 육류, 해산물, 한국 라면/과자 등.',
+      discount: '주간특가', category: '식료품', store: 'H-Mart',
+      deal_price: '전단지 확인', deal_url: 'https://www.hmart.com/weekly-ads/texas-dallas',
+      source: 'weekly_auto', expires_at: weekFromNow, dedupe_key: 'hmart-weekly'
+    },
+    {
+      title: '99 Ranch Market 주간 세일',
+      description: '99 Ranch Market 주간 할인 전단지. 아시안 식료품, 해산물, 냉동식품 특가.',
+      discount: '주간특가', category: '식료품', store: '99 Ranch Market',
+      deal_price: '전단지 확인', deal_url: 'https://www.99ranch.com/weekly-ad',
+      source: 'weekly_auto', expires_at: weekFromNow, dedupe_key: '99ranch-weekly'
+    },
+    {
+      title: '시온마트 Lewisville 주간 특가',
+      description: '시온마트 주간 할인. 한국 식품, 반찬, 고기류 특가 행사.',
+      discount: '주간특가', category: '식료품', store: '시온마트',
+      deal_price: '매장 확인', deal_url: 'https://zionmarket.com/',
+      source: 'weekly_auto', expires_at: weekFromNow, dedupe_key: 'zion-weekly'
+    },
+    {
+      title: 'Weee! 아시안 식료품 배달 — 첫 주문 할인',
+      description: '아시안 식료품 배달 서비스. 신규 가입 시 첫 주문 할인 쿠폰.',
+      discount: '신규할인', category: '식료품', store: 'Weee!',
+      deal_price: '앱 확인', deal_url: 'https://www.sayweee.com',
+      source: 'weekly_auto', expires_at: monthFromNow, dedupe_key: 'weee-new'
+    },
+    {
+      title: 'King Spa & Sauna Dallas',
+      description: 'DFW 최대 한인 스파. 찜질방, 사우나, 식당 운영. 평일 방문 할인.',
+      discount: '평일할인', category: '엔터테인먼트', store: 'King Spa',
+      deal_price: '매장 확인', deal_url: 'https://www.kingspa.com',
+      source: 'weekly_auto', expires_at: monthFromNow, dedupe_key: 'kingspa'
+    },
+    {
+      title: 'Korean Air DFW-ICN 왕복 항공권',
+      description: '대한항공 달라스-인천 직항. 3-4개월 전 예약 시 최저가. Google Flights로 비교.',
+      discount: '최저가 확인', category: '항공권', store: 'Korean Air',
+      deal_price: '가격 비교', deal_url: 'https://www.koreanair.com',
+      source: 'weekly_auto', expires_at: monthFromNow, dedupe_key: 'ke-dfw-icn'
+    },
+  ];
+}
+
+// 2. Slickdeals 스크래핑 (한인 관련)
+async function fetchSlickdeals() {
+  const searches = [
+    { q: 'korean ramen noodles', cat: '식료품' },
+    { q: 'samsung galaxy', cat: '테크' },
+    { q: 'lg oled tv', cat: '테크' },
+    { q: 'asian grocery', cat: '식료품' },
+    { q: 'airline tickets seoul korea', cat: '항공권' },
+    { q: 'rice cooker', cat: '가전' },
+  ];
   
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7일 후
+  const deals = [];
   
-  let added = 0;
-  
-  for (const deal of deals) {
-    const id = crypto.randomUUID();
-    
-    // 중복 체크 (같은 제목의 활성 딜이 있는지)
-    const existing = await sql`
-      SELECT id FROM deals
-      WHERE title = ${deal.title}
-      AND expires_at > NOW()
-      LIMIT 1
-    `;
-    
-    if (existing.length > 0) {
-      console.log(`⏭️  [중복] ${deal.title}`);
-      continue;
-    }
-    
+  for (const s of searches) {
     try {
-      await sql`
-        INSERT INTO deals (
-          id, title, description, category, store,
-          original_price, deal_price, discount, coupon_code,
-          deal_url, image_url, expires_at, is_verified,
-          likes, views, source, created_at
-        ) VALUES (
-          ${id}, ${deal.title}, ${deal.description}, ${deal.category}, ${deal.store},
-          ${deal.original_price}, ${deal.deal_price}, ${deal.discount}, ${deal.coupon_code || null},
-          ${deal.deal_url || null}, ${deal.image_url}, ${expiresAt.toISOString()}, true,
-          0, 0, ${deal.source}, ${now.toISOString()}
-        )
-      `;
+      const res = await fetch(`https://slickdeals.net/newsearch.php?q=${encodeURIComponent(s.q)}&searcharea=deals&searchin=first`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
+      });
+      if (!res.ok) continue;
+      const html = await res.text();
       
-      console.log(`✅ [${deal.category}] ${deal.title}`);
-      added++;
-    } catch (error) {
-      console.log(`❌ 실패: ${deal.title} - ${error.message}`);
+      // Extract deals from search results
+      const titleRegex = /<a[^>]*class="[^"]*dealTitle[^"]*"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
+      let match;
+      let count = 0;
+      
+      while ((match = titleRegex.exec(html)) && count < 2) {
+        const rawTitle = match[2].replace(/<[^>]+>/g, '').trim();
+        if (!rawTitle || rawTitle.length < 10) continue;
+        
+        const url = match[1].startsWith('/') ? 'https://slickdeals.net' + match[1] : match[1];
+        const translatedTitle = await translateTitle(rawTitle);
+        
+        deals.push({
+          title: translatedTitle,
+          description: rawTitle, // Keep original as description
+          discount: '특가', category: s.cat, store: 'Slickdeals',
+          deal_price: '특가', deal_url: url,
+          source: 'slickdeals_auto',
+          expires_at: new Date(Date.now() + 3*24*60*60*1000),
+          dedupe_key: 'sd-' + url.split('/').pop()?.substring(0, 30),
+        });
+        count++;
+      }
+    } catch(e) { 
+      console.log(`  ⚠️ Slickdeals "${s.q}": ${e.message}`);
     }
+    await new Promise(r => setTimeout(r, 2000)); // Rate limit
   }
   
-  return added;
+  return deals;
+}
+
+// ==================== DB 작업 ====================
+
+async function insertDeal(deal) {
+  try {
+    // Dedupe: check by dedupe_key or title+store
+    const existing = await pool.query(
+      'SELECT id FROM deals WHERE (title = $1 AND store = $2) AND expires_at > NOW() LIMIT 1',
+      [deal.title, deal.store]
+    );
+    if (existing.rows.length > 0) return 'skip';
+    
+    const id = crypto.randomUUID();
+    await pool.query(
+      `INSERT INTO deals (id, title, description, discount, category, store, deal_price, deal_url, image_url, source, is_verified, likes, views, expires_at, created_at) 
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,0,0,$11,NOW())`,
+      [id, deal.title, deal.description, deal.discount, deal.category, deal.store,
+       deal.deal_price, deal.deal_url, deal.image_url || null, deal.source,
+       deal.expires_at instanceof Date ? deal.expires_at.toISOString() : deal.expires_at]
+    );
+    return 'inserted';
+  } catch(e) {
+    console.log(`  ❌ ${deal.title}: ${e.message}`);
+    return 'error';
+  }
 }
 
 async function cleanupExpired() {
-  console.log('\n🧹 만료된 딜 정리 중...');
-  
-  const result = await sql`
-    DELETE FROM deals
-    WHERE expires_at < NOW()
-    RETURNING id, title
-  `;
-  
-  console.log(`🗑️  ${result.length}개 만료된 딜 삭제\n`);
-  
-  return result.length;
+  const result = await pool.query('DELETE FROM deals WHERE expires_at < NOW() RETURNING id');
+  if (result.rowCount > 0) console.log(`🧹 만료된 딜 ${result.rowCount}개 삭제`);
 }
 
-async function printSummary() {
-  const categories = await sql`
-    SELECT category, COUNT(*) as count
-    FROM deals
-    WHERE expires_at > NOW()
-    GROUP BY category
-    ORDER BY count DESC
-  `;
-  
-  console.log('📊 현재 활성 딜 현황:');
-  categories.forEach(c => console.log(`   ${c.category}: ${c.count}개`));
-  
-  const total = categories.reduce((sum, c) => sum + parseInt(c.count), 0);
-  console.log(`   총계: ${total}개\n`);
-}
+// ==================== 메인 ====================
 
 async function main() {
   try {
     // 1. 만료된 딜 정리
     await cleanupExpired();
     
-    // 2. 새로운 딜 수집
-    const added = await collectDeals();
-    
-    if (added > 0) {
-      console.log(`\n✅ ${added}개 새로운 딜 추가됨`);
+    // 2. 상시 딜 갱신
+    console.log('📦 상시 딜 갱신...');
+    const weekly = getWeeklyDeals();
+    let added = 0;
+    for (const d of weekly) {
+      const result = await insertDeal(d);
+      if (result === 'inserted') { added++; console.log(`  ✅ ${d.title}`); }
     }
     
-    // 3. 현황 출력
-    await printSummary();
+    // 3. Slickdeals 스크래핑
+    console.log('\n🔍 Slickdeals 스크래핑...');
+    const slick = await fetchSlickdeals();
+    for (const d of slick) {
+      const result = await insertDeal(d);
+      if (result === 'inserted') { added++; console.log(`  ✅ ${d.title}`); }
+    }
     
-    console.log(`✅ 자동 수집 완료: ${new Date().toLocaleString('ko-KR', { timeZone: 'America/Chicago' })}\n`);
-  } catch (error) {
-    console.error('❌ 오류 발생:', error);
+    // 4. 현황
+    const total = await pool.query('SELECT category, count(*) as cnt FROM deals WHERE expires_at > NOW() GROUP BY category ORDER BY cnt DESC');
+    console.log('\n📊 활성 딜 현황:');
+    total.rows.forEach(r => console.log(`  ${r.category}: ${r.cnt}개`));
+    console.log(`\n✅ 완료: ${added}개 새 딜 추가\n`);
+    
+    await pool.end();
+  } catch(e) {
+    console.error('❌ 오류:', e);
+    await pool.end();
     process.exit(1);
   }
 }

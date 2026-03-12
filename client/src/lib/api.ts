@@ -236,7 +236,7 @@ export function useBlogs(params?: {
 export function useBlog(slug: string) {
   return useQuery<Blog>({
     queryKey: ['blog', slug],
-    queryFn: () => fetchApi<Blog>(`/api/blog-detail?slug=${slug}`),
+    queryFn: () => fetchApi<Blog>(`/api/blogs/${encodeURIComponent(slug)}`),
     enabled: !!slug,
   });
 }

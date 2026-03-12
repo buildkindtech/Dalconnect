@@ -14,76 +14,94 @@ const pg = require('pg');
 const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 
-// RSS 피드 소스
-const RSS_FEEDS = [
-  // DFW 로컬 뉴스
-  { url: 'https://www.fox4news.com/rss.xml', category: '로컬뉴스', source: 'Fox 4 DFW', city: 'dallas' },
-  { url: 'https://www.wfaa.com/feeds/syndication/rss/news', category: '로컬뉴스', source: 'WFAA', city: 'dallas' },
-  { url: 'https://dfw.cbslocal.com/feed/', category: '로컬뉴스', source: 'CBS DFW', city: 'dallas' },
-  { url: 'https://www.nbcdfw.com/news/feed/', category: '로컬뉴스', source: 'NBC DFW', city: 'dallas' },
-  { url: 'https://starlocalmedia.com/dallasnews/feed/', category: '로컬뉴스', source: 'Star Local Media', city: 'dallas' },
-  { url: 'https://www.dallasobserver.com/dallas/Rss.xml', category: '로컬뉴스', source: 'Dallas Observer', city: 'dallas' },
+// Gemini Flash API for translation (English → Korean) — cheapest option
+const GOOGLE_AI_KEY = process.env.GOOGLE_AI_KEY || '';
 
-  // 한국 뉴스 (간추린 — 한인 관심사)
+async function translateToKorean(title, content) {
+  if (!GOOGLE_AI_KEY) return { title, content };
+  // Skip if already Korean
+  if (/[\uAC00-\uD7AF]/.test(title)) return { title, content };
+  
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `뉴스 제목과 내용을 자연스러운 한국어로 번역하세요. 반드시 JSON만 반환: {"title":"번역된제목","content":"번역된내용"}\n\n제목: ${title}\n내용: ${(content || '').substring(0, 300)}`
+          }]
+        }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 500 },
+      }),
+    });
+    if (!res.ok) return { title, content };
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    // Extract JSON from response (might have markdown code blocks)
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return { title, content };
+    const parsed = JSON.parse(jsonMatch[0]);
+    return { title: parsed.title || title, content: parsed.content || parsed.summary || content };
+  } catch (e) {
+    return { title, content };
+  }
+}
+
+// RSS 피드 소스 — 한국어 + 영어 (번역)
+const RSS_FEEDS = [
+  // 한국 뉴스 (메인)
   { url: 'https://www.yonhapnewstv.co.kr/browse/feed/', category: '한국뉴스', source: '연합뉴스TV', city: null },
   { url: 'https://www.hani.co.kr/rss/', category: '한국뉴스', source: '한겨레', city: null },
   { url: 'https://rss.donga.com/total.xml', category: '한국뉴스', source: '동아일보', city: null },
+  { url: 'https://www.khan.co.kr/rss/rssdata/total_news.xml', category: '한국뉴스', source: '경향신문', city: null },
+  { url: 'https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml', category: '한국뉴스', source: '조선일보', city: null },
 
-  // 미국 뉴스
-  { url: 'https://rss.nytimes.com/services/xml/rss/nyt/US.xml', category: '미국뉴스', source: 'New York Times', city: null },
+  // 미주 한인 뉴스
+  { url: 'https://www.koreadaily.com/RSS/news.xml', category: '미주뉴스', source: '중앙일보 미주', city: null },
+
+  // DFW 로컬 뉴스 (영어 → 번역)
+  { url: 'https://www.wfaa.com/feeds/syndication/rss/news', category: '로컬뉴스', source: 'WFAA', city: 'dallas', translate: true },
+  { url: 'https://www.nbcdfw.com/news/feed/', category: '로컬뉴스', source: 'NBC DFW', city: 'dallas', translate: true },
 
   // 이민/비자
-  { url: 'https://www.uscis.gov/rss/news', category: '이민/비자', source: 'USCIS', city: null },
+  { url: 'https://www.uscis.gov/rss/news', category: '이민/비자', source: 'USCIS', city: null, translate: true },
 
-  // K-POP / 엔터
-  { url: 'https://www.soompi.com/feed', category: 'K-POP', source: 'Soompi', city: null },
+  // K-POP / 연예
+  { url: 'https://www.soompi.com/feed', category: 'K-POP', source: 'Soompi', city: null, translate: true },
 
   // 스포츠
-  { url: 'https://www.espn.com/espn/rss/nfl/news', category: '스포츠', source: 'ESPN', city: null },
+  { url: 'https://rss.donga.com/sports.xml', category: '스포츠', source: '동아 스포츠', city: null },
+  { url: 'https://www.espn.com/espn/rss/nfl/news', category: '스포츠', source: 'ESPN', city: null, translate: true },
 
   // 건강
-  { url: 'https://www.medicalnewstoday.com/rss/nutrition.xml', category: '건강', source: 'Medical News Today', city: null },
-  { url: 'https://rss.webmd.com/rss/rss.aspx/rss/rss.aspx?RSSSource=RSS_PUBLIC', category: '건강', source: 'WebMD', city: null },
-  { url: 'https://www.health.com/rss/all.xml', category: '건강', source: 'Health.com', city: null },
-  { url: 'https://www.hidoc.co.kr/rss/news', category: '건강', source: '하이닥', city: null },
+  { url: 'https://health.chosun.com/rss/all.xml', category: '건강', source: '헬스조선', city: null },
+  { url: 'https://www.medicalnewstoday.com/rss/nutrition.xml', category: '건강', source: 'Medical News Today', city: null, translate: true },
 
-  // 부동산/숙소
-  { url: 'https://www.dallasnews.com/real-estate/feed/', category: '부동산/숙소', source: 'Dallas Morning News RE', city: 'dallas' },
-  { url: 'https://www.housingwire.com/feed/', category: '부동산/숙소', source: 'HousingWire', city: null },
-  { url: 'https://www.realtor.com/news/feed/', category: '부동산/숙소', source: 'Realtor.com', city: null },
-
-  // 생활정보
-  { url: 'https://lifehacker.com/feed/rss', category: '생활정보', source: 'Lifehacker', city: null },
-  { url: 'https://www.consumerreports.org/feeds/topic/money.xml', category: '생활정보', source: 'Consumer Reports', city: null },
-
-  // 세금/재정
-  { url: 'https://www.irs.gov/newsroom/rss.xml', category: '세금/재정', source: 'IRS News', city: null },
-  { url: 'https://www.nerdwallet.com/blog/feed/', category: '세금/재정', source: 'NerdWallet', city: null },
-  { url: 'https://feeds.feedburner.com/TheFinancialDiet', category: '세금/재정', source: 'Financial Diet', city: null },
-
-  // 연예/드라마
-  { url: 'https://www.allkpop.com/rss', category: '연예/드라마', source: 'allkpop', city: null },
-  { url: 'https://www.soompi.com/feed', category: '연예/드라마', source: 'Soompi Drama', city: null },
-  { url: 'https://mydramalist.com/rss/news', category: '연예/드라마', source: 'MyDramaList', city: null },
+  // 부동산
+  { url: 'https://www.realtor.com/news/feed/', category: '부동산/숙소', source: 'Realtor.com', city: null, translate: true },
 
   // 월드뉴스
-  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: '월드뉴스', source: 'BBC World', city: null },
-  { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: '월드뉴스', source: 'NYT World', city: null },
-  { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: '월드뉴스', source: 'Al Jazeera', city: null },
+  { url: 'https://www.yna.co.kr/rss/international.xml', category: '월드뉴스', source: '연합뉴스 국제', city: null },
+  { url: 'https://rss.donga.com/international.xml', category: '월드뉴스', source: '동아 국제', city: null },
+  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: '월드뉴스', source: 'BBC World', city: null, translate: true },
 
   // 육아
-  { url: 'https://www.parents.com/feed/', category: '육아', source: 'Parents.com', city: null },
-  { url: 'https://www.scarymommy.com/feed', category: '육아', source: 'Scary Mommy', city: null },
+  { url: 'https://www.parents.com/feed/', category: '육아', source: 'Parents.com', city: null, translate: true },
 
   // 취업/사업
-  { url: 'https://www.entrepreneur.com/latest/feed', category: '취업/사업', source: 'Entrepreneur', city: null },
-  { url: 'https://www.sba.gov/rss.xml', category: '취업/사업', source: 'SBA', city: null },
-  { url: 'https://feeds.feedburner.com/TheSmallBusinessBlog', category: '취업/사업', source: 'Small Biz Blog', city: null },
+  { url: 'https://www.entrepreneur.com/latest/feed', category: '취업/사업', source: 'Entrepreneur', city: null, translate: true },
 
   // 패션/뷰티
-  { url: 'https://www.allure.com/feed/rss', category: '패션/뷰티', source: 'Allure', city: null },
-  { url: 'https://fashionista.com/.rss/full/', category: '패션/뷰티', source: 'Fashionista', city: null },
-  { url: 'https://www.elle.com/rss/all.xml/', category: '패션/뷰티', source: 'Elle', city: null },
+  { url: 'https://www.wkorea.com/feed/', category: '패션/뷰티', source: 'W Korea', city: null },
+  { url: 'https://www.allurekorea.com/feed/', category: '패션/뷰티', source: 'Allure Korea', city: null },
+  { url: 'https://www.elle.com/rss/all.xml/', category: '패션/뷰티', source: 'Elle', city: null, translate: true },
+
+  // 세금/재정
+  { url: 'https://www.nerdwallet.com/blog/feed/', category: '세금/재정', source: 'NerdWallet', city: null, translate: true },
+
+  // 테크
+  { url: 'https://www.etnews.com/rss', category: '테크', source: '전자신문', city: null },
 ];
 
 // Simple XML parser for RSS (no dependency needed)
@@ -176,6 +194,7 @@ async function fetchFeed(feedConfig) {
       category: feedConfig.category,
       source: feedConfig.source,
       city: feedConfig.city,
+      translate: feedConfig.translate || false,
     }));
   } catch (e) {
     console.log(`  ⚠️ ${feedConfig.source}: ${e.message}`);
@@ -188,11 +207,20 @@ async function insertIfNew(article) {
     const existing = await pool.query('SELECT id FROM news WHERE url = $1', [article.url]);
     if (existing.rows.length > 0) return false;
 
+    let { title, content } = article;
+    
+    // Translate English articles to Korean
+    if (article.translate) {
+      const translated = await translateToKorean(title, content);
+      title = translated.title;
+      content = translated.content;
+    }
+
     await pool.query(
       'INSERT INTO news (title, content, category, source, url, thumbnail_url, published_date, city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
       [
-        article.title,
-        article.content || article.title,
+        title,
+        content || title,
         article.category,
         article.source,
         article.url,

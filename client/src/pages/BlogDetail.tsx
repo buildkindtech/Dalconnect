@@ -135,7 +135,7 @@ export default function BlogDetail() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">더 많은 정보를 원하시나요?</h2>
           <p className="text-lg mb-8 opacity-90">
-            DalConnect에서 DFW 한인 업체 정보를 확인하세요
+            DalKonnect에서 DFW 한인 업체 정보를 확인하세요
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/businesses">

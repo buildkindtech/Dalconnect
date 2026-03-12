@@ -534,7 +534,7 @@ export default function Home() {
                   <span className="font-bold text-orange-600">오늘의 맛집</span>
                 </div>
                 <h2 className="text-3xl font-bold mb-2">이 주의 추천 레스토랑</h2>
-                <p className="text-slate-600">DalConnect가 추천하는 특별한 맛집을 소개합니다</p>
+                <p className="text-slate-600">DalKonnect가 추천하는 특별한 맛집을 소개합니다</p>
               </div>
               
               <Card className="overflow-hidden hover:shadow-2xl transition-shadow">
@@ -864,7 +864,7 @@ export default function Home() {
                 <Clock className="h-8 w-8 text-primary" />
                 <div>
                   <h2 className="text-4xl font-bold">신규 등록 업체</h2>
-                  <p className="text-slate-600 mt-1">최근 DalConnect에 추가된 업체들</p>
+                  <p className="text-slate-600 mt-1">최근 DalKonnect에 추가된 업체들</p>
                 </div>
               </div>
               <Link href="/businesses?sort=recent">
@@ -1478,7 +1478,7 @@ export default function Home() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-6">업체를 운영하시나요?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            DalConnect에 등록하고 더 많은 고객을 만나세요
+            DalKonnect에 등록하고 더 많은 고객을 만나세요
           </p>
           <Link href="/pricing">
             <Button size="lg" variant="secondary" className="h-14 px-10 text-lg">

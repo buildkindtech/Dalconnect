@@ -1,5 +1,5 @@
 /**
- * Analytics utilities for DalConnect
+ * Analytics utilities for DalKonnect
  * Supports GA4 and Umami (both optional, controlled by env vars)
  */
 

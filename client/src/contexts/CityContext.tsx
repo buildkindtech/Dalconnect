@@ -8,9 +8,6 @@ export type City = {
 
 export const CITIES: City[] = [
   { id: "dallas", name: "달라스-포트워스", active: true },
-  { id: "houston", name: "휴스턴", active: false },
-  { id: "austin", name: "어스틴", active: true },
-  { id: "san_antonio", name: "샌안토니오", active: false },
 ];
 
 type CityContextType = {

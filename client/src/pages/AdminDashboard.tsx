@@ -37,7 +37,7 @@ export default function AdminDashboard() {
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-4xl font-bold font-ko mb-2">관리자 대시보드</h1>
-          <p className="text-muted-foreground">DalConnect 플랫폼 관리</p>
+          <p className="text-muted-foreground">DalKonnect 플랫폼 관리</p>
         </div>
 
         {/* Stats Grid */}

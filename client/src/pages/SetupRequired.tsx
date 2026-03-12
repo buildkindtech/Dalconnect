@@ -106,7 +106,7 @@ export default function SetupRequired() {
 
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                After adding the environment variable, this page will automatically show the DalConnect platform.
+                After adding the environment variable, this page will automatically show the DalKonnect platform.
               </p>
             </div>
           </div>

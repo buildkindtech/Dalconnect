@@ -90,44 +90,14 @@ export default function Header() {
               <div className="bg-primary text-white p-1.5 rounded-md">
                 <Globe className="h-5 w-5" />
               </div>
-              <span className="font-bold text-xl">DalConnect</span>
+              <span className="font-bold text-xl">DalKonnect</span>
             </Link>
             
-            {/* City Selector Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="gap-2 border-muted-foreground/20 hover:bg-accent/50"
-                >
-                  <MapPin className="h-4 w-4" />
-                  <span className="hidden md:inline">{currentCity.name}</span>
-                  <span className="md:hidden">지역</span>
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                {CITIES.map((city) => (
-                  <DropdownMenuItem
-                    key={city.id}
-                    onClick={() => handleCityClick(city)}
-                    className={`flex items-center justify-between cursor-pointer ${
-                      !city.active ? "text-muted-foreground" : ""
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      {city.active && currentCity.id === city.id && "📍"}
-                      {city.name}
-                    </span>
-                    {!city.active && (
-                      <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
-                        🔜 Coming Soon
-                      </span>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* City label - single city for now */}
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4" />
+              <span className="hidden md:inline">{currentCity.name}</span>
+            </span>
             
             <nav className="hidden xl:flex gap-6">
               <Link href="/businesses" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/businesses' ? 'text-primary' : 'text-muted-foreground'}`}>

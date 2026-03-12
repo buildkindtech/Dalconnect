@@ -284,7 +284,7 @@ export default function RegisterBusiness() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-3 text-slate-900">업체 등록</h1>
-          <p className="text-lg text-slate-600">DalConnect에 우리 업체를 소개해보세요 (무료)</p>
+          <p className="text-lg text-slate-600">DalKonnect에 우리 업체를 소개해보세요 (무료)</p>
         </div>
 
         {/* Progress Indicator */}

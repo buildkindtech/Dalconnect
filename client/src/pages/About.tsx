@@ -9,7 +9,7 @@ export default function About() {
       {/* Hero */}
       <section className="bg-gradient-to-r from-primary to-primary/80 text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">DalConnect 소개</h1>
+          <h1 className="text-5xl font-bold mb-6">DalKonnect 소개</h1>
           <p className="text-xl max-w-3xl mx-auto opacity-90">
             달라스-포트워스 한인 커뮤니티를 연결하는 최고의 플랫폼
           </p>
@@ -23,7 +23,7 @@ export default function About() {
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-6">우리의 미션</h2>
               <p className="text-xl text-slate-600 leading-relaxed">
-                DalConnect는 DFW 지역의 한인 업체와 커뮤니티를 하나로 연결합니다.
+                DalKonnect는 DFW 지역의 한인 업체와 커뮤니티를 하나로 연결합니다.
                 믿을 수 있는 한인 비즈니스 정보와 최신 뉴스를 제공하여,
                 한인들이 더 쉽게 필요한 서비스를 찾고 소통할 수 있도록 돕습니다.
               </p>
@@ -85,7 +85,7 @@ export default function About() {
       {/* Stats */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">DalConnect의 성장</h2>
+          <h2 className="text-4xl font-bold text-center mb-12">DalKonnect의 성장</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center">
               <p className="text-5xl font-bold text-primary mb-2">365+</p>
@@ -108,7 +108,7 @@ export default function About() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-6">함께 성장하세요</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            DalConnect와 함께 DFW 한인 커뮤니티를 더욱 강하게 만들어갑니다
+            DalKonnect와 함께 DFW 한인 커뮤니티를 더욱 강하게 만들어갑니다
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/businesses">

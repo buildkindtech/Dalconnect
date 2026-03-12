@@ -349,6 +349,21 @@ export async function registerRoutes(
     }
   });
 
+  // Listing detail
+  app.get("/api/listings/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const result = await db.select().from(listings).where(sql`${listings.id} = ${id}`).limit(1);
+      if (!result || result.length === 0) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      res.json(result[0]);
+    } catch(e) {
+      console.error("Listing detail error:", e);
+      res.status(500).json({ error: "Failed to fetch listing" });
+    }
+  });
+
   app.post("/api/listings", async (req, res) => {
     try {
       const { title, description, price, category, condition, contact_method, contact_info, author_name, author_phone, location, city } = req.body;
@@ -373,13 +388,70 @@ export async function registerRoutes(
     }
   });
 
-  // /api/community - stub (future feature)
+  // /api/community
   app.get("/api/community", async (req, res) => {
-    const { action } = req.query;
-    if (action === 'posts') {
-      return res.json({ success: true, posts: [], total: 0 });
+    try {
+      const { action, id, limit = "20" } = req.query as Record<string, string>;
+      
+      // Detail view: action=post&id=xxx
+      if (action === 'post' && id) {
+        const postResult = await db.execute(
+          sql`SELECT * FROM community_posts WHERE id = ${id} LIMIT 1`
+        );
+        if (!postResult.rows || postResult.rows.length === 0) {
+          return res.json({ success: false, message: "Post not found" });
+        }
+        let comments: any[] = [];
+        try {
+          const cr = await db.execute(
+            sql`SELECT * FROM community_comments WHERE post_id = ${id} ORDER BY created_at ASC`
+          );
+          comments = cr.rows || [];
+        } catch(e) { /* comments table may not exist */ }
+        return res.json({ post: postResult.rows[0], comments });
+      }
+      
+      const lim = parseInt(limit);
+      const result = await db.execute(
+        sql`SELECT * FROM community_posts ORDER BY created_at DESC LIMIT ${lim}`
+      );
+      if (action === 'posts') {
+        return res.json({ success: true, posts: result.rows || [], total: (result.rows || []).length });
+      }
+      return res.json({ success: true, data: result.rows || [] });
+    } catch (e) {
+      console.error("Community error:", e);
+      if ((req.query as any).action === 'posts') {
+        return res.json({ success: true, posts: [], total: 0 });
+      }
+      return res.json({ success: true, data: [] });
     }
-    return res.json({ success: true, data: [] });
+  });
+
+  // Community detail
+  app.get("/api/community/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const result = await db.execute(
+        sql`SELECT * FROM community_posts WHERE id = ${id} LIMIT 1`
+      );
+      if (!result.rows || result.rows.length === 0) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      // Also fetch comments if table exists
+      let comments = [];
+      try {
+        const commentResult = await db.execute(
+          sql`SELECT * FROM community_comments WHERE post_id = ${id} ORDER BY created_at ASC`
+        );
+        comments = commentResult.rows || [];
+      } catch(e) { /* comments table may not exist */ }
+      
+      return res.json({ ...result.rows[0], comments });
+    } catch(e) {
+      console.error("Community detail error:", e);
+      return res.status(500).json({ message: "Server error" });
+    }
   });
 
   app.post("/api/community", async (req, res) => {
@@ -428,6 +500,32 @@ export async function registerRoutes(
     } catch (e) {
       console.error("Deals error:", e);
       res.json([]);
+    }
+  });
+
+  // /api/place-photo — Google Places Photo proxy (avoids API key domain restrictions)
+  app.get("/api/place-photo", async (req, res) => {
+    try {
+      const { ref, maxWidth, maxHeight } = req.query as Record<string, string>;
+      if (!ref || !ref.startsWith('places/') || !ref.includes('/photos/')) {
+        return res.status(400).json({ error: 'Invalid ref' });
+      }
+      const API_KEY = process.env.GOOGLE_PLACES_API_KEY || 'AIzaSyAzcujFS2IfcaxVmtYvFEb4omQhVlOQCOE';
+      const w = parseInt(maxWidth) || 800;
+      const h = parseInt(maxHeight) || 800;
+      const googleUrl = `https://places.googleapis.com/v1/${ref}?maxHeightPx=${h}&maxWidthPx=${w}&key=${API_KEY}`;
+      const response = await fetch(googleUrl, { headers: { 'Accept': 'image/*' } });
+      if (!response.ok) {
+        return res.status(response.status).json({ error: `Google API ${response.status}` });
+      }
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      const buffer = Buffer.from(await response.arrayBuffer());
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+      return res.status(200).send(buffer);
+    } catch (error: any) {
+      console.error("place-photo proxy error:", error.message);
+      return res.status(500).json({ error: 'Failed to fetch photo' });
     }
   });
 

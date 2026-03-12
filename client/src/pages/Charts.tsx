@@ -45,10 +45,15 @@ const Charts: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/categories?action=charts&type=${type}`);
-      const data: ApiResponse = await response.json();
+      const response = await fetch(`/api/charts?type=${type}&limit=20`);
+      const data = await response.json();
       
-      if (data.success) {
+      if (Array.isArray(data) && data.length > 0) {
+        setChartsData(prev => ({
+          ...prev,
+          [type]: data
+        }));
+      } else if (data.success && data.data) {
         setChartsData(prev => ({
           ...prev,
           [type]: data.data

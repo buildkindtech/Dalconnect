@@ -11,7 +11,7 @@ export default function Footer() {
               <div className="bg-gradient-to-br from-primary to-primary/80 text-white p-2 rounded-xl">
                 <Globe className="h-6 w-6" />
               </div>
-              <h3 className="font-bold text-2xl text-white font-ko">DalConnect</h3>
+              <h3 className="font-bold text-2xl text-white font-ko">DalKonnect</h3>
             </div>
             <p className="text-sm text-slate-400 max-w-xs mb-6 leading-relaxed font-ko">
               달라스-포트워스 한인 커뮤니티를 연결하는 플랫폼
@@ -95,7 +95,7 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-slate-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
             <div className="flex items-center gap-2">
-              <span>&copy; {new Date().getFullYear()} DalConnect. All rights reserved.</span>
+              <span>&copy; {new Date().getFullYear()} DalKonnect. All rights reserved.</span>
             </div>
             <div className="flex items-center gap-1 text-slate-400">
               <span>Built with</span>
