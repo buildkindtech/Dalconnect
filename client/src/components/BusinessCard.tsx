@@ -3,7 +3,7 @@ import { MapPin, Star, Phone, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Business } from "@/lib/api";
-import { getCategoryColor, getCategoryIcon } from "@/lib/imageDefaults";
+import { getCategoryColor, getCategoryIcon, proxyPhotoUrl } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
 
 function getRelativeTime(date: string): string {
@@ -34,7 +34,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
           {business.cover_url ? (
             <div 
               className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-              style={{ backgroundImage: `url(${business.cover_url})` }}
+              style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
             />
           ) : (
             <div className={`w-full h-48 bg-gradient-to-br ${colorClass} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>

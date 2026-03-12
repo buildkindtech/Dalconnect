@@ -35,6 +35,7 @@ const Charts: React.FC = () => {
     { id: 'music', label: '🎵 음악', icon: Music },
     { id: 'movie', label: '🎥 영화', icon: Film },
     { id: 'netflix', label: '📺 넷플릭스', icon: Tv },
+    { id: 'youtube_korea', label: '▶️ 유튜브', icon: Mic2 },
   ];
 
   const fetchChartData = async (type: string) => {

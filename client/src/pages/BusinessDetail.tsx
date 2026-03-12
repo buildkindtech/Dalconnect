@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useBusiness } from "@/lib/api";
-import { getCategoryImage } from "@/lib/imageDefaults";
+import { getCategoryImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import { useToast } from "@/hooks/use-toast";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyAzcujFS2IfcaxVmtYvFEb4omQhVlOQCOE";
@@ -85,8 +85,15 @@ export default function BusinessDetail() {
     );
   }
 
-  // Image gallery setup
-  const images = business.cover_url ? [business.cover_url] : [getCategoryImage(business.category, null)];
+  // Image gallery setup — proxy Google Places photo URLs through server-side endpoint
+  const coverImage = business.cover_url ? proxyPhotoUrl(business.cover_url) : null;
+  const photoImages = business.photos?.map(p => proxyPhotoUrl(p)).filter(Boolean) as string[] || [];
+  const allImages = coverImage 
+    ? [coverImage, ...photoImages.filter(p => p !== coverImage)]
+    : photoImages.length > 0 
+      ? photoImages 
+      : [getCategoryImage(business.category, null)];
+  const images = allImages.filter(Boolean) as string[];
   const hasMultipleImages = images.length > 1;
 
   const nextImage = () => {

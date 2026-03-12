@@ -79,10 +79,40 @@ export function hasValidImage(url: string | null | undefined): boolean {
   return Boolean(url && url.trim().length > 0);
 }
 
+/**
+ * Convert Google Places Photo API URLs to proxy URLs.
+ * This avoids API key domain restrictions by routing through our server-side proxy.
+ * 
+ * Input:  https://places.googleapis.com/v1/places/{id}/photos/{ref}/media?maxHeightPx=800&maxWidthPx=800&key=...
+ * Output: /api/place-photo?ref=places/{id}/photos/{ref}/media&maxWidth=800&maxHeight=800
+ */
+export function proxyPhotoUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  
+  // Only proxy Google Places API URLs
+  if (!url.includes('places.googleapis.com/v1/')) {
+    return url;
+  }
+  
+  try {
+    // Extract the ref path: everything after "/v1/" and before "?"
+    const v1Index = url.indexOf('/v1/');
+    if (v1Index === -1) return url;
+    
+    const afterV1 = url.substring(v1Index + 4); // skip "/v1/"
+    const qIndex = afterV1.indexOf('?');
+    const ref = qIndex >= 0 ? afterV1.substring(0, qIndex) : afterV1;
+    
+    return `/api/place-photo?ref=${encodeURIComponent(ref)}`;
+  } catch {
+    return url;
+  }
+}
+
 // Get category image - returns actual image or null (for fallback rendering)
 export function getCategoryImage(category: string | null | undefined, imageUrl: string | null | undefined): string | null {
   if (hasValidImage(imageUrl)) {
-    return imageUrl!;
+    return proxyPhotoUrl(imageUrl!) || imageUrl!;
   }
   return null; // Let the component handle the fallback rendering
 }

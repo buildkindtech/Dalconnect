@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBusinesses, useCategories } from "@/lib/api";
 import BusinessCard from "@/components/BusinessCard";
-import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
+import { getCategoryColor, getCategoryIcon, hasValidImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
 
 const CITIES = [
@@ -463,7 +463,7 @@ export default function Businesses() {
                         <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
                           {hasValidImage(business.cover_url) ? (
                             <img
-                              src={business.cover_url!}
+                              src={proxyPhotoUrl(business.cover_url) || business.cover_url!}
                               alt={business.name_ko || business.name_en}
                               className="w-full h-full object-cover"
                               onError={(e) => {

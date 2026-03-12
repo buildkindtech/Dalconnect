@@ -40,6 +40,50 @@ const RSS_FEEDS = [
 
   // 스포츠
   { url: 'https://www.espn.com/espn/rss/nfl/news', category: '스포츠', source: 'ESPN', city: null },
+
+  // 건강
+  { url: 'https://www.medicalnewstoday.com/rss/nutrition.xml', category: '건강', source: 'Medical News Today', city: null },
+  { url: 'https://rss.webmd.com/rss/rss.aspx/rss/rss.aspx?RSSSource=RSS_PUBLIC', category: '건강', source: 'WebMD', city: null },
+  { url: 'https://www.health.com/rss/all.xml', category: '건강', source: 'Health.com', city: null },
+  { url: 'https://www.hidoc.co.kr/rss/news', category: '건강', source: '하이닥', city: null },
+
+  // 부동산/숙소
+  { url: 'https://www.dallasnews.com/real-estate/feed/', category: '부동산/숙소', source: 'Dallas Morning News RE', city: 'dallas' },
+  { url: 'https://www.housingwire.com/feed/', category: '부동산/숙소', source: 'HousingWire', city: null },
+  { url: 'https://www.realtor.com/news/feed/', category: '부동산/숙소', source: 'Realtor.com', city: null },
+
+  // 생활정보
+  { url: 'https://lifehacker.com/feed/rss', category: '생활정보', source: 'Lifehacker', city: null },
+  { url: 'https://www.consumerreports.org/feeds/topic/money.xml', category: '생활정보', source: 'Consumer Reports', city: null },
+
+  // 세금/재정
+  { url: 'https://www.irs.gov/newsroom/rss.xml', category: '세금/재정', source: 'IRS News', city: null },
+  { url: 'https://www.nerdwallet.com/blog/feed/', category: '세금/재정', source: 'NerdWallet', city: null },
+  { url: 'https://feeds.feedburner.com/TheFinancialDiet', category: '세금/재정', source: 'Financial Diet', city: null },
+
+  // 연예/드라마
+  { url: 'https://www.allkpop.com/rss', category: '연예/드라마', source: 'allkpop', city: null },
+  { url: 'https://www.soompi.com/feed', category: '연예/드라마', source: 'Soompi Drama', city: null },
+  { url: 'https://mydramalist.com/rss/news', category: '연예/드라마', source: 'MyDramaList', city: null },
+
+  // 월드뉴스
+  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: '월드뉴스', source: 'BBC World', city: null },
+  { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', category: '월드뉴스', source: 'NYT World', city: null },
+  { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: '월드뉴스', source: 'Al Jazeera', city: null },
+
+  // 육아
+  { url: 'https://www.parents.com/feed/', category: '육아', source: 'Parents.com', city: null },
+  { url: 'https://www.scarymommy.com/feed', category: '육아', source: 'Scary Mommy', city: null },
+
+  // 취업/사업
+  { url: 'https://www.entrepreneur.com/latest/feed', category: '취업/사업', source: 'Entrepreneur', city: null },
+  { url: 'https://www.sba.gov/rss.xml', category: '취업/사업', source: 'SBA', city: null },
+  { url: 'https://feeds.feedburner.com/TheSmallBusinessBlog', category: '취업/사업', source: 'Small Biz Blog', city: null },
+
+  // 패션/뷰티
+  { url: 'https://www.allure.com/feed/rss', category: '패션/뷰티', source: 'Allure', city: null },
+  { url: 'https://fashionista.com/.rss/full/', category: '패션/뷰티', source: 'Fashionista', city: null },
+  { url: 'https://www.elle.com/rss/all.xml/', category: '패션/뷰티', source: 'Elle', city: null },
 ];
 
 // Simple XML parser for RSS (no dependency needed)

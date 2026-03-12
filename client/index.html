@@ -10,6 +10,39 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Google Analytics 4 (GA4) — set VITE_GA4_ID env var to enable -->
+    <script>
+      (function() {
+        var id = '%VITE_GA4_ID%';
+        if (!id || id === '' || id.indexOf('VITE_') === 0) return;
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', id);
+      })();
+    </script>
+
+    <!-- Umami Analytics — set VITE_UMAMI_ID and VITE_UMAMI_URL env vars to enable -->
+    <script>
+      (function() {
+        var id = '%VITE_UMAMI_ID%';
+        var url = '%VITE_UMAMI_URL%';
+        if (!id || id === '' || id.indexOf('VITE_') === 0) return;
+        if (!url || url === '' || url.indexOf('VITE_') === 0) return;
+        var s = document.createElement('script');
+        s.async = true;
+        s.defer = true;
+        s.setAttribute('data-website-id', id);
+        s.src = url + '/script.js';
+        document.head.appendChild(s);
+      })();
+    </script>
+
     <!-- Primary Meta Tags -->
     <title>DalConnect - 달라스 한인 커뮤니티 포털 | 업소록, 뉴스, 사고팔기</title>
     <meta name="title" content="DalConnect - 달라스 한인 커뮤니티 포털 | 업소록, 뉴스, 사고팔기" />

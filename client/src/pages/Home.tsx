@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFeaturedBusinesses, useNews, useBlogs, useListings, useCategories } from "@/lib/api";
-import { getCategoryColor, getCategoryIcon, hasValidImage } from "@/lib/imageDefaults";
+import { getCategoryColor, getCategoryIcon, hasValidImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import { getBlogCategoryStyle, getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import * as Icons from "lucide-react";
@@ -378,7 +378,7 @@ export default function Home() {
       <section 
         className="relative h-[600px] flex items-center justify-center bg-cover bg-center"
         style={{ 
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=1600&q=80)` 
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url(https://images.unsplash.com/photo-1545194445-dddb8f4487c6?w=1600&q=80)` 
         }}
       >
         <div className="container mx-auto px-4 text-center text-white">
@@ -386,7 +386,7 @@ export default function Home() {
             DFW 한인 커뮤니티의 모든 것
           </h1>
           <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-slate-200">
-            달라스-포트워스 지역 {1122}개 한인 업체 정보와 최신 한인 뉴스
+            달라스-포트워스 지역 {1210}개 한인 업체 정보와 최신 한인 뉴스
           </p>
           
           {/* Big Search Bar with Autocomplete */}
@@ -476,7 +476,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-6 justify-center items-center text-sm text-slate-700">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="font-semibold">총 {(1122).toLocaleString()}개 업체</span>
+                <span className="font-semibold">총 {(1210).toLocaleString()}개 업체</span>
               </div>
               <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
               <div className="flex items-center gap-2">
@@ -544,7 +544,7 @@ export default function Home() {
                     {hasValidImage(restaurantOfDay.cover_url) ? (
                       <div 
                         className="w-full h-full bg-cover bg-center"
-                        style={{ backgroundImage: `url(${restaurantOfDay.cover_url})` }}
+                        style={{ backgroundImage: `url(${proxyPhotoUrl(restaurantOfDay.cover_url) || restaurantOfDay.cover_url})` }}
                       />
                     ) : (
                       <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(restaurantOfDay.category)} flex items-center justify-center`}>
@@ -676,7 +676,7 @@ export default function Home() {
                         {hasValidImage(business.cover_url) ? (
                           <div 
                             className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                            style={{ backgroundImage: `url(${business.cover_url})` }}
+                            style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
                           />
                         ) : (
                           <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
@@ -762,7 +762,7 @@ export default function Home() {
                       {hasValidImage(business.cover_url) ? (
                         <div 
                           className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ backgroundImage: `url(${business.cover_url})` }}
+                          style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
                         />
                       ) : (
                         <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
@@ -897,7 +897,7 @@ export default function Home() {
                         {hasValidImage(business.cover_url) ? (
                           <div 
                             className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                            style={{ backgroundImage: `url(${business.cover_url})` }}
+                            style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
                           />
                         ) : (
                           <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
