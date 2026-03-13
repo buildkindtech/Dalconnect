@@ -21,7 +21,7 @@ export default function NewsDetail() {
   const { data: newsItem, isLoading, error } = useQuery<NewsItem>({
     queryKey: ['news', params.id],
     queryFn: async () => {
-      const res = await fetch(`/api/news?id=${params.id}`);
+      const res = await fetch(`/api/news/${params.id}`);
       if (res.status === 404) return null;
       if (!res.ok) throw new Error('Failed to fetch news');
       return res.json();

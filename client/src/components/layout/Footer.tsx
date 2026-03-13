@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Globe, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from "lucide-react";
+import { Globe, Mail, MapPin, Facebook, Instagram, Twitter } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -23,16 +23,11 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-primary" />
-                <a href="mailto:info@buildkind.tech" className="hover:text-primary transition-colors">
-                  info@buildkind.tech
+                <a href="mailto:info@dalkonnect.com" className="hover:text-primary transition-colors">
+                  info@dalkonnect.com
                 </a>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-primary" />
-                <a href="tel:+14696132763" className="hover:text-primary transition-colors">
-                  (469) 613-2763
-                </a>
-              </div>
+
             </div>
             
             {/* Social Media Links */}
@@ -100,15 +95,7 @@ export default function Footer() {
             <div className="flex items-center gap-1 text-slate-400">
               <span>Built with</span>
               <span className="text-red-500">❤️</span>
-              <span>for the DFW Korean Community by</span>
-              <a 
-                href="https://buildkind.tech" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="font-medium text-primary hover:underline ml-1"
-              >
-                BuildKind Tech
-              </a>
+              <span>for the DFW Korean Community</span>
             </div>
           </div>
         </div>

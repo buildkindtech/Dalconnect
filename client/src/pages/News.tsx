@@ -3,35 +3,47 @@ import { useNews, type NewsItem } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Calendar, Building2, Plus, Loader2 } from "lucide-react";
-import { useState, useRef, useCallback } from "react";
+import { ChevronRight, Calendar, Building2, Plus, Flame, TrendingUp } from "lucide-react";
+import { useState, useRef } from "react";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { NewsSubmissionDialog } from "@/components/NewsSubmissionDialog";
 import { getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
 
-// 이민 사회 관심사 우선 정렬
+// 관심도 순 카테고리 정렬
 const CATEGORIES = [
-  { id: 'all', label: '전체' },
-  { id: '이민/비자', label: '이민/비자' },
-  { id: '세금/재정', label: '세금/재정' },
-  { id: '취업/사업', label: '취업/사업' },
-  { id: '생활정보', label: '생활정보' },
-  { id: '부동산/숙소', label: '부동산/숙소' },
-  { id: '육아', label: '육아' },
-  { id: '건강', label: '건강' },
-  { id: '로컬뉴스', label: '로컬뉴스' },
-  { id: '한국뉴스', label: '한국뉴스' },
-  { id: '미국뉴스', label: '미국뉴스' },
-  { id: '월드뉴스', label: '월드뉴스' },
-  { id: '연예/드라마', label: '연예/드라마' },
-  { id: 'K-POP', label: 'K-POP' },
-  { id: '스포츠', label: '스포츠' },
-  { id: '패션/뷰티', label: '패션/뷰티' },
+  { id: 'all', label: '전체', emoji: '📰' },
+  { id: '로컬뉴스', label: '로컬', emoji: '📍' },
+  { id: '한국뉴스', label: '한국', emoji: '🇰🇷' },
+  { id: '월드뉴스', label: '세계', emoji: '🌍' },
+  { id: 'K-POP', label: 'K-POP', emoji: '🎤' },
+  { id: '스포츠', label: '스포츠', emoji: '⚽' },
+  { id: '이민/비자', label: '이민/비자', emoji: '🛂' },
+  { id: '세금/재정', label: '세금/재정', emoji: '💰' },
+  { id: '부동산/숙소', label: '부동산', emoji: '🏠' },
+  { id: '패션/뷰티', label: '패션/뷰티', emoji: '👗' },
+  { id: '취업/사업', label: '취업/사업', emoji: '💼' },
+  { id: '건강', label: '건강', emoji: '🏥' },
+  { id: '육아', label: '육아', emoji: '👶' },
+  { id: '테크', label: '테크', emoji: '💻' },
 ];
 
-const PAGE_SIZE = 20;
+// 카테고리별 우선순위 (낮을수록 높음)
+const CATEGORY_PRIORITY: Record<string, number> = {
+  '로컬뉴스': 1,
+  '한국뉴스': 2,
+  '월드뉴스': 3,
+  'K-POP': 4,
+  '스포츠': 5,
+  '이민/비자': 6,
+  '세금/재정': 7,
+  '부동산/숙소': 8,
+  '패션/뷰티': 9,
+  '취업/사업': 10,
+  '건강': 11,
+  '육아': 12,
+  '테크': 13,
+};
 
-// Helper function to format relative time
 function getRelativeTime(date: string | Date): string {
   const now = new Date();
   const published = new Date(date);
@@ -40,248 +52,342 @@ function getRelativeTime(date: string | Date): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 60) {
-    return `${diffMins}분 전`;
-  } else if (diffHours < 24) {
-    return `${diffHours}시간 전`;
-  } else if (diffDays < 7) {
-    return `${diffDays}일 전`;
-  } else {
-    return published.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
+  if (diffMins < 60) return `${diffMins}분 전`;
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  if (diffDays < 7) return `${diffDays}일 전`;
+  return published.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+}
+
+function getCategoryColor(category: string): string {
+  const colors: Record<string, string> = {
+    '로컬뉴스': 'bg-blue-100 text-blue-800',
+    '한국뉴스': 'bg-red-100 text-red-800',
+    '월드뉴스': 'bg-emerald-100 text-emerald-800',
+    'K-POP': 'bg-pink-100 text-pink-800',
+    '스포츠': 'bg-orange-100 text-orange-800',
+    '이민/비자': 'bg-purple-100 text-purple-800',
+    '세금/재정': 'bg-yellow-100 text-yellow-800',
+    '부동산/숙소': 'bg-teal-100 text-teal-800',
+    '패션/뷰티': 'bg-fuchsia-100 text-fuchsia-800',
+    '취업/사업': 'bg-cyan-100 text-cyan-800',
+    '건강': 'bg-lime-100 text-lime-800',
+    '육아': 'bg-amber-100 text-amber-800',
+    '테크': 'bg-indigo-100 text-indigo-800',
+  };
+  return colors[category] || 'bg-slate-100 text-slate-700';
+}
+
+// 헤드라인 카드 (큰 카드)
+function HeadlineCard({ news, size = 'large' }: { news: NewsItem; size?: 'large' | 'medium' }) {
+  const isLarge = size === 'large';
+  return (
+    <Link href={`/news/${news.id}`}>
+      <div className={`group cursor-pointer bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 ${isLarge ? 'md:col-span-2' : ''}`}>
+        {/* Image area */}
+        {news.thumbnail_url ? (
+          <div className={`${isLarge ? 'h-48 md:h-64' : 'h-40'} overflow-hidden bg-slate-100`}>
+            <img 
+              src={news.thumbnail_url} 
+              alt={news.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          </div>
+        ) : (
+          <div className={`${isLarge ? 'h-32 md:h-40' : 'h-24'} bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center`}>
+            <span className={`${isLarge ? 'text-5xl' : 'text-3xl'}`}>
+              {CATEGORIES.find(c => c.id === news.category)?.emoji || '📰'}
+            </span>
+          </div>
+        )}
+        <div className="p-4 md:p-5">
+          <div className="flex items-center gap-2 mb-2">
+            {news.category && (
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getCategoryColor(news.category)}`}>
+                {news.category}
+              </span>
+            )}
+            {news.published_date && (
+              <span className="text-xs text-slate-400">{getRelativeTime(news.published_date)}</span>
+            )}
+          </div>
+          <h3 className={`${isLarge ? 'text-xl md:text-2xl' : 'text-base md:text-lg'} font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 font-ko leading-tight`}>
+            {news.title}
+          </h3>
+          {news.content && news.content !== news.title && (
+            <p className="text-sm text-slate-500 line-clamp-2 mt-2 font-ko">
+              {news.content}
+            </p>
+          )}
+          {news.source && (
+            <p className="text-xs text-slate-400 mt-2">{news.source}</p>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// 뉴스 리스트 아이템 (컴팩트)
+function NewsListItem({ news }: { news: NewsItem }) {
+  return (
+    <Link href={`/news/${news.id}`}>
+      <div className="group flex gap-4 p-4 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-0">
+        {/* Thumbnail */}
+        {news.thumbnail_url ? (
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+            <img 
+              src={news.thumbnail_url} 
+              alt=""
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+              onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+            />
+          </div>
+        ) : (
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg flex-shrink-0 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+            <span className="text-2xl">{CATEGORIES.find(c => c.id === news.category)?.emoji || '📰'}</span>
+          </div>
+        )}
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${getCategoryColor(news.category || '')}`}>
+              {news.category}
+            </span>
+            {news.published_date && (
+              <span className="text-[11px] text-slate-400">{getRelativeTime(news.published_date)}</span>
+            )}
+          </div>
+          <h3 className="text-sm md:text-base font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 font-ko leading-snug">
+            {news.title}
+          </h3>
+          {news.source && (
+            <p className="text-[11px] text-slate-400 mt-1">{news.source}</p>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// 섹션 헤더
+function SectionHeader({ emoji, title, count, onViewAll }: { emoji: string; title: string; count: number; onViewAll: () => void }) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <span className="text-xl">{emoji}</span>
+        <h2 className="text-lg md:text-xl font-bold text-slate-800 font-ko">{title}</h2>
+        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{count}</span>
+      </div>
+      <button 
+        onClick={onViewAll}
+        className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
+      >
+        전체보기 <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
 }
 
 export default function News() {
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [allItems, setAllItems] = useState<NewsItem[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
+  const [displayedItems, setDisplayedItems] = useState(20);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const categoryTabsRef = useRef<HTMLDivElement>(null);
-
-  // 첫 페이지 로드
-  const { data: firstPageData, isLoading, isFetching } = useNews({
-    category: selectedCategory === 'all' ? undefined : selectedCategory,
-    limit: PAGE_SIZE,
-    offset: 0,
-  });
-
-  // 추가 페이지 로드
-  const { isFetching: isLoadingMore } = useNews(
-    page > 0 ? {
-      category: selectedCategory === 'all' ? undefined : selectedCategory,
-      limit: PAGE_SIZE,
-      offset: page * PAGE_SIZE,
-    } : undefined
+  
+  const { data: allNewsItems, isLoading } = useNews(
+    selectedCategory === 'all' ? undefined : { category: selectedCategory }
   );
 
-  // 첫 페이지 데이터가 변경되면 전체 리스트 초기화
-  const prevCategory = useRef(selectedCategory);
-  if (firstPageData && (prevCategory.current !== selectedCategory || allItems.length === 0)) {
-    prevCategory.current = selectedCategory;
-    setAllItems(firstPageData);
-    setHasMore(firstPageData.length >= PAGE_SIZE);
-  }
+  const newsItems = allNewsItems ? allNewsItems.slice(0, displayedItems) : [];
+  const hasMoreItems = allNewsItems ? allNewsItems.length > displayedItems : false;
 
-  // 더보기 핸들러
-  const handleLoadMore = useCallback(async () => {
-    const nextPage = page + 1;
-    const offset = nextPage * PAGE_SIZE;
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setDisplayedItems(prev => prev + 20);
+    setIsLoadingMore(false);
+  };
 
-    try {
-      const queryParams = new URLSearchParams();
-      if (selectedCategory !== 'all') queryParams.append('category', selectedCategory);
-      queryParams.append('limit', PAGE_SIZE.toString());
-      queryParams.append('offset', offset.toString());
-
-      const res = await fetch(`/api/news?${queryParams.toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      const newItems: NewsItem[] = await res.json();
-
-      setAllItems(prev => [...prev, ...newItems]);
-      setPage(nextPage);
-      setHasMore(newItems.length >= PAGE_SIZE);
-    } catch (e) {
-      console.error('Failed to load more news:', e);
-    }
-  }, [page, selectedCategory]);
-
-  // 카테고리 변경
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    setPage(0);
-    setAllItems([]);
-    setHasMore(true);
-
+    setDisplayedItems(20);
     setTimeout(() => {
       if (categoryTabsRef.current) {
-        const selectedButton = categoryTabsRef.current.querySelector(`[data-category="${categoryId}"]`) as HTMLElement;
-        if (selectedButton) {
-          selectedButton.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-            inline: 'center'
-          });
-        }
+        const btn = categoryTabsRef.current.querySelector(`[data-category="${categoryId}"]`) as HTMLElement;
+        btn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       }
     }, 100);
   };
 
-  // 표시할 아이템: 첫 페이지 데이터 또는 축적된 전체
-  const newsItems = allItems.length > 0 ? allItems : (firstPageData || []);
+  // Group news by category for the "all" view
+  const groupedByCategory = allNewsItems ? 
+    CATEGORIES.filter(c => c.id !== 'all').reduce((acc, cat) => {
+      const items = allNewsItems.filter((n: NewsItem) => n.category === cat.id);
+      if (items.length > 0) acc[cat.id] = items;
+      return acc;
+    }, {} as Record<string, NewsItem[]>) : {};
+
+  // Pick headlines: latest from priority categories, preferring ones with thumbnails
+  const headlines: NewsItem[] = [];
+  if (allNewsItems && selectedCategory === 'all') {
+    const priorityCats = ['로컬뉴스', '한국뉴스', '월드뉴스', 'K-POP', '이민/비자'];
+    // First pass: items WITH thumbnails from priority cats
+    for (const cat of priorityCats) {
+      if (headlines.length >= 4) break;
+      const item = allNewsItems.find((n: NewsItem) => n.category === cat && !headlines.includes(n) && n.thumbnail_url);
+      if (item) headlines.push(item);
+    }
+    // Second pass: items from priority cats (any)
+    for (const cat of priorityCats) {
+      if (headlines.length >= 4) break;
+      const item = allNewsItems.find((n: NewsItem) => n.category === cat && !headlines.includes(n));
+      if (item) headlines.push(item);
+    }
+    // Fill remaining with latest
+    for (const item of allNewsItems) {
+      if (headlines.length >= 4) break;
+      if (!headlines.includes(item)) headlines.push(item);
+    }
+  }
+
+  const headlineIds = new Set(headlines.map(h => h.id));
 
   return (
-    <div className="bg-slate-50 min-h-screen py-12">
-      <div className="container mx-auto px-4 max-w-5xl">
+    <div className="bg-slate-50 min-h-screen py-8 md:py-12">
+      <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
-        <div className="mb-10 text-center">
-          <h1 className="text-4xl font-bold mb-4 font-ko">커뮤니티 뉴스</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            달라스-포트워스 한인 커뮤니티의 최신 소식과 유익한 정보
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2 font-ko">📰 뉴스</h1>
+          <p className="text-base text-muted-foreground">
+            달라스 한인 커뮤니티를 위한 최신 뉴스
           </p>
         </div>
 
-        {/* Category Filter */}
-        <div className="mb-6">
-          {/* Categories with horizontal scroll on mobile */}
-          <div
+        {/* Category Pills */}
+        <div className="mb-8">
+          <div 
             ref={categoryTabsRef}
-            className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4 md:flex-wrap md:overflow-visible"
+            className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 md:flex-wrap md:overflow-visible md:justify-center"
           >
-            {CATEGORIES.map((cat) => (
-              <Button
-                key={cat.id}
-                data-category={cat.id}
-                variant={selectedCategory === cat.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleCategoryChange(cat.id)}
-                className="font-ko flex-shrink-0"
-              >
-                {cat.label}
-              </Button>
-            ))}
-          </div>
-
-          {/* Submit News Button - Separated on mobile */}
-          <div className="flex justify-center md:justify-end">
-            <NewsSubmissionDialog>
-              <Button variant="outline" size="sm" className="font-ko">
-                <Plus className="h-4 w-4 mr-1.5" />
-                뉴스 제보
-              </Button>
-            </NewsSubmissionDialog>
+            {CATEGORIES.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              const count = cat.id === 'all' ? allNewsItems?.length : groupedByCategory[cat.id]?.length;
+              return (
+                <button
+                  key={cat.id}
+                  data-category={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all flex-shrink-0
+                    ${isActive 
+                      ? 'bg-primary text-white shadow-sm' 
+                      : 'bg-white text-slate-600 border border-slate-200 hover:border-primary/30 hover:text-primary'
+                    }
+                    ${!count ? 'opacity-50' : ''}
+                  `}
+                >
+                  <span>{cat.emoji}</span>
+                  <span className="font-ko">{cat.label}</span>
+                  {count ? <span className={`text-[10px] ${isActive ? 'text-white/70' : 'text-slate-400'}`}>{count}</span> : null}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* News List */}
-        <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden mb-8">
-          {isLoading ? (
-            <div className="divide-y">
-              {[1,2,3,4,5,6,7,8].map(i => (
-                <div key={i} className="p-4 md:p-6 flex gap-4">
-                  <Skeleton className="h-20 w-20 rounded flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                </div>
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1,2,3].map(i => (
+                <Skeleton key={i} className="h-64 rounded-xl" />
               ))}
             </div>
-          ) : newsItems && newsItems.length > 0 ? (
-            <div className="divide-y">
-              {newsItems.map((news: NewsItem) => {
-                const categoryStyle = getNewsCategoryStyle(news.category);
+            {[1,2,3,4].map(i => (
+              <Skeleton key={i} className="h-24" />
+            ))}
+          </div>
+        ) : selectedCategory === 'all' ? (
+          /* ===== ALL VIEW: Headlines + Sections ===== */
+          <div>
+            {/* Headlines */}
+            {headlines.length > 0 && (
+              <div className="mb-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <Flame className="h-5 w-5 text-red-500" />
+                  <h2 className="text-lg font-bold text-slate-800 font-ko">오늘의 헤드라인</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {headlines.map((news, i) => (
+                    <HeadlineCard key={news.id} news={news} size={i === 0 ? 'large' : 'medium'} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Category Sections */}
+            {Object.entries(groupedByCategory)
+              .sort(([a], [b]) => (CATEGORY_PRIORITY[a] || 99) - (CATEGORY_PRIORITY[b] || 99))
+              .map(([catId, items]) => {
+                const cat = CATEGORIES.find(c => c.id === catId);
+                if (!cat) return null;
+                const displayItems = items.filter((n: NewsItem) => !headlineIds.has(n.id)).slice(0, 5);
+                if (displayItems.length === 0) return null;
+                
                 return (
-                  <Link
-                    href={`/news/${news.id}`}
-                    key={news.id}
-                    className="block"
-                  >
-                    <div
-                      className="p-4 md:p-6 hover:bg-slate-50 transition-colors cursor-pointer group"
-                      data-testid={`news-item-${news.id}`}
-                    >
-                    {/* Content */}
-                    <div className="w-full">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 font-ko">
-                          {news.title}
-                        </h3>
-                        {news.category && (
-                          <Badge variant="secondary" className="flex-shrink-0">
-                            {news.category}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {news.content && (
-                        <p className="text-sm text-slate-600 line-clamp-1 md:line-clamp-2 mb-3">
-                          {news.content}
-                        </p>
-                      )}
-
-                      <div className="flex items-center gap-4 text-xs text-slate-500">
-                        {news.source && (
-                          <div className="flex items-center gap-1">
-                            <Building2 className="h-3.5 w-3.5" />
-                            <span>출처: {news.source}</span>
-                          </div>
-                        )}
-                        {news.published_date && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>{getRelativeTime(news.published_date)}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1 text-primary">
-                          <ChevronRight className="h-3.5 w-3.5" />
-                          <span>자세히 보기</span>
-                        </div>
-                      </div>
+                  <div key={catId} className="mb-8">
+                    <SectionHeader 
+                      emoji={cat.emoji} 
+                      title={cat.label} 
+                      count={items.length}
+                      onViewAll={() => handleCategoryChange(catId)}
+                    />
+                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                      {displayItems.map((news: NewsItem) => (
+                        <NewsListItem key={news.id} news={news} />
+                      ))}
                     </div>
                   </div>
-                </Link>
                 );
-              })}
+              })
+            }
+          </div>
+        ) : (
+          /* ===== FILTERED VIEW ===== */
+          <div>
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
+              {newsItems.length > 0 ? (
+                newsItems.map((news: NewsItem) => (
+                  <NewsListItem key={news.id} news={news} />
+                ))
+              ) : (
+                <div className="p-12 text-center text-slate-500">
+                  <div className="text-4xl mb-4">{CATEGORIES.find(c => c.id === selectedCategory)?.emoji || '📰'}</div>
+                  <p className="text-lg font-ko">
+                    "{CATEGORIES.find(c => c.id === selectedCategory)?.label}" 뉴스가 아직 없습니다
+                  </p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="p-12 text-center text-slate-500">
-              <div className="text-4xl mb-4">📰</div>
-              <p className="text-lg font-ko">
-                {selectedCategory === 'all'
-                  ? '뉴스가 없습니다'
-                  : `"${CATEGORIES.find(c => c.id === selectedCategory)?.label}" 카테고리에 뉴스가 없습니다`
-                }
-              </p>
-            </div>
-          )}
-        </div>
 
-        {/* Load More Button */}
-        {hasMore && newsItems.length > 0 && (
-          <div className="text-center mb-8">
-            <Button
-              variant="outline"
-              onClick={handleLoadMore}
-              disabled={isLoadingMore}
-              className="font-ko"
-            >
-              {isLoadingMore ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  로딩 중...
-                </>
-              ) : '더보기'}
-            </Button>
+            {hasMoreItems && (
+              <div className="text-center mb-8">
+                <Button 
+                  variant="outline" 
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="font-ko px-8"
+                >
+                  {isLoadingMore ? '로딩 중...' : '더보기'}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Newsletter CTA */}
-        <NewsletterSignup />
+        {/* Newsletter */}
+        <div className="mt-8">
+          <NewsletterSignup />
+        </div>
       </div>
     </div>
   );

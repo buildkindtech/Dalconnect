@@ -66,7 +66,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(businesses).where(eq(businesses.featured, true)).limit(10);
   }
 
-  async getNews(category?: string, limit: number = 20): Promise<News[]> {
+  async getNews(category?: string, limit: number = 200): Promise<News[]> {
     if (category) {
       return db.select().from(news).where(eq(news.category, category)).orderBy(desc(news.published_date)).limit(limit);
     }

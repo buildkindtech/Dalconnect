@@ -95,8 +95,8 @@ export async function registerRoutes(
     try {
       const param = req.params.idOrCategory;
       
-      // If it looks like an ID (news-1, news-2, etc.), fetch by ID
-      if (param.startsWith('news-')) {
+      // If it looks like a UUID or news-* ID, fetch by ID
+      if (param.match(/^[0-9a-f]{8}-/) || param.startsWith('news-')) {
         const newsItem = await storage.getNewsById(param);
         if (!newsItem) {
           return res.status(404).json({ error: "News not found" });
@@ -110,6 +110,58 @@ export async function registerRoutes(
     } catch (error) {
       console.error("GET /api/news/:idOrCategory error:", error);
       res.status(500).json({ error: "Failed to fetch news" });
+    }
+  });
+
+  // Contact Form
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const { name, email, type, message } = req.body;
+      if (!name || !email || !message) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Store in DB
+      await db.execute(sql`
+        INSERT INTO contact_messages (name, email, type, message, created_at)
+        VALUES (${name}, ${email}, ${type || '일반 문의'}, ${message}, NOW())
+      `);
+
+      // Send notification email via SendGrid
+      const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+      if (SENDGRID_API_KEY) {
+        await fetch('https://api.sendgrid.com/v3/mail/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            personalizations: [{ to: [{ email: 'info@dalkonnect.com' }] }],
+            from: { email: 'info@dalkonnect.com', name: 'DalKonnect' },
+            reply_to: { email, name },
+            subject: `[DalKonnect 문의] ${type || '일반 문의'} - ${name}`,
+            content: [{
+              type: 'text/html',
+              value: `
+                <h2>새로운 문의가 접수되었습니다</h2>
+                <table style="border-collapse:collapse;width:100%;max-width:500px;">
+                  <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">이름</td><td style="padding:8px;border:1px solid #ddd;">${name}</td></tr>
+                  <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">이메일</td><td style="padding:8px;border:1px solid #ddd;">${email}</td></tr>
+                  <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">유형</td><td style="padding:8px;border:1px solid #ddd;">${type || '일반 문의'}</td></tr>
+                  <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">메시지</td><td style="padding:8px;border:1px solid #ddd;">${message}</td></tr>
+                </table>
+                <p style="margin-top:16px;color:#666;font-size:12px;">이 메일은 DalKonnect 문의 폼에서 자동 발송되었습니다.</p>
+              `,
+            }],
+          }),
+        });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("POST /api/contact error:", error);
+      res.status(500).json({ error: "Failed to send message" });
     }
   });
 

@@ -1,95 +1,73 @@
 import { Link } from "wouter";
-import { Calendar, User, ArrowRight, BookOpen, Tag } from "lucide-react";
+import { Calendar, User, BookOpen, Clock } from "lucide-react";
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBlogs } from "@/lib/api";
-import { getBlogCategoryStyle } from "@/lib/blogNewsDefaults";
 
 const CATEGORIES = [
-  '맛집/식당',
-  '볼거리/엔터테인먼트',
-  '가볼만한곳',
-  '유행/트렌드',
-  '스포츠',
-  '육아/교육',
-  '부동산',
-  '이민/비자',
-  '건강/웰빙',
-  '뷰티/패션',
-  '커뮤니티 이벤트',
-  '생활정보'
+  { label: '🍽️ 맛집/식당', value: '맛집/식당' },
+  { label: '🎢 가볼만한곳', value: '가볼만한곳' },
+  { label: '📚 육아/교육', value: '육아/교육' },
+  { label: '🏠 부동산', value: '부동산' },
+  { label: '💊 건강/웰빙', value: '건강/웰빙' },
+  { label: '✈️ 이민/비자', value: '이민/비자' },
+  { label: '💄 뷰티/패션', value: '뷰티/패션' },
+  { label: '📝 생활정보', value: '생활정보' },
+  { label: '🎉 커뮤니티 이벤트', value: '커뮤니티 이벤트' },
+  { label: '⚽ 스포츠', value: '스포츠' },
+  { label: '🎬 볼거리/엔터테인먼트', value: '볼거리/엔터테인먼트' },
+  { label: '🔥 유행/트렌드', value: '유행/트렌드' },
 ];
 
-const AGE_GROUPS = [
-  { value: 'all', label: '전체' },
-  { value: '20s', label: '20대' },
-  { value: '30s', label: '30대' },
-  { value: '40s', label: '40대' },
-  { value: '50s+', label: '50대+' }
-];
+const CATEGORY_EMOJI: Record<string, string> = {
+  '맛집/식당': '🍽️', '가볼만한곳': '🎢', '육아/교육': '📚',
+  '부동산': '🏠', '건강/웰빙': '💊', '이민/비자': '✈️',
+  '뷰티/패션': '💄', '생활정보': '📝', '커뮤니티 이벤트': '🎉',
+  '스포츠': '⚽', '볼거리/엔터테인먼트': '🎬', '유행/트렌드': '🔥',
+};
+
+function readingTime(content?: string): number {
+  return Math.max(1, Math.round((content?.length || 0) / 500));
+}
 
 export default function Blog() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
-  const [selectedAge, setSelectedAge] = useState<string>('all');
   
   const { data: blogs, isLoading } = useBlogs({
     search: searchQuery || undefined,
     category: selectedCategory,
-    target_age: selectedAge !== 'all' ? selectedAge : undefined
   });
+
+  // Featured = first 3 with cover images
+  const featured = blogs?.filter(b => b.cover_image).slice(0, 3) || [];
+  const rest = blogs?.filter(b => !featured.find(f => f.id === b.id)) || [];
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary/80 text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <BookOpen className="h-14 w-14 mx-auto mb-4" />
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-ko">DalKonnect 블로그</h1>
-            <p className="text-lg md:text-xl opacity-90">
-              달라스 한인 커뮤니티 생활 가이드와 유용한 정보
-            </p>
-          </div>
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white py-12">
+        <div className="container mx-auto px-4 text-center">
+          <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-90" />
+          <h1 className="text-3xl md:text-4xl font-bold mb-2 font-ko">블로그</h1>
+          <p className="text-lg opacity-80">달라스 한인을 위한 생활 가이드 & 유용한 정보</p>
         </div>
       </section>
 
-      {/* Search & Filter */}
-      <section className="py-6 bg-white border-b sticky top-0 z-10 shadow-sm">
+      {/* Search & Category */}
+      <section className="py-4 bg-white border-b sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col gap-4">
-            {/* Search */}
-            <div className="w-full md:w-96">
-              <Input
-                placeholder="블로그 검색..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            
-            {/* Age Filter */}
-            <div className="flex gap-2 flex-wrap items-center">
-              <span className="text-sm font-medium text-slate-600">연령대:</span>
-              {AGE_GROUPS.map(age => (
-                <Button
-                  key={age.value}
-                  variant={selectedAge === age.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedAge(age.value)}
-                >
-                  {age.label}
-                </Button>
-              ))}
-            </div>
-
-            {/* Category Filter */}
-            <div className="flex gap-2 flex-wrap items-center">
-              <span className="text-sm font-medium text-slate-600">카테고리:</span>
+          <div className="flex flex-col gap-3">
+            <Input
+              placeholder="블로그 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full md:w-96"
+            />
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={!selectedCategory ? "default" : "outline"}
                 size="sm"
@@ -99,12 +77,12 @@ export default function Blog() {
               </Button>
               {CATEGORIES.map(cat => (
                 <Button
-                  key={cat}
-                  variant={selectedCategory === cat ? "default" : "outline"}
+                  key={cat.value}
+                  variant={selectedCategory === cat.value ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => setSelectedCategory(cat.value)}
                 >
-                  {cat}
+                  {cat.label}
                 </Button>
               ))}
             </div>
@@ -112,109 +90,126 @@ export default function Blog() {
         </div>
       </section>
 
-      {/* Blog List */}
-      <section className="py-12">
-        <div className="container mx-auto px-4 max-w-5xl">
+      <section className="py-8">
+        <div className="container mx-auto px-4 max-w-6xl">
           {isLoading ? (
-            <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
-              <div className="divide-y">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="p-4 md:p-6 space-y-2">
-                    <Skeleton className="h-6 w-3/4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border">
+                  <Skeleton className="h-48 w-full" />
+                  <div className="p-4 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-1/2" />
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           ) : blogs && blogs.length > 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
-              <div className="divide-y">
-                {blogs.map((blog) => {
-                  return (
-                    <Link key={blog.id} href={`/blog/${blog.slug}`}>
-                      <div className="p-4 md:p-6 hover:bg-slate-50 transition-colors cursor-pointer group">
-                        <div className="w-full">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 font-ko">
-                              {blog.title}
-                            </h3>
-                            {blog.category && (
-                              <Badge variant="secondary" className="flex-shrink-0">
-                                {blog.category}
+            <>
+              {/* Featured (큰 카드 3개) */}
+              {!selectedCategory && !searchQuery && featured.length > 0 && (
+                <div className="mb-10">
+                  <h2 className="text-2xl font-bold mb-5 font-ko">📌 추천 글</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {featured.map((blog, i) => (
+                      <Link key={blog.id} href={`/blog/${blog.slug}`}>
+                        <article className={`bg-white rounded-xl overflow-hidden shadow-sm border hover:shadow-lg transition-all cursor-pointer group ${i === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}>
+                          <div className={`relative ${i === 0 ? 'h-64 md:h-80' : 'h-48'}`}>
+                            <img
+                              src={blog.cover_image!}
+                              alt={blog.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                              <Badge className="mb-2 bg-white/20 text-white border-0 backdrop-blur-sm">
+                                {CATEGORY_EMOJI[blog.category || ''] || '📝'} {blog.category}
                               </Badge>
-                            )}
-                          </div>
-                        </div>
-                      
-                      <div className="p-6 flex-1 flex flex-col">
-                          
-                          {blog.excerpt && (
-                            <p className="text-slate-600 line-clamp-2 mb-3 text-sm">
-                              {blog.excerpt}
-                            </p>
-                          )}
-
-                          <div className="flex items-center justify-between text-xs text-slate-500">
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-1.5">
-                                <User className="h-3.5 w-3.5" />
-                                <span>{blog.author}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Calendar className="h-3.5 w-3.5" />
-                                <span>
-                                  {new Date(blog.published_at).toLocaleDateString('ko-KR', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </span>
-                              </div>
+                              <h3 className={`font-bold leading-tight font-ko ${i === 0 ? 'text-xl md:text-2xl' : 'text-lg'}`}>
+                                {blog.title}
+                              </h3>
                             </div>
-                            
-                            {blog.target_age && blog.target_age !== 'all' && (
-                              <Badge variant="outline" className="text-xs">
-                                {blog.target_age === '20s' ? '20대' :
-                                 blog.target_age === '30s' ? '30대' :
-                                 blog.target_age === '40s' ? '40대' :
-                                 blog.target_age === '50s+' ? '50대+' : blog.target_age}
-                              </Badge>
-                            )}
                           </div>
+                        </article>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 전체 리스트 (카드 그리드) */}
+              <h2 className="text-2xl font-bold mb-5 font-ko">
+                {selectedCategory ? `${CATEGORY_EMOJI[selectedCategory] || ''} ${selectedCategory}` : '📖 전체 글'}
+                <span className="text-base font-normal text-muted-foreground ml-2">
+                  ({(selectedCategory || searchQuery ? blogs : rest).length}개)
+                </span>
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(selectedCategory || searchQuery ? blogs : rest).map(blog => (
+                  <Link key={blog.id} href={`/blog/${blog.slug}`}>
+                    <article className="bg-white rounded-xl overflow-hidden shadow-sm border hover:shadow-lg transition-all cursor-pointer group h-full flex flex-col">
+                      {/* Cover */}
+                      <div className="h-48 relative overflow-hidden">
+                        {blog.cover_image ? (
+                          <img
+                            src={blog.cover_image}
+                            alt={blog.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/30 flex items-center justify-center">
+                            <span className="text-5xl">{CATEGORY_EMOJI[blog.category || ''] || '📝'}</span>
+                          </div>
+                        )}
+                        {blog.category && (
+                          <Badge className="absolute top-3 left-3 bg-white/90 text-slate-700 border-0 shadow-sm text-xs">
+                            {CATEGORY_EMOJI[blog.category] || ''} {blog.category}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-4 flex-1 flex flex-col">
+                        <h3 className="font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
+                          {blog.title}
+                        </h3>
+                        {blog.excerpt && (
+                          <p className="text-sm text-slate-500 line-clamp-2 mb-3 flex-1">
+                            {blog.excerpt}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between text-xs text-slate-400 mt-auto pt-2 border-t">
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {blog.author || 'DalKonnect'}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(blog.published_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                            </span>
+                          </div>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {readingTime(blog.content)}분
+                          </span>
                         </div>
                       </div>
-                    </Link>
-                );
-                })}
+                    </article>
+                  </Link>
+                ))}
               </div>
-            </div>
+            </>
           ) : (
             <div className="text-center py-20">
-              <BookOpen className="h-24 w-24 mx-auto text-slate-300 mb-6" />
-              <h3 className="text-2xl font-bold text-slate-600 mb-2">
-                블로그 포스트가 없습니다
-              </h3>
-              <p className="text-slate-500">
+              <BookOpen className="h-20 w-20 mx-auto text-slate-300 mb-4" />
+              <h3 className="text-xl font-bold text-slate-500 mb-2">블로그 포스트가 없습니다</h3>
+              <p className="text-slate-400">
                 {searchQuery || selectedCategory ? '검색 조건을 변경해보세요.' : '새로운 콘텐츠가 곧 업데이트됩니다.'}
               </p>
             </div>
           )}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-primary to-primary/80 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 font-ko">더 많은 정보가 필요하신가요?</h2>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            DalKonnect에서 350개 이상의 한인 업체 정보를 확인하세요
-          </p>
-          <Link href="/businesses">
-            <Button size="lg" variant="secondary" className="h-12 px-8 text-lg">
-              업체 둘러보기
-            </Button>
-          </Link>
         </div>
       </section>
     </div>

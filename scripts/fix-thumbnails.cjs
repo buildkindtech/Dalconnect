@@ -1,71 +1,56 @@
-#!/usr/bin/env node
-/**
- * 뉴스 썸네일 보충 스크립트
- * thumbnail_url 없는 뉴스 → OG image 추출 시도
- */
-
 const pg = require('pg');
+const https = require('https');
+const http = require('http');
 const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 
-async function fetchOGImage(url) {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DalConnect/2.0)' },
-      redirect: 'follow',
+function fetchUrl(url, redirects = 3) {
+  return new Promise((resolve) => {
+    const mod = url.startsWith('https') ? https : http;
+    const req = mod.get(url, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && redirects > 0) {
+        const loc = res.headers.location.startsWith('http') ? res.headers.location : new URL(res.headers.location, url).href;
+        return resolve(fetchUrl(loc, redirects - 1));
+      }
+      let data = '';
+      res.setEncoding('utf8');
+      res.on('data', c => { data += c; if (data.length > 50000) res.destroy(); });
+      res.on('end', () => resolve(data));
+      res.on('error', () => resolve(''));
     });
-    clearTimeout(timeout);
-    
-    if (!res.ok) return null;
-    
-    const html = await res.text();
-    
-    // Try og:image first
-    const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
-      || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-    if (ogMatch) return ogMatch[1];
-    
-    // Try twitter:image
-    const twMatch = html.match(/<meta[^>]*(?:name|property)=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
-      || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*(?:name|property)=["']twitter:image["']/i);
-    if (twMatch) return twMatch[1];
-    
-    return null;
-  } catch (e) {
-    return null;
-  }
+    req.on('error', () => resolve(''));
+    req.on('timeout', () => { req.destroy(); resolve(''); });
+  });
 }
 
 async function run() {
-  const result = await pool.query(
-    "SELECT id, url, title FROM news WHERE (thumbnail_url IS NULL OR thumbnail_url = '') ORDER BY published_date DESC LIMIT 100"
-  );
+  const { rows } = await pool.query("SELECT id, url FROM news WHERE thumbnail_url IS NULL LIMIT 200");
+  console.log(`썸네일 없는 기사: ${rows.length}개`);
+  let fixed = 0, failed = 0;
   
-  console.log(`[${new Date().toISOString()}] ${result.rows.length}개 뉴스 썸네일 보충 시작...`);
-  let fixed = 0;
-  let failed = 0;
-  
-  for (const row of result.rows) {
-    const ogImage = await fetchOGImage(row.url);
-    
-    if (ogImage) {
-      await pool.query('UPDATE news SET thumbnail_url = $1 WHERE id = $2', [ogImage, row.id]);
-      console.log(`  ✅ ${row.title.substring(0, 50)}`);
-      fixed++;
-    } else {
-      failed++;
-    }
-    
-    // Rate limit
+  for (const row of rows) {
+    try {
+      const html = await fetchUrl(row.url);
+      if (!html) { failed++; continue; }
+      // Try og:image first, then twitter:image
+      const ogMatch = html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
+        || html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i)
+        || html.match(/name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
+        || html.match(/content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i);
+      
+      if (ogMatch && ogMatch[1] && ogMatch[1].startsWith('http')) {
+        await pool.query("UPDATE news SET thumbnail_url = $1 WHERE id = $2", [ogMatch[1], row.id]);
+        fixed++;
+        process.stdout.write(`✅ `);
+      } else {
+        failed++;
+        process.stdout.write(`❌ `);
+      }
+    } catch(e) { failed++; }
     await new Promise(r => setTimeout(r, 300));
   }
   
-  console.log(`\n[완료] ${fixed}개 썸네일 추가, ${failed}개 실패`);
+  console.log(`\n\n완료: ${fixed}개 수정, ${failed}개 실패`);
   await pool.end();
 }
-
-run().catch(e => { console.error(e); process.exit(1); });
+run();

@@ -11,11 +11,20 @@
  */
 
 const pg = require('pg');
+const fs = require('fs');
 const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 
-// Gemini Flash API for translation (English → Korean) — cheapest option
-const GOOGLE_AI_KEY = process.env.GOOGLE_AI_KEY || '';
+// Load GOOGLE_AI_KEY from env or workspace .env file
+let GOOGLE_AI_KEY = process.env.GOOGLE_AI_KEY || '';
+if (!GOOGLE_AI_KEY) {
+  try {
+    const envFile = fs.readFileSync('/Users/aaron/.openclaw/workspace/.env', 'utf8');
+    const m = envFile.match(/GOOGLE_AI_KEY=(.+)/);
+    if (m) GOOGLE_AI_KEY = m[1].trim();
+  } catch(e) {}
+}
+console.log('Gemini API:', GOOGLE_AI_KEY ? 'loaded' : 'MISSING');
 
 async function translateToKorean(title, content) {
   if (!GOOGLE_AI_KEY) return { title, content };
@@ -65,7 +74,9 @@ const RSS_FEEDS = [
   { url: 'https://www.nbcdfw.com/news/feed/', category: '로컬뉴스', source: 'NBC DFW', city: 'dallas', translate: true },
 
   // 이민/비자
-  { url: 'https://www.uscis.gov/rss/news', category: '이민/비자', source: 'USCIS', city: null, translate: true },
+  { url: 'https://www.murthy.com/feed/', category: '이민/비자', source: 'Murthy Law', city: null, translate: true },
+  { url: 'https://feeds.feedburner.com/immigrationimpact', category: '이민/비자', source: 'American Immigration Council', city: null, translate: true },
+  { url: 'https://www.visajourney.com/forums/forum/86-immigration-news/index.xml', category: '이민/비자', source: 'VisaJourney', city: null, translate: true },
 
   // K-POP / 연예
   { url: 'https://www.soompi.com/feed', category: 'K-POP', source: 'Soompi', city: null, translate: true },
@@ -75,8 +86,8 @@ const RSS_FEEDS = [
   { url: 'https://www.espn.com/espn/rss/nfl/news', category: '스포츠', source: 'ESPN', city: null, translate: true },
 
   // 건강
-  { url: 'https://health.chosun.com/rss/all.xml', category: '건강', source: '헬스조선', city: null },
-  { url: 'https://www.medicalnewstoday.com/rss/nutrition.xml', category: '건강', source: 'Medical News Today', city: null, translate: true },
+  { url: 'https://www.kormedi.com/rss/', category: '건강', source: '코메디닷컴', city: null },
+  { url: 'https://rss.donga.com/health.xml', category: '건강', source: '동아일보 건강', city: null },
 
   // 부동산
   { url: 'https://www.realtor.com/news/feed/', category: '부동산/숙소', source: 'Realtor.com', city: null, translate: true },
@@ -87,7 +98,10 @@ const RSS_FEEDS = [
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: '월드뉴스', source: 'BBC World', city: null, translate: true },
 
   // 육아
-  { url: 'https://www.parents.com/feed/', category: '육아', source: 'Parents.com', city: null, translate: true },
+  { url: 'https://www.ibabynews.com/rss/S1N4.xml', category: '육아', source: '베이비뉴스 육아교육', city: null },
+  { url: 'https://www.ibabynews.com/rss/S1N3.xml', category: '육아', source: '베이비뉴스 생활건강', city: null },
+  { url: 'https://www.ibabynews.com/rss/S1N2.xml', category: '육아', source: '베이비뉴스 임신출산', city: null },
+  { url: 'https://www.mother.ly/feed/', category: '육아', source: 'Motherly', city: null, translate: true },
 
   // 취업/사업
   { url: 'https://www.entrepreneur.com/latest/feed', category: '취업/사업', source: 'Entrepreneur', city: null, translate: true },
@@ -266,7 +280,32 @@ async function run() {
     await new Promise(r => setTimeout(r, 500));
   }
 
-  console.log(`\n[완료] ${total}개 새 기사 추가 (${errors}개 소스 실패)`);
+  console.log(`\n[수집 완료] ${total}개 새 기사 추가 (${errors}개 소스 실패)`);
+  
+  // Post-collection: translate any remaining English articles
+  if (GOOGLE_AI_KEY) {
+    console.log('\n🌐 영어 기사 번역 시작...');
+    const { rows } = await pool.query(`SELECT id, title, content FROM news WHERE title ~ '[A-Za-z]{5,}' AND title !~ '[가-힣]'`);
+    if (rows.length > 0) {
+      console.log(`  번역 대상: ${rows.length}개`);
+      let translated = 0;
+      for (const row of rows) {
+        try {
+          const t = await translateToKorean(row.title, row.content);
+          if (t.title !== row.title) {
+            await pool.query('UPDATE news SET title = $1, content = $2 WHERE id = $3', [t.title, t.content || '', row.id]);
+            translated++;
+          }
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 300));
+      }
+      console.log(`  ✅ ${translated}개 번역 완료`);
+    } else {
+      console.log('  영어 기사 없음 — 스킵');
+    }
+  }
+  
+  console.log(`\n[최종 완료] ${total}개 추가, 전부 한글`);
   await pool.end();
 }
 
