@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Search, Menu, Globe, X, ChevronDown, MapPin, MessageCircle } from "lucide-react";
+import { Search, Menu, X, ChevronDown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -87,17 +87,8 @@ export default function Header() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-6 md:gap-10">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="bg-primary text-white p-1.5 rounded-md">
-                <Globe className="h-5 w-5" />
-              </div>
-              <span className="font-bold text-xl">DalKonnect</span>
+              <img src="/logo.png" alt="DalKonnect" className="h-10 w-auto" />
             </Link>
-            
-            {/* City label - single city for now */}
-            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span className="hidden md:inline">{currentCity.name}</span>
-            </span>
             
             <nav className="hidden xl:flex gap-6">
               <Link href="/businesses" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location === '/businesses' ? 'text-primary' : 'text-muted-foreground'}`}>

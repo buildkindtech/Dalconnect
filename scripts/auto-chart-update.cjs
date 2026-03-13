@@ -9,7 +9,9 @@
 
 require('dotenv').config();
 const pg = require('pg');
-const DB_URL = process.env.DATABASE_URL;
+const DB_URL = process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql')
+  ? process.env.DATABASE_URL
+  : 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
 if (!DB_URL) { console.error('DATABASE_URL not set'); process.exit(1); }
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 
