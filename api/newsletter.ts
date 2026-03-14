@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
+import { checkRateLimit } from './_rateLimit';
 function handleCors(req: any, res: any): boolean {
   const origin = (req.headers?.origin) || '';
   const allowed = ['https://dalconnect.vercel.app','https://dalconnect.buildkind.tech','https://dalconnect.com','https://www.dalconnect.com','https://dalkonnect.com','https://www.dalkonnect.com','http://localhost:5000','http://localhost:5173'];
@@ -15,6 +16,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 1 });
   try {
     if (req.method === 'POST') {
+      // Rate limit: 시간당 3회
+      const rl = await checkRateLimit(req, 'newsletter', 3, 3600);
+      if (!rl.allowed) return res.status(429).json({ error: rl.message });
+
       const { email, name, city } = req.body;
       if (!email) return res.status(400).json({ error: 'Email required' });
       

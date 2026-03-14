@@ -4,6 +4,7 @@ import { communityPosts, communityComments, communityTrends } from '../shared/sc
 import { eq, desc, sql, and, like, or, ilike } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { checkRateLimit as dbCheckRateLimit, getClientIP, hashIP } from './_rateLimit';
 function handleCors(req: any, res: any): boolean {
   const origin = (req.headers?.origin) || '';
   const allowed = ['https://dalconnect.vercel.app','https://dalconnect.buildkind.tech','https://dalconnect.com','https://www.dalconnect.com','https://dalkonnect.com','https://www.dalkonnect.com','http://localhost:5000','http://localhost:5173'];
@@ -15,37 +16,7 @@ function handleCors(req: any, res: any): boolean {
 }
 
 // Rate limiting storage (in-memory for simplicity)
-const rateLimits = new Map<string, { posts: number[], comments: number[] }>();
-
-// Helper function to hash IP addresses
-function hashIP(ip: string): string {
-  const salt = process.env.IP_HASH_SALT || 'dalconnect-salt';
-  return crypto.createHash('sha256').update(ip + salt).digest('hex');
-}
-
-// Helper function for rate limiting
-function checkRateLimit(ip: string, type: 'post' | 'comment'): boolean {
-  const now = Date.now();
-  const hourAgo = now - 60 * 60 * 1000;
-  
-  if (!rateLimits.has(ip)) {
-    rateLimits.set(ip, { posts: [], comments: [] });
-  }
-  
-  const limits = rateLimits.get(ip)!;
-  
-  // Clean old entries
-  limits.posts = limits.posts.filter(time => time > hourAgo);
-  limits.comments = limits.comments.filter(time => time > hourAgo);
-  
-  // Check limits
-  if (type === 'post' && limits.posts.length >= 5) return false;
-  if (type === 'comment' && limits.comments.length >= 20) return false;
-  
-  // Add current attempt
-  limits[type === 'post' ? 'posts' : 'comments'].push(now);
-  return true;
-}
+// Rate limiting — DB 기반으로 교체 (인메모리는 Vercel 서버리스에서 무효)
 
 // Helper function to sanitize HTML content
 function sanitizeContent(content: string): string {
@@ -71,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const db = getDb();
   const { action } = req.query;
-  const clientIP = (req.headers['x-forwarded-for'] as string || '').split(',')[0] || req.connection?.remoteAddress || '';
+  const clientIP = getClientIP(req);
   const ipHash = hashIP(clientIP);
 
   try {
@@ -209,9 +180,9 @@ async function handleCreatePost(db: any, req: VercelRequest, res: VercelResponse
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!checkRateLimit(ipHash, 'post')) {
-    return res.status(429).json({ error: 'Rate limit exceeded. Maximum 5 posts per hour.' });
-  }
+  // DB 기반 rate limit — 시간당 5회
+  const rl = await dbCheckRateLimit(req, 'community_post', 5, 3600);
+  if (!rl.allowed) return res.status(429).json({ error: rl.message || 'Rate limit exceeded.' });
 
   const { nickname, password, title, content, category = '자유게시판', tags = [] } = req.body;
 
@@ -241,9 +212,9 @@ async function handleCreateComment(db: any, req: VercelRequest, res: VercelRespo
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!checkRateLimit(ipHash, 'comment')) {
-    return res.status(429).json({ error: 'Rate limit exceeded. Maximum 20 comments per hour.' });
-  }
+  // DB 기반 rate limit — 시간당 20회
+  const rlc = await dbCheckRateLimit(req, 'community_comment', 20, 3600);
+  if (!rlc.allowed) return res.status(429).json({ error: rlc.message || 'Rate limit exceeded.' });
 
   const { post_id, parent_id, nickname, password, content } = req.body;
 
