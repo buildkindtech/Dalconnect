@@ -41,7 +41,7 @@ async function translateToKorean(title, content) {
             text: `뉴스 제목과 내용을 자연스러운 한국어로 번역하세요. 반드시 JSON만 반환: {"title":"번역된제목","content":"번역된내용"}\n\n제목: ${title}\n내용: ${(content || '').substring(0, 300)}`
           }]
         }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 500 },
+        generationConfig: { temperature: 0.2, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
       }),
     });
     if (!res.ok) return { title, content };
