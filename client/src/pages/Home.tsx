@@ -98,7 +98,7 @@ function ChartsPreview() {
         <div className="text-center mb-12">
           <div className="flex justify-center items-center gap-3 mb-4">
             <Trophy className="h-8 w-8 text-yellow-500" />
-            <h2 className="text-4xl font-bold">🏆 인기 차트</h2>
+            <h2 className="text-xl md:text-4xl font-bold">🏆 인기 차트</h2>
           </div>
           <p className="text-slate-600 text-lg">지금 가장 핫한 드라마, 음악, 영화를 확인하세요!</p>
         </div>
@@ -501,10 +501,10 @@ export default function Home() {
       )}
 
       {/* Categories Grid - WITH COUNTS */}
-      <section className="py-20 bg-slate-50">
+      <section className="py-8 md:py-16 bg-slate-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">인기 카테고리</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-4xl font-bold text-center mb-6 md:mb-10">인기 카테고리</h2>
+          <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6 max-w-6xl mx-auto">
             {CATEGORIES.map((category) => {
               const IconComponent = category.icon;
               const count = getCategoryCount(category.id);
@@ -512,15 +512,15 @@ export default function Home() {
                 <button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className="bg-white rounded-xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-4 group"
+                  className="bg-white rounded-xl p-3 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-2 md:gap-4 group"
                 >
-                  <div className={`${category.color} w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <IconComponent className="h-8 w-8 text-white" />
+                  <div className={`${category.color} w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <IconComponent className="h-5 w-5 md:h-8 md:w-8 text-white" />
                   </div>
                   <div className="text-center">
-                    <span className="font-semibold text-lg text-slate-800 block">{category.name}</span>
+                    <span className="font-semibold text-xs md:text-lg text-slate-800 block leading-tight">{category.name}</span>
                     {count !== null && count > 0 && (
-                      <span className="text-sm text-slate-500 mt-1 block">({count})</span>
+                      <span className="text-[10px] md:text-sm text-slate-500 mt-0.5 block">({count})</span>
                     )}
                   </div>
                 </button>
@@ -646,7 +646,7 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <Sparkles className="h-8 w-8 text-primary" />
                 <div>
-                  <h2 className="text-4xl font-bold">이번 주 인기 업체</h2>
+                  <h2 className="text-xl md:text-4xl font-bold">이번 주 인기 업체</h2>
                   <p className="text-slate-600 mt-1">높은 평점과 많은 리뷰를 받은 업체들</p>
                 </div>
               </div>
@@ -658,7 +658,7 @@ export default function Home() {
             </div>
 
             {false ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                 {[1, 2, 3].map((i) => (
                   <Card key={i}>
                     <CardContent className="p-0">
@@ -672,7 +672,7 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                 {trending.slice(0, 6).map((business) => (
                   <Link key={business.id} href={`/business/${business.id}`}>
                     <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
@@ -687,7 +687,7 @@ export default function Home() {
                             {(() => {
                               const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
                               const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
-                              return IconComponent ? <IconComponent className="w-16 h-16 text-white/80" /> : null;
+                              return IconComponent ? <IconComponent className="w-8 h-8 md:w-16 md:h-16 text-white/80" /> : null;
                             })()}
                           </div>
                         )}
@@ -734,7 +734,7 @@ export default function Home() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
-            <h2 className="text-4xl font-bold">추천 업체</h2>
+            <h2 className="text-xl md:text-4xl font-bold">추천 업체</h2>
             <Link href="/businesses?featured=true">
               <Button variant="ghost" className="gap-2">
                 전체 보기 <ArrowRight className="h-4 w-4" />
@@ -743,7 +743,7 @@ export default function Home() {
           </div>
 
           {loadingFeatured ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-0">
@@ -758,7 +758,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
               {featured.map((business) => (
                 <Card key={business.id} className="overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
                   <CardContent className="p-0">
@@ -773,7 +773,7 @@ export default function Home() {
                           {(() => {
                             const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
                             const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
-                            return IconComponent ? <IconComponent className="w-16 h-16 text-white/80" /> : null;
+                            return IconComponent ? <IconComponent className="w-8 h-8 md:w-16 md:h-16 text-white/80" /> : null;
                           })()}
                         </div>
                       )}
@@ -867,7 +867,7 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <Clock className="h-8 w-8 text-primary" />
                 <div>
-                  <h2 className="text-4xl font-bold">신규 등록 업체</h2>
+                  <h2 className="text-xl md:text-4xl font-bold">신규 등록 업체</h2>
                   <p className="text-slate-600 mt-1">최근 DalKonnect에 추가된 업체들</p>
                 </div>
               </div>
@@ -879,7 +879,7 @@ export default function Home() {
             </div>
 
             {false ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                 {[1, 2, 3].map((i) => (
                   <Card key={i}>
                     <CardContent className="p-0">
@@ -893,7 +893,7 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                 {recent.slice(0, 6).map((business) => (
                   <Link key={business.id} href={`/business/${business.id}`}>
                     <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
@@ -908,7 +908,7 @@ export default function Home() {
                             {(() => {
                               const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
                               const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
-                              return IconComponent ? <IconComponent className="w-16 h-16 text-white/80" /> : null;
+                              return IconComponent ? <IconComponent className="w-8 h-8 md:w-16 md:h-16 text-white/80" /> : null;
                             })()}
                           </div>
                         )}
@@ -953,7 +953,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <Flame className="h-8 w-8 text-red-500" />
               <div>
-                <h2 className="text-4xl font-bold">🔥 오늘의 핫딜</h2>
+                <h2 className="text-xl md:text-4xl font-bold">🔥 오늘의 핫딜</h2>
                 <p className="text-slate-600 mt-1">DFW 한인들을 위한 최고의 딜과 쿠폰!</p>
               </div>
             </div>
