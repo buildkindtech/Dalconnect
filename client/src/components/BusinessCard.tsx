@@ -47,7 +47,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
         <div className="p-3 md:p-6">
           <div className="flex items-start justify-between mb-2">
             <Link href={`/business/${business.id}`} className="flex-1 min-w-0">
-              <h3 className="text-sm md:text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko line-clamp-2 leading-tight">
+              <h3 className="text-xs md:text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko line-clamp-2 leading-snug">
                 {business.name_ko || business.name_en}
               </h3>
             </Link>
@@ -67,16 +67,16 @@ export default function BusinessCard({ business }: BusinessCardProps) {
                     const fillPercentage = Math.min(Math.max(rating - i, 0), 1);
                     return (
                       <div key={i} className="relative">
-                        <Star className="h-4 w-4 text-slate-300" />
+                        <Star className="h-3 w-3 md:h-4 md:w-4 text-slate-300" />
                         {fillPercentage > 0 && (
                           <div className="absolute inset-0 overflow-hidden" style={{ width: `${fillPercentage * 100}%` }}>
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <Star className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 text-yellow-400" />
                           </div>
                         )}
                       </div>
                     );
                   })}
-                  <span className="font-bold text-lg ml-1">{business.rating}</span>
+                  <span className="font-bold text-xs md:text-lg ml-0.5">{business.rating}</span>
                 </>
               ) : (
                 <span className="text-slate-400 text-sm">평점 없음</span>
@@ -84,15 +84,15 @@ export default function BusinessCard({ business }: BusinessCardProps) {
             </div>
             {business.review_count && business.review_count > 0 && (
               <span className="text-slate-500 text-sm">
-                💬 {business.review_count}개 리뷰
+                💬 {business.review_count}
               </span>
             )}
           </div>
           
-          <div className="flex items-center gap-3 text-sm text-slate-500 mb-3">
+          <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
             {business.city && (
               <div className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5 text-primary" />
+                <MapPin className="h-3 w-3 text-primary" />
                 <span>{business.city}</span>
               </div>
             )}
