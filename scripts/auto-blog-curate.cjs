@@ -80,6 +80,43 @@ const SOURCES = [
     maxItems: 2,
     filterKeywords: ['텍사스', 'Texas', '달라스', 'DFW'],
   },
+  // 건강/웰빙
+  {
+    name: 'Healthline',
+    url: 'https://www.healthline.com/rss/health-news',
+    category: '건강/웰빙',
+    format: 'rss',
+    translate: true,
+    maxItems: 2,
+  },
+  // 스포츠 (DFW)
+  {
+    name: '달라스 카우보이스 뉴스',
+    url: 'https://www.dallascowboys.com/rss/news',
+    category: '스포츠',
+    format: 'rss',
+    translate: true,
+    maxItems: 2,
+  },
+  // 뷰티/패션
+  {
+    name: 'Soompi 뷰티',
+    url: 'https://www.soompi.com/feed',
+    category: '뷰티/패션',
+    format: 'rss',
+    translate: true,
+    maxItems: 2,
+    filterKeywords: ['beauty', 'fashion', 'style', 'makeup', 'skin'],
+  },
+  // 이민/비자
+  {
+    name: 'Murthy Law',
+    url: 'https://www.murthy.com/feed/',
+    category: '이민/비자',
+    format: 'rss',
+    translate: true,
+    maxItems: 2,
+  },
 ];
 
 // ==================== RSS 파싱 ====================
