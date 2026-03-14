@@ -766,7 +766,7 @@ export default function Home() {
           </div>
 
           {loadingFeatured ? (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-0">
@@ -781,7 +781,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
               {featured.map((business) => (
                 <Card key={business.id} className="overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
                   <CardContent className="p-0">
@@ -989,7 +989,7 @@ export default function Home() {
           </div>
 
           {loadingDeals ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {[1, 2, 3].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-6">
@@ -1002,7 +1002,7 @@ export default function Home() {
               ))}
             </div>
           ) : hotDeals.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {hotDeals.slice(0, 3).map((deal) => {
                 const isHot = deal.likes > 200;
                 const isFree = (deal.discount ?? '').includes('FREE') || deal.deal_price === 'FREE';
@@ -1134,7 +1134,7 @@ export default function Home() {
           </div>
 
           {loadingBlogs ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
               {[1, 2, 3].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-0">
@@ -1148,7 +1148,7 @@ export default function Home() {
               ))}
             </div>
           ) : recentBlogs.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
               {recentBlogs.map((blog) => {
                 const categoryStyle = getBlogCategoryStyle(blog.category);
                 return (
@@ -1320,7 +1320,7 @@ export default function Home() {
           </div>
 
           {loadingNews ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
               {[1, 2, 3].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-0">
@@ -1334,7 +1334,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
               {recentNews.map((news) => {
                 const categoryStyle = getNewsCategoryStyle(news.category);
                 return (
