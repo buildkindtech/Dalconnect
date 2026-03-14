@@ -10,6 +10,7 @@ import { useFeaturedBusinesses, useNews, useBlogs, useListings, useCategories } 
 import { getCategoryColor, getCategoryIcon, hasValidImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import { getBlogCategoryStyle, getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import BusinessCard from "@/components/BusinessCard";
 import * as Icons from "lucide-react";
 
 const CATEGORIES = [
@@ -215,13 +216,18 @@ export default function Home() {
   useEffect(() => {
     const fetchRandomRestaurant = async () => {
       try {
-        const response = await fetch('/api/businesses?category=식당&featured=true&limit=10');
+        // 구글 리뷰 많은 순 top 20 가져와서 한인 식당(한국어 이름 있는 곳)만 필터 → 랜덤 선택
+        const response = await fetch('/api/businesses?category=식당&sort=reviews&limit=20');
         if (response.ok) {
           const data = await response.json();
           if (data.businesses && data.businesses.length > 0) {
-            // Pick a random restaurant
-            const randomIndex = Math.floor(Math.random() * data.businesses.length);
-            setRestaurantOfDay(data.businesses[randomIndex]);
+            const koreanRegex = /[가-힣]/;
+            const koreanRestaurants = data.businesses.filter((b: any) =>
+              koreanRegex.test(b.name_ko || '') || koreanRegex.test(b.name_en || '')
+            );
+            const pool = koreanRestaurants.length > 0 ? koreanRestaurants : data.businesses;
+            const randomIndex = Math.floor(Math.random() * pool.length);
+            setRestaurantOfDay(pool[randomIndex]);
           }
         }
       } catch (error) {
@@ -257,7 +263,7 @@ export default function Home() {
   useEffect(() => {
     const fetchHotDeals = async () => {
       try {
-        const response = await fetch('/api/featured?action=deals&hot=true');
+        const response = await fetch('/api/deals?limit=6');
         if (response.ok) {
           const deals = await response.json();
           setHotDeals(deals || []);
@@ -697,61 +703,82 @@ export default function Home() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                 {trending.slice(0, 6).map((business) => (
-                  <Link key={business.id} href={`/business/${business.id}`}>
-                    <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
-                      <CardContent className="p-0">
-                        {hasValidImage(business.cover_url) ? (
-                          <div 
-                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                            style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
-                          />
-                        ) : (
-                          <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-                            {(() => {
-                              const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
-                              const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
-                              return IconComponent ? <IconComponent className="w-8 h-8 md:w-16 md:h-16 text-white/80" /> : null;
-                            })()}
-                          </div>
-                        )}
-                        <div className="p-6">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko">
-                                {business.name_ko || business.name_en}
-                              </h3>
-                              {business.name_ko && business.name_en && (
-                                <p className="text-sm text-slate-500 mt-0.5">{business.name_en}</p>
-                              )}
-                            </div>
-                            <Badge variant="destructive" className="ml-2 flex-shrink-0">🔥 HOT</Badge>
-                          </div>
-                          <p className="text-slate-600 mb-3 font-ko">{business.category}</p>
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="flex items-center">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                              <span className="font-semibold text-lg">{business.rating || 'N/A'}</span>
-                            </div>
-                            <span className="text-slate-500 text-sm">
-                              ({business.review_count || 0} 리뷰)
-                            </span>
-                          </div>
-                          {business.address && (
-                            <div className="flex items-start gap-2 text-sm text-slate-600">
-                              <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                              <span className="line-clamp-2">{business.address}</span>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                  <BusinessCard key={business.id} business={business} />
                 ))}
               </div>
             )}
           </div>
         </section>
       )}
+
+      {/* Latest News */}
+      <section className="py-20 bg-slate-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-12">
+            <h2 className="text-4xl font-bold">최신 뉴스</h2>
+            <Link href="/news">
+              <Button variant="ghost" className="gap-2">
+                전체 보기 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {loadingNews ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
+              {[1, 2, 3].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-0">
+                    <Skeleton className="w-full h-48" />
+                    <div className="p-6 space-y-3">
+                      <Skeleton className="h-6 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
+              {recentNews.map((news) => {
+                const categoryStyle = getNewsCategoryStyle(news.category);
+                return (
+                  <a key={news.id} href={news.url} target="_blank" rel="noopener noreferrer">
+                    <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
+                      <CardContent className="p-0">
+                        {hasValidImage(news.thumbnail_url) ? (
+                          <div 
+                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                            style={{ backgroundImage: `url(${news.thumbnail_url})` }}
+                          />
+                        ) : (
+                          <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                            <span className="text-7xl">{categoryStyle.emoji}</span>
+                          </div>
+                        )}
+                        <div className="p-6">
+                          <Badge variant="secondary" className="mb-3">
+                            {news.category || '뉴스'}
+                          </Badge>
+                          <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
+                            {news.title}
+                          </h3>
+                          <p className="text-sm text-slate-600 line-clamp-2">{news.content}</p>
+                          <p className="text-xs text-slate-400 mt-3">
+                            {news.source} • {new Date(news.published_date).toLocaleDateString('ko-KR')}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Charts Section */}
+      <ChartsPreview />
 
       {/* Featured Businesses */}
       <section className="py-20">
@@ -783,99 +810,7 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
               {featured.map((business) => (
-                <Card key={business.id} className="overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
-                  <CardContent className="p-0">
-                    <Link href={`/business/${business.id}`}>
-                      {hasValidImage(business.cover_url) ? (
-                        <div 
-                          className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
-                        />
-                      ) : (
-                        <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-                          {(() => {
-                            const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
-                            const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
-                            return IconComponent ? <IconComponent className="w-8 h-8 md:w-16 md:h-16 text-white/80" /> : null;
-                          })()}
-                        </div>
-                      )}
-                    </Link>
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <Link href={`/business/${business.id}`} className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko">
-                            {business.name_ko || business.name_en}
-                          </h3>
-                          {business.name_ko && business.name_en && (
-                            <p className="text-sm text-slate-500 mt-0.5">{business.name_en}</p>
-                          )}
-                        </Link>
-                      </div>
-                      
-                      <Badge 
-                        variant="secondary" 
-                        className="mb-3 text-xs"
-                        style={{ 
-                          background: `linear-gradient(to right, ${getCategoryColor(business.category).replace('from-', '').replace('to-', '').split(' ').map(c => `var(--${c})`).join(', ')})`,
-                          color: 'white'
-                        }}
-                      >
-                        {business.category}
-                      </Badge>
-                      
-                      {/* Star Rating Visualization */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="flex items-center gap-1">
-                          {business.rating && parseFloat(business.rating) > 0 ? (
-                            <>
-                              {[...Array(5)].map((_, i) => {
-                                const rating = parseFloat(business.rating || '0');
-                                const fillPercentage = Math.min(Math.max(rating - i, 0), 1);
-                                return (
-                                  <div key={i} className="relative">
-                                    <Star className="h-4 w-4 text-slate-300" />
-                                    {fillPercentage > 0 && (
-                                      <div className="absolute inset-0 overflow-hidden" style={{ width: `${fillPercentage * 100}%` }}>
-                                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                              <span className="font-bold text-lg ml-1">{business.rating}</span>
-                            </>
-                          ) : (
-                            <span className="text-slate-400 text-sm">평점 없음</span>
-                          )}
-                        </div>
-                        {business.review_count && business.review_count > 0 && (
-                          <span className="text-slate-500 text-sm">
-                            💬 {business.review_count}개 리뷰
-                          </span>
-                        )}
-                      </div>
-                      
-                      {business.city && (
-                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-3">
-                          <MapPin className="h-4 w-4 text-primary" />
-                          <span className="font-medium">{business.city}</span>
-                        </div>
-                      )}
-                      
-                      {business.phone && (
-                        <a 
-                          href={`tel:${business.phone}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors md:hidden"
-                        >
-                          <Phone className="h-4 w-4" />
-                          <span className="font-medium">전화 걸기</span>
-                        </a>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <BusinessCard key={business.id} business={business} />
               ))}
             </div>
           )}
@@ -918,50 +853,7 @@ export default function Home() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                 {recent.slice(0, 6).map((business) => (
-                  <Link key={business.id} href={`/business/${business.id}`}>
-                    <Card className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
-                      <CardContent className="p-0">
-                        {hasValidImage(business.cover_url) ? (
-                          <div 
-                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                            style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
-                          />
-                        ) : (
-                          <div className={`w-full h-48 bg-gradient-to-br ${getCategoryColor(business.category)} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-                            {(() => {
-                              const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
-                              const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
-                              return IconComponent ? <IconComponent className="w-8 h-8 md:w-16 md:h-16 text-white/80" /> : null;
-                            })()}
-                          </div>
-                        )}
-                        <div className="p-6">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors">
-                              {business.name_ko || business.name_en}
-                            </h3>
-                            <Badge variant="secondary" className="ml-2">NEW</Badge>
-                          </div>
-                          <p className="text-slate-600 mb-3">{business.category}</p>
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="flex items-center">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                              <span className="font-semibold">{business.rating || 'N/A'}</span>
-                            </div>
-                            <span className="text-slate-500 text-sm">
-                              ({business.review_count || 0} 리뷰)
-                            </span>
-                          </div>
-                          {business.address && (
-                            <div className="flex items-start gap-2 text-sm text-slate-600">
-                              <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                              <span className="line-clamp-2">{business.address}</span>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                  <BusinessCard key={business.id} business={business} />
                 ))}
               </div>
             )}
@@ -1307,72 +1199,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Latest News */}
-      <section className="py-20 bg-slate-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-4xl font-bold">최신 뉴스</h2>
-            <Link href="/news">
-              <Button variant="ghost" className="gap-2">
-                전체 보기 <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          {loadingNews ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
-              {[1, 2, 3].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-0">
-                    <Skeleton className="w-full h-48" />
-                    <div className="p-6 space-y-3">
-                      <Skeleton className="h-6 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
-              {recentNews.map((news) => {
-                const categoryStyle = getNewsCategoryStyle(news.category);
-                return (
-                  <a key={news.id} href={news.url} target="_blank" rel="noopener noreferrer">
-                    <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
-                      <CardContent className="p-0">
-                        {hasValidImage(news.thumbnail_url) ? (
-                          <div 
-                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                            style={{ backgroundImage: `url(${news.thumbnail_url})` }}
-                          />
-                        ) : (
-                          <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-                            <span className="text-7xl">{categoryStyle.emoji}</span>
-                          </div>
-                        )}
-                        <div className="p-6">
-                          <Badge variant="secondary" className="mb-3">
-                            {news.category || '뉴스'}
-                          </Badge>
-                          <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
-                            {news.title}
-                          </h3>
-                          <p className="text-sm text-slate-600 line-clamp-2">{news.content}</p>
-                          <p className="text-xs text-slate-400 mt-3">
-                            {news.source} • {new Date(news.published_date).toLocaleDateString('ko-KR')}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </a>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* Community Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
@@ -1489,9 +1315,6 @@ export default function Home() {
           )}
         </div>
       </section>
-
-      {/* Charts Section */}
-      <ChartsPreview />
 
       {/* Newsletter Section */}
       <section className="py-16 bg-slate-50">

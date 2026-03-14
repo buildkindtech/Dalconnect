@@ -6,7 +6,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  getBusinesses(filters?: { category?: string; city?: string; search?: string; featured?: boolean; sort?: string }): Promise<Business[]>;
+  getBusinesses(filters?: { category?: string; city?: string; search?: string; featured?: boolean; sort?: string; limit?: number }): Promise<Business[]>;
   getBusiness(id: string): Promise<Business | undefined>;
   getFeaturedBusinesses(): Promise<Business[]>;
   getNews(category?: string, limit?: number): Promise<News[]>;
@@ -29,7 +29,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getBusinesses(filters?: { category?: string; city?: string; search?: string; featured?: boolean; sort?: string }): Promise<Business[]> {
+  async getBusinesses(filters?: { category?: string; city?: string; search?: string; featured?: boolean; sort?: string; limit?: number }): Promise<Business[]> {
     const conditions = [];
 
     if (filters?.category) {
@@ -54,17 +54,19 @@ export class DatabaseStorage implements IStorage {
     // Sort order
     const sortOrder = (() => {
       switch (filters?.sort) {
-        case 'rating': return desc(businesses.rating);
-        case 'name':   return asc(businesses.name_ko);
-        case 'recent': return desc(businesses.created_at);
-        default:       return desc(businesses.featured); // featured순
+        case 'rating':  return desc(businesses.rating);
+        case 'reviews': return desc(businesses.review_count);
+        case 'name':    return asc(businesses.name_ko);
+        case 'recent':  return desc(businesses.created_at);
+        default:        return desc(businesses.featured); // featured순
       }
     })();
 
+    const limitVal = filters?.limit ?? 500;
     if (conditions.length > 0) {
-      return db.select().from(businesses).where(and(...conditions)).orderBy(sortOrder);
+      return db.select().from(businesses).where(and(...conditions)).orderBy(sortOrder).limit(limitVal);
     }
-    return db.select().from(businesses).orderBy(sortOrder);
+    return db.select().from(businesses).orderBy(sortOrder).limit(limitVal);
   }
 
   async getBusiness(id: string): Promise<Business | undefined> {

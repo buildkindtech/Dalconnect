@@ -18,14 +18,19 @@
  *   node scripts/social-auto-post.cjs --type news  # 뉴스만
  */
 
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env.local') });
 const pg = require('pg');
+const FormData = require('form-data');
+const fs = require('fs');
+const nodeFetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+const { generateNewsCard } = require('./generate-news-card.cjs');
 const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 
 const FACEBOOK_PAGE_ID = process.env.FACEBOOK_PAGE_ID;
 const FB_TOKEN = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 const IG_ACCOUNT_ID = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
-const SITE_URL = 'https://dalconnect.buildkind.tech';
+const SITE_URL = 'https://dalkonnect.com';
 
 const isPreview = process.argv.includes('--preview');
 const typeFilter = process.argv.find(a => a.startsWith('--type='))?.split('=')[1] 
@@ -41,7 +46,8 @@ async function selectContent() {
     const localNews = await pool.query(`
       SELECT id, title, content, category, thumbnail_url, url 
       FROM news 
-      WHERE category = '로컬뉴스' 
+      WHERE category = '로컬뉴스'
+        AND title ~ '[가-힣]' 
         AND published_date > NOW() - INTERVAL '24 hours'
         AND thumbnail_url IS NOT NULL AND thumbnail_url != ''
       ORDER BY published_date DESC 
@@ -65,6 +71,7 @@ async function selectContent() {
       SELECT id, title, content, category, thumbnail_url, url 
       FROM news 
       WHERE category IN ('한국뉴스', 'K-POP')
+        AND title ~ '[가-힣]'
         AND published_date > NOW() - INTERVAL '24 hours'
         AND thumbnail_url IS NOT NULL AND thumbnail_url != ''
       ORDER BY published_date DESC 
@@ -132,25 +139,108 @@ async function selectContent() {
   return posts;
 }
 
+// ==================== 카테고리별 컬러 + 훅 캡션 ====================
+
+function getCategoryInfo(post) {
+  const title = post.title || '';
+  const isDFW = /달라스|텍사스|DFW|Dallas|Texas/i.test(title);
+  if (post.type === 'deal') return { label: '🏷️ 오늘의 딜', color: '#C9A84C' };
+  if (post.type === 'blog') return { label: '📝 달라스 생활', color: '#059669' };
+  if (isDFW) return { label: '📰 DFW 뉴스', color: '#C41E3A' };
+  return { label: '🇰🇷 한국 뉴스', color: '#7B2FFF' };
+}
+
+function buildCaption(post, platform = 'ig') {
+  const title = post.title.replace(/^[📰🔥📝]\s*/, '');
+  const summary = post.content.substring(0, platform === 'ig' ? 150 : 280).trim();
+  
+  // 훅: 제목을 질문/강조로 변환
+  const hook = title.endsWith('?') ? title : `${title}`;
+  
+  const igTags = `${post.hashtags} #달라스한인 #DFW한인 #달라스 #달커넥트`;
+  const fbTags = post.hashtags;
+  
+  if (platform === 'ig') {
+    return `${hook}\n\n${summary}...\n\n자세히 보기 👉 dalkonnect.com/news\n\n${igTags}`;
+  } else {
+    return `${hook}\n\n${summary}...\n\n자세히 보기 👉 ${post.link}\n\n${fbTags} #달라스한인 #DFW한인`;
+  }
+}
+
+// ==================== 브랜드 카드 생성 + FB 업로드 ====================
+
+async function createAndUploadCard(post) {
+  const { label, color } = getCategoryInfo(post);
+  const title = post.title.replace(/^[📰🔥📝]\s*/, '');
+  const outputName = `auto-${Date.now()}`;
+  
+  try {
+    const cardPath = await generateNewsCard({
+      title,
+      imageUrl: post.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1080',
+      category: label,
+      categoryColor: color,
+      outputName,
+    });
+    
+    // FB에 비공개 업로드 → CDN URL 획득 (IG용)
+    const form = new FormData();
+    form.append('source', fs.createReadStream(cardPath));
+    form.append('published', 'false');
+    form.append('access_token', FB_TOKEN);
+    const r = await nodeFetch(`https://graph.facebook.com/v19.0/${FACEBOOK_PAGE_ID}/photos`, { method: 'POST', body: form });
+    const d = await r.json();
+    if (!d.id) throw new Error(`FB upload failed: ${JSON.stringify(d)}`);
+    
+    const ur = await nodeFetch(`https://graph.facebook.com/v19.0/${d.id}?fields=images&access_token=${FB_TOKEN}`);
+    const ud = await ur.json();
+    const cdnUrl = ud.images?.[0]?.source;
+    
+    // 임시 파일 삭제
+    try { fs.unlinkSync(cardPath); } catch(e) {}
+    
+    return { photoId: d.id, cdnUrl };
+  } catch (e) {
+    console.log(`  ⚠️ 카드 생성 실패, 원본 이미지 사용: ${e.message}`);
+    return { photoId: null, cdnUrl: post.image };
+  }
+}
+
 // ==================== Facebook 포스팅 ====================
 
-async function postToFacebook(post) {
+async function postToFacebook(post, cardPhotoId) {
   if (!FACEBOOK_PAGE_ID || !FB_TOKEN) {
     console.log('  ⚠️ Facebook 토큰 미설정 — 스킵');
     return false;
   }
   
   try {
-    const message = `${post.title}\n\n${post.content.substring(0, 300)}\n\n🔗 ${post.link}\n\n${post.hashtags}`;
+    const caption = buildCaption(post, 'fb');
     
-    const body = { message, access_token: FB_TOKEN };
-    if (post.image) body.link = post.link;
-    
-    const res = await fetch(`https://graph.facebook.com/v19.0/${FACEBOOK_PAGE_ID}/feed`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    let res;
+    if (cardPhotoId) {
+      // 카드 이미지로 포스팅
+      const form = new FormData();
+      form.append('source', fs.createReadStream(
+        require('path').join(__dirname, '..', 'sns-cards', 'news-cards', `auto-temp.png`)
+      ));
+      // 이미 업로드된 photo ID 사용
+      res = await fetch(`https://graph.facebook.com/v19.0/${FACEBOOK_PAGE_ID}/feed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: caption,
+          attached_media: [{ media_fbid: cardPhotoId }],
+          access_token: FB_TOKEN,
+        }),
+      });
+    } else {
+      res = await fetch(`https://graph.facebook.com/v19.0/${FACEBOOK_PAGE_ID}/feed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: caption, link: post.link, access_token: FB_TOKEN }),
+      });
+    }
     
     const data = await res.json();
     if (data.id) {
@@ -168,26 +258,27 @@ async function postToFacebook(post) {
 
 // ==================== Instagram 포스팅 ====================
 
-async function postToInstagram(post) {
+async function postToInstagram(post, cdnUrl) {
   if (!IG_ACCOUNT_ID || !FB_TOKEN) {
     console.log('  ⚠️ Instagram 토큰 미설정 — 스킵');
     return false;
   }
   
-  if (!post.image) {
+  const imageUrl = cdnUrl || post.image;
+  if (!imageUrl) {
     console.log('  ⚠️ Instagram: 이미지 없음 — 스킵');
     return false;
   }
   
   try {
-    const caption = `${post.title}\n\n${post.content.substring(0, 200)}\n\n🔗 Link in bio\n\n${post.hashtags}`;
+    const caption = buildCaption(post, 'ig');
     
     // Step 1: Create media container
     const createRes = await fetch(`https://graph.facebook.com/v19.0/${IG_ACCOUNT_ID}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        image_url: post.image,
+        image_url: imageUrl,
         caption,
         access_token: FB_TOKEN,
       }),
@@ -199,7 +290,16 @@ async function postToInstagram(post) {
       return false;
     }
     
-    // Step 2: Publish
+    // Step 2: Wait for media to be ready (retry up to 5x with 4s delay)
+    let publishData = null;
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      await new Promise(r => setTimeout(r, 4000));
+      const statusRes = await fetch(`https://graph.facebook.com/v19.0/${createData.id}?fields=status_code&access_token=${FB_TOKEN}`);
+      const statusData = await statusRes.json();
+      if (statusData.status_code === 'FINISHED' || attempt === 5) break;
+    }
+
+    // Step 3: Publish
     const publishRes = await fetch(`https://graph.facebook.com/v19.0/${IG_ACCOUNT_ID}/media_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -209,12 +309,12 @@ async function postToInstagram(post) {
       }),
     });
     
-    const publishData = await publishRes.json();
-    if (publishData.id) {
-      console.log(`  ✅ Instagram: ${publishData.id}`);
+    const pubResult = await publishRes.json();
+    if (pubResult.id) {
+      console.log(`  ✅ Instagram: ${pubResult.id}`);
       return true;
     } else {
-      console.log(`  ❌ Instagram publish: ${JSON.stringify(publishData)}`);
+      console.log(`  ❌ Instagram publish: ${JSON.stringify(pubResult)}`);
       return false;
     }
   } catch (e) {
@@ -245,8 +345,10 @@ async function run() {
     console.log(`  링크: ${post.link}`);
     
     if (!isPreview) {
-      await postToFacebook(post);
-      await postToInstagram(post);
+      console.log('  🎨 브랜드 카드 생성 중...');
+      const { photoId, cdnUrl } = await createAndUploadCard(post);
+      await postToFacebook(post, photoId);
+      await postToInstagram(post, cdnUrl);
       // Rate limit between posts
       await new Promise(r => setTimeout(r, 2000));
     }

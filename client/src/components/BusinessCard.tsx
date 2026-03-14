@@ -1,21 +1,9 @@
 import { Link } from "wouter";
-import { MapPin, Star, Phone, Clock } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import type { Business } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon, proxyPhotoUrl } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
-
-function getRelativeTime(date: string): string {
-  const now = new Date();
-  const d = new Date(date);
-  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (diffDays === 0) return '오늘 업데이트';
-  if (diffDays === 1) return '어제 업데이트';
-  if (diffDays < 7) return `${diffDays}일 전 업데이트`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전 업데이트`;
-  return `${Math.floor(diffDays / 30)}개월 전 업데이트`;
-}
 
 interface BusinessCardProps {
   business: Business;
@@ -25,96 +13,61 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   const iconName = getCategoryIcon(business.category) as keyof typeof Icons;
   const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
   const colorClass = getCategoryColor(business.category);
-  
+
   return (
-    <Card className="overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl">
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group h-full rounded-xl">
       <CardContent className="p-0">
         <Link href={`/business/${business.id}`}>
-          {/* Image or Icon Fallback */}
+          {/* Image */}
           {business.cover_url ? (
-            <div 
-              className="w-full h-32 md:h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+            <div
+              className="w-full h-28 md:h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
               style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
             />
           ) : (
-            <div className={`w-full h-32 md:h-48 bg-gradient-to-br ${colorClass} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-              {IconComponent && <IconComponent className="h-10 w-10 md:h-20 md:w-20 text-white/80" />}
+            <div className={`w-full h-28 md:h-48 bg-gradient-to-br ${colorClass} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+              {IconComponent && <IconComponent className="h-10 w-10 md:h-16 md:w-16 text-white/80" />}
             </div>
           )}
         </Link>
-        
+
         {/* Content */}
-        <div className="p-3 md:p-6">
-          <div className="flex items-start justify-between mb-2">
-            <Link href={`/business/${business.id}`} className="flex-1 min-w-0">
-              <h3 className="text-xs md:text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko line-clamp-2 leading-snug">
-                {business.name_ko || business.name_en}
-              </h3>
-            </Link>
-          </div>
-          
-          <Badge variant="secondary" className="mb-2 text-xs">
-            {business.category}
-          </Badge>
-          
-          {/* Visual Star Rating */}
-          <div className="flex items-center gap-1 md:gap-3 mb-2 md:mb-3">
-            <div className="flex items-center gap-1">
-              {business.rating && parseFloat(business.rating) > 0 ? (
-                <>
-                  {[...Array(5)].map((_, i) => {
-                    const rating = parseFloat(business.rating || '0');
-                    const fillPercentage = Math.min(Math.max(rating - i, 0), 1);
-                    return (
-                      <div key={i} className="relative">
-                        <Star className="h-3 w-3 md:h-4 md:w-4 text-slate-300" />
-                        {fillPercentage > 0 && (
-                          <div className="absolute inset-0 overflow-hidden" style={{ width: `${fillPercentage * 100}%` }}>
-                            <Star className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 text-yellow-400" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  <span className="font-bold text-xs md:text-lg ml-0.5">{business.rating}</span>
-                </>
-              ) : (
-                <span className="text-slate-400 text-sm">평점 없음</span>
+        <Link href={`/business/${business.id}`}>
+          <div className="p-2 md:p-5">
+            {/* Category badge */}
+            <span className="text-[10px] md:text-xs text-primary font-semibold uppercase tracking-wide">
+              {business.category}
+            </span>
+
+            {/* Name */}
+            <h3 className="text-xs md:text-lg font-bold text-slate-800 group-hover:text-primary transition-colors font-ko line-clamp-2 leading-snug mt-0.5">
+              {business.name_ko || business.name_en}
+            </h3>
+
+            {/* Rating + City */}
+            <div className="flex items-center justify-between mt-1.5">
+              <div className="flex items-center gap-0.5">
+                {business.rating && parseFloat(business.rating) > 0 ? (
+                  <>
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    <span className="text-xs font-bold text-slate-700 ml-0.5">{business.rating}</span>
+                    {business.review_count && business.review_count > 0 && (
+                      <span className="text-[10px] text-slate-400 ml-0.5">({business.review_count})</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-[10px] text-slate-400">평점 없음</span>
+                )}
+              </div>
+              {business.city && (
+                <div className="flex items-center gap-0.5 text-[10px] text-slate-400">
+                  <MapPin className="h-2.5 w-2.5" />
+                  <span>{business.city}</span>
+                </div>
               )}
             </div>
-            {business.review_count && business.review_count > 0 && (
-              <span className="text-slate-500 text-sm">
-                💬 {business.review_count}
-              </span>
-            )}
           </div>
-          
-          <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
-            {business.city && (
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3 w-3 text-primary" />
-                <span>{business.city}</span>
-              </div>
-            )}
-            {business.updated_at && (
-              <div className="flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                <span>{getRelativeTime(business.updated_at)}</span>
-              </div>
-            )}
-          </div>
-          
-          {business.phone && (
-            <a 
-              href={`tel:${business.phone}`}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors md:hidden mt-3"
-            >
-              <Phone className="h-4 w-4" />
-              <span className="font-medium">전화 걸기</span>
-            </a>
-          )}
-        </div>
+        </Link>
       </CardContent>
     </Card>
   );
