@@ -274,6 +274,23 @@ async function safeUpdateChart(type, newItems) {
       }
     }
   }
+
+  // TMDB 포스터 (드라마/영화/넷플릭스 — YouTube 썸네일 없는 경우)
+  const TMDB_KEY = process.env.TMDB_API_KEY || 'cd3790d0963ceee5f8a9ac1b9d5fe779';
+  if (['drama', 'movie', 'netflix'].includes(type)) {
+    for (const item of newItems) {
+      if (!item.thumbnail_url) {
+        try {
+          const q = encodeURIComponent(item.title_ko || item.title_en || '');
+          const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${q}&language=ko-KR`, { signal: AbortSignal.timeout(5000) });
+          const d = await r.json();
+          const result = d.results?.find(x => x.poster_path);
+          if (result?.poster_path) item.thumbnail_url = `https://image.tmdb.org/t/p/w500${result.poster_path}`;
+        } catch(e) {}
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+    }
+  }
   
   // 트랜잭션으로 안전하게 교체
   const client = await pool.connect();
