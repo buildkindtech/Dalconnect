@@ -766,7 +766,7 @@ export default function Home() {
           </div>
 
           {loadingFeatured ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-0">
@@ -781,7 +781,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
               {featured.map((business) => (
                 <Card key={business.id} className="overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
                   <CardContent className="p-0">
@@ -1210,7 +1210,7 @@ export default function Home() {
           </div>
 
           {loadingListings ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <Card key={i}>
                   <CardContent className="p-6">
@@ -1222,7 +1222,7 @@ export default function Home() {
               ))}
             </div>
           ) : recentListings.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recentListings.map((listing) => {
                 const date = new Date(listing.created_at);
                 const now = new Date();
