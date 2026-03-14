@@ -33,35 +33,32 @@ export default function BusinessCard({ business }: BusinessCardProps) {
           {/* Image or Icon Fallback */}
           {business.cover_url ? (
             <div 
-              className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-32 md:h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
               style={{ backgroundImage: `url(${proxyPhotoUrl(business.cover_url) || business.cover_url})` }}
             />
           ) : (
-            <div className={`w-full h-48 bg-gradient-to-br ${colorClass} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-              {IconComponent && <IconComponent className="h-20 w-20 text-white/80" />}
+            <div className={`w-full h-32 md:h-48 bg-gradient-to-br ${colorClass} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+              {IconComponent && <IconComponent className="h-10 w-10 md:h-20 md:w-20 text-white/80" />}
             </div>
           )}
         </Link>
         
         {/* Content */}
-        <div className="p-6">
-          <div className="flex items-start justify-between mb-3">
+        <div className="p-3 md:p-6">
+          <div className="flex items-start justify-between mb-2">
             <Link href={`/business/${business.id}`} className="flex-1 min-w-0">
-              <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko">
+              <h3 className="text-sm md:text-xl font-bold text-slate-800 group-hover:text-primary transition-colors font-ko line-clamp-2 leading-tight">
                 {business.name_ko || business.name_en}
               </h3>
-              {business.name_ko && business.name_en && (
-                <p className="text-sm text-slate-500 mt-0.5">{business.name_en}</p>
-              )}
             </Link>
           </div>
           
-          <Badge variant="secondary" className="mb-3 text-xs">
+          <Badge variant="secondary" className="mb-2 text-xs">
             {business.category}
           </Badge>
           
           {/* Visual Star Rating */}
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-1 md:gap-3 mb-2 md:mb-3">
             <div className="flex items-center gap-1">
               {business.rating && parseFloat(business.rating) > 0 ? (
                 <>
