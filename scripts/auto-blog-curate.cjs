@@ -276,27 +276,8 @@ async function insertBlog(blog) {
     const id = crypto.randomUUID();
     const slug = generateSlug(blog.title);
     
-    // 카테고리별 Unsplash 실제 사진 키워드
-    const COVER_KEYWORDS = {
-      '맛집': 'korean-food,restaurant,asian-food',
-      '맛집/식당': 'korean-restaurant,food,dining',
-      '건강/웰빙': 'fitness,health,wellness',
-      '스포츠': 'sports,stadium,dallas',
-      '뷰티/패션': 'beauty,salon,fashion',
-      '생활정보': 'dallas,city,community',
-      '이민/비자': 'immigration,passport,travel',
-      '볼거리/엔터테인먼트': 'entertainment,theater,arts',
-      '가볼만한곳': 'texas,travel,park',
-      '놀거리': 'activities,family,fun',
-      '부동산': 'house,real-estate,home',
-      '교육/생활': 'education,school,learning',
-      '여행/일상': 'travel,road-trip,lifestyle',
-      '문화/이벤트': 'festival,event,culture',
-      '육아/교육': 'family,children,parenting',
-      '커뮤니티 이벤트': 'community,event,gathering',
-    };
-    const kw = COVER_KEYWORDS[blog.category] || 'dallas,korea,community';
-    const coverImage = `https://source.unsplash.com/featured/800x450/?${encodeURIComponent(kw)}`;
+    // 이미지 없이 — 카테고리 이모지로 대체 (AI 이미지/불일치 이미지 방지)
+    const coverImage = null;
 
     await pool.query(
       `INSERT INTO blogs (id, title, slug, content, excerpt, category, author,

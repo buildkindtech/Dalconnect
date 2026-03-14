@@ -42,9 +42,9 @@ export default function Blog() {
     category: selectedCategory,
   });
 
-  // Featured = first 3 with cover images
-  const featured = blogs?.filter(b => b.cover_image).slice(0, 3) || [];
-  const rest = blogs?.filter(b => !featured.find(f => f.id === b.id)) || [];
+  // Featured = 최신 3개 (이미지 유무 관계없이)
+  const featured = blogs?.slice(0, 3) || [];
+  const rest = blogs?.slice(3) || [];
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -115,13 +115,15 @@ export default function Blog() {
                     {featured.map((blog, i) => (
                       <Link key={blog.id} href={`/blog/${blog.slug}`}>
                         <article className={`bg-white rounded-xl overflow-hidden shadow-sm border hover:shadow-lg transition-all cursor-pointer group ${i === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}>
-                          <div className={`relative ${i === 0 ? 'h-64 md:h-80' : 'h-48'}`}>
-                            <img
-                              src={blog.cover_image!}
-                              alt={blog.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          <div className={`relative ${i === 0 ? 'h-64 md:h-80' : 'h-48'} bg-gradient-to-br from-emerald-50 to-teal-100`}>
+                            {blog.cover_image ? (
+                              <img src={blog.cover_image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className={i === 0 ? 'text-8xl' : 'text-6xl'}>{CATEGORY_EMOJI[blog.category || ''] || '📝'}</span>
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                             <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                               <Badge className="mb-2 bg-white/20 text-white border-0 backdrop-blur-sm">
                                 {CATEGORY_EMOJI[blog.category || ''] || '📝'} {blog.category}
