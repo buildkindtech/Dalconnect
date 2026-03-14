@@ -223,6 +223,22 @@ async function fetchFeed(feedConfig) {
   }
 }
 
+// 로컬뉴스 소스에서 실제 DFW 로컬인지 판별 후 적절한 카테고리 반환
+function smartCategory(defaultCategory, title) {
+  if (defaultCategory !== '로컬뉴스') return defaultCategory;
+  const t = (title || '').toLowerCase();
+  const local = ['달라스','댈러스','dallas','포트워스','fort worth','텍사스','texas','dfw','알링턴','arlington','grand prairie','그랜드 프레이리','메스키트','mesquite','플레이노','plano','카롤톤','carrollton','프리스코','frisco','맥키니','mckinney','가랜드','garland','어빙','irving','리처드슨','richardson','grapevine','lewisville','grayson','north texas'];
+  if (local.some(k => t.includes(k))) return '로컬뉴스';
+  const world = ['북한','이란','이라크','쿠바','cuba','중국','러시아','우크라이나','이스라엘','팔레스타인','암스테르담','바그다드','걸프','하마스','iran','iraq','north korea','ukraine','russia','china','europe','middle east','gaza','hamas','gulf','tehran','beijing','moscow','바레인','bahrain'];
+  if (world.some(k => t.includes(k))) return '월드뉴스';
+  const sports = ['nfl','nba','mlb','nhl','march madness','ncaa','formula 1','f1','bracket','ravens','titans','jets','bills','falcons','seahawks','광란의'];
+  if (sports.some(k => t.includes(k))) return '스포츠';
+  // 나머지 로컬소스 전국 뉴스
+  const national = ['미시간','michigan','애리조나','arizona','조지아','georgia','플로리다','florida','콜로라도','colorado','캘리포니아','california','오헤어','o\'hare','dulles','dolly','southwest airlines','gas price','포브스','forbes','oscar','emmy','senate','congress','federal'];
+  if (national.some(k => t.includes(k))) return '미국뉴스';
+  return '미국뉴스'; // WFAA 기본값: 로컬 아닌 건 미국뉴스
+}
+
 async function insertIfNew(article) {
   try {
     const existing = await pool.query('SELECT id FROM news WHERE url = $1', [article.url]);
@@ -236,6 +252,9 @@ async function insertIfNew(article) {
       title = translated.title;
       content = translated.content;
     }
+    
+    // Smart category for local sources
+    article.category = smartCategory(article.category, title);
 
     await pool.query(
       'INSERT INTO news (title, content, category, source, url, thumbnail_url, published_date, city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',

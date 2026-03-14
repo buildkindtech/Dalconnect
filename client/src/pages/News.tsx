@@ -13,6 +13,7 @@ import { getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
 const CATEGORIES = [
   { id: 'all', label: '전체', emoji: '📰' },
   { id: '로컬뉴스', label: '로컬', emoji: '📍' },
+  { id: '미국뉴스', label: '미국', emoji: '🇺🇸' },
   { id: '한국뉴스', label: '한국', emoji: '🇰🇷' },
   { id: '월드뉴스', label: '세계', emoji: '🌍' },
   { id: 'K-POP', label: 'K-POP', emoji: '🎤' },
@@ -30,8 +31,9 @@ const CATEGORIES = [
 // 카테고리별 우선순위 (낮을수록 높음)
 const CATEGORY_PRIORITY: Record<string, number> = {
   '로컬뉴스': 1,
-  '한국뉴스': 2,
-  '월드뉴스': 3,
+  '미국뉴스': 2,
+  '한국뉴스': 3,
+  '월드뉴스': 4,
   'K-POP': 4,
   '스포츠': 5,
   '이민/비자': 6,
@@ -61,6 +63,7 @@ function getRelativeTime(date: string | Date): string {
 function getCategoryColor(category: string): string {
   const colors: Record<string, string> = {
     '로컬뉴스': 'bg-blue-100 text-blue-800',
+    '미국뉴스': 'bg-indigo-100 text-indigo-800',
     '한국뉴스': 'bg-red-100 text-red-800',
     '월드뉴스': 'bg-emerald-100 text-emerald-800',
     'K-POP': 'bg-pink-100 text-pink-800',
