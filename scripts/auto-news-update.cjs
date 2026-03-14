@@ -256,6 +256,21 @@ async function insertIfNew(article) {
     // Smart category for local sources
     article.category = smartCategory(article.category, title);
 
+    // Soompi/썸네일 없는 소스 → 기사 페이지에서 OG 이미지 fetch
+    let thumbnail = article.thumbnail || null;
+    if (!thumbnail && ['Soompi', 'Murthy Law', 'American Immigration Council'].includes(article.source)) {
+      try {
+        const r = await fetch(article.url, {
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+          signal: AbortSignal.timeout(5000)
+        });
+        const html = await r.text();
+        const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+                || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        if (m) thumbnail = m[1];
+      } catch(e) {}
+    }
+
     await pool.query(
       'INSERT INTO news (title, content, category, source, url, thumbnail_url, published_date, city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
       [
@@ -264,7 +279,7 @@ async function insertIfNew(article) {
         article.category,
         article.source,
         article.url,
-        article.thumbnail || null,
+        thumbnail,
         article.pubDate || new Date(),
         article.city || 'dallas',
       ]
