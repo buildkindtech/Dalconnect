@@ -135,10 +135,31 @@ export default function BusinessDetail() {
   };
 
   const handleShareKakao = () => {
-    // Kakao share would require Kakao SDK integration
-    toast({
-      title: '카카오톡 공유',
-      description: '카카오톡 공유 기능은 준비 중입니다.',
+    const kakao = (window as any).Kakao;
+    if (!kakao || !kakao.isInitialized()) {
+      toast({ title: '카카오톡 공유 불가', description: '카카오 SDK를 불러오지 못했습니다.' });
+      return;
+    }
+    kakao.Share.sendDefault({
+      objectType: 'location',
+      address: business.address || '달라스, TX',
+      addressTitle: business.name,
+      content: {
+        title: business.name,
+        description: `${business.category || ''} · ${business.city || 'Dallas'} | DalKonnect 달라스 한인 업소록`,
+        imageUrl: business.photos?.[0] || 'https://dalkonnect.com/logo.png',
+        link: {
+          mobileWebUrl: `https://dalkonnect.com/business/${business.id}`,
+          webUrl: `https://dalkonnect.com/business/${business.id}`,
+        },
+      },
+      buttons: [{
+        title: '업소 보기',
+        link: {
+          mobileWebUrl: `https://dalkonnect.com/business/${business.id}`,
+          webUrl: `https://dalkonnect.com/business/${business.id}`,
+        },
+      }],
     });
   };
 
@@ -450,8 +471,8 @@ export default function BusinessDetail() {
                     <Globe className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                     <div>
                       <p className="text-sm text-slate-600">웹사이트</p>
-                      <p className="font-medium group-hover:text-primary break-all">
-                        {business.website}
+                      <p className="font-medium group-hover:text-primary">
+                        웹사이트 방문 →
                       </p>
                     </div>
                   </a>

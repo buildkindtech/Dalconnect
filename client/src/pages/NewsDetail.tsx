@@ -177,6 +177,30 @@ export default function NewsDetail() {
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>
                 </a>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const kakao = (window as any).Kakao;
+                    if (!kakao?.isInitialized()) return;
+                    kakao.Share.sendDefault({
+                      objectType: 'feed',
+                      content: {
+                        title: newsItem.title,
+                        description: newsItem.content?.substring(0, 80) + '...' || 'DalKonnect 뉴스',
+                        imageUrl: newsItem.thumbnail_url || 'https://dalkonnect.com/logo.png',
+                        link: {
+                          mobileWebUrl: `https://dalkonnect.com/news/${newsItem.id}`,
+                          webUrl: `https://dalkonnect.com/news/${newsItem.id}`,
+                        },
+                      },
+                      buttons: [{ title: '기사 보기', link: { mobileWebUrl: `https://dalkonnect.com/news/${newsItem.id}`, webUrl: `https://dalkonnect.com/news/${newsItem.id}` } }],
+                    });
+                  }}
+                  className="gap-2"
+                >
+                  <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png" alt="카카오" className="w-5 h-5" />
+                  카카오 공유
+                </Button>
               </div>
             </div>
           </div>
