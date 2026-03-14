@@ -28,7 +28,7 @@ export async function registerRoutes(
       return res.status(503).json({ error: "Database not configured" });
     }
     try {
-      const { category, city, search, featured, id } = req.query;
+      const { category, city, search, featured, sort, id } = req.query;
 
       // Single business lookup by id
       if (id) {
@@ -42,6 +42,7 @@ export async function registerRoutes(
         city: city as string | undefined,
         search: search as string | undefined,
         featured: featured === 'true' ? true : undefined,
+        sort: sort as string | undefined,
       });
       
       // Return { businesses, total } shape expected by frontend
