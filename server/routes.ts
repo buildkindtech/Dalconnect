@@ -45,6 +45,7 @@ export async function registerRoutes(
         sort: sort as string | undefined,
       });
       
+      console.log(`[businesses] cat=${category} city=${city} sort=${sort} featured=${featured} → ${results.length} results`);
       // Return { businesses, total } shape expected by frontend
       res.json({ businesses: results, total: results.length });
     } catch (error) {

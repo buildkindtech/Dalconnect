@@ -177,6 +177,7 @@ export default function Businesses() {
     search: debouncedSearch || undefined,
     page: currentPage,
     limit: 20,
+    sort: sortBy,
   });
 
   const businesses = data?.businesses || [];

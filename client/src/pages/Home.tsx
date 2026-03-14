@@ -25,7 +25,14 @@ const CATEGORIES = [
 ];
 
 const POPULAR_SEARCH_TAGS = [
-  "한식당", "미용실", "교회", "정비소", "치과", "부동산", "학원", "한인마트"
+  { label: "한식당", category: "식당" },
+  { label: "미용실", category: "미용실" },
+  { label: "교회",   category: "교회" },
+  { label: "정비소", category: "자동차" },
+  { label: "병원",   category: "병원" },
+  { label: "부동산", category: "부동산" },
+  { label: "학원",   category: "학원" },
+  { label: "한인마트", category: "한인마트" },
 ];
 
 // Charts Preview Component
@@ -458,11 +465,11 @@ export default function Home() {
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
             {POPULAR_SEARCH_TAGS.map((tag) => (
               <button
-                key={tag}
-                onClick={() => setLocation(`/businesses?search=${encodeURIComponent(tag)}`)}
+                key={tag.category}
+                onClick={() => setLocation(`/businesses?category=${encodeURIComponent(tag.category)}`)}
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-white transition-all hover:scale-105"
               >
-                {tag}
+                {tag.label}
               </button>
             ))}
           </div>
@@ -616,17 +623,14 @@ export default function Home() {
             <div className="flex flex-wrap justify-center gap-3">
               {POPULAR_SEARCH_TAGS.map((tag, index) => (
                 <button
-                  key={tag}
-                  onClick={() => {
-                    setSearchQuery(tag);
-                    setLocation(`/businesses?search=${encodeURIComponent(tag)}`);
-                  }}
+                  key={tag.category}
+                  onClick={() => setLocation(`/businesses?category=${encodeURIComponent(tag.category)}`)}
                   className="group relative inline-flex items-center gap-2 px-6 py-3 bg-slate-50 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition-all hover:shadow-lg hover:-translate-y-0.5"
                 >
                   <span className="text-lg font-bold text-slate-400 group-hover:text-white/70">
                     {index + 1}
                   </span>
-                  <span>{tag}</span>
+                  <span>{tag.label}</span>
                 </button>
               ))}
             </div>

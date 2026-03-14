@@ -136,10 +136,17 @@ function parseRSS(xml) {
     const mediaMatch = itemXml.match(/(?:media:content|media:thumbnail|enclosure)[^>]*url=["']([^"']+)["']/i);
     if (mediaMatch) thumbnail = mediaMatch[1];
     
-    // Or from <image> in description
+    // Or from <img> in description — supports both quoted and unquoted src (한겨레 등)
     if (!thumbnail) {
-      const imgMatch = (description || '').match(/<img[^>]+src=["']([^"']+)["']/i);
-      if (imgMatch) thumbnail = imgMatch[1];
+      const desc = description || '';
+      // 1) quoted: src="..." or src='...'
+      const imgQuoted = desc.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (imgQuoted) thumbnail = imgQuoted[1];
+      // 2) unquoted: src=https://... (한겨레 RSS 형식)
+      if (!thumbnail) {
+        const imgUnquoted = desc.match(/<img[^>]+src=(https?:\/\/[^\s>"']+)/i);
+        if (imgUnquoted) thumbnail = imgUnquoted[1];
+      }
     }
     
     if (title && link) {

@@ -141,6 +141,7 @@ export function useBusinesses(params?: {
   featured?: boolean;
   page?: number;
   limit?: number;
+  sort?: string;
 }) {
   const queryParams = new URLSearchParams();
   if (params?.category) queryParams.append('category', params.category);
@@ -149,6 +150,7 @@ export function useBusinesses(params?: {
   if (params?.featured) queryParams.append('featured', 'true');
   if (params?.page) queryParams.append('page', params.page.toString());
   if (params?.limit) queryParams.append('limit', params.limit.toString());
+  if (params?.sort) queryParams.append('sort', params.sort);
 
   const queryString = queryParams.toString();
   const endpoint = `/api/businesses${queryString ? `?${queryString}` : ''}`;
