@@ -504,7 +504,8 @@ export default function Home() {
       <section className="py-8 md:py-16 bg-slate-50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-4xl font-bold text-center mb-6 md:mb-10">인기 카테고리</h2>
-          <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6 max-w-6xl mx-auto">
+          {/* 모바일: 가로 슬라이드 / 데스크탑: 그리드 */}
+          <div className="flex md:hidden overflow-x-auto gap-3 pb-2 scrollbar-hide -mx-4 px-4">
             {CATEGORIES.map((category) => {
               const IconComponent = category.icon;
               const count = getCategoryCount(category.id);
@@ -512,15 +513,37 @@ export default function Home() {
                 <button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className="bg-white rounded-xl p-3 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-2 md:gap-4 group"
+                  className="bg-white rounded-xl p-3 flex-shrink-0 flex flex-col items-center justify-center gap-2 group shadow-sm w-20"
                 >
-                  <div className={`${category.color} w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <IconComponent className="h-5 w-5 md:h-8 md:w-8 text-white" />
+                  <div className={`${category.color} w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <IconComponent className="h-6 w-6 text-white" />
+                  </div>
+                  <span className="font-semibold text-xs text-slate-800 block leading-tight text-center">{category.name}</span>
+                  {count !== null && count > 0 && (
+                    <span className="text-[10px] text-slate-400 -mt-1 block">({count})</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {/* 데스크탑: 그리드 */}
+          <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+            {CATEGORIES.map((category) => {
+              const IconComponent = category.icon;
+              const count = getCategoryCount(category.id);
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryClick(category.id)}
+                  className="bg-white rounded-xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-4 group"
+                >
+                  <div className={`${category.color} w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <IconComponent className="h-8 w-8 text-white" />
                   </div>
                   <div className="text-center">
-                    <span className="font-semibold text-xs md:text-lg text-slate-800 block leading-tight">{category.name}</span>
+                    <span className="font-semibold text-lg text-slate-800 block">{category.name}</span>
                     {count !== null && count > 0 && (
-                      <span className="text-[10px] md:text-sm text-slate-500 mt-0.5 block">({count})</span>
+                      <span className="text-sm text-slate-500 mt-1 block">({count})</span>
                     )}
                   </div>
                 </button>
