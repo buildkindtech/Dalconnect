@@ -233,11 +233,13 @@ export default function Businesses() {
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(selectedCategory === category ? '' : category);
     setCurrentPage(1);
+    setMobileFiltersOpen(false); // 모바일: 선택 후 Sheet 닫기
   };
 
   const handleCityClick = (city: string) => {
     setSelectedCity(selectedCity === city ? '' : city);
     setCurrentPage(1);
+    setMobileFiltersOpen(false); // 모바일: 선택 후 Sheet 닫기
   };
 
   const handleRemoveFilter = (type: 'category' | 'city' | 'search') => {
