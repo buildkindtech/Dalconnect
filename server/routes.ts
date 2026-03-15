@@ -82,7 +82,13 @@ export async function registerRoutes(
   
   app.get("/api/news", async (req, res) => {
     try {
-      const { category, limit } = req.query;
+      const { category, limit, id, offset, city } = req.query;
+      // ?id= 단일 기사 조회 (Vercel API와 동일한 동작)
+      if (id) {
+        const newsItem = await storage.getNewsById(id as string);
+        if (!newsItem) return res.status(404).json({ error: "News not found" });
+        return res.json(newsItem);
+      }
       const results = await storage.getNews(
         category as string | undefined,
         limit ? Number(limit) : undefined
