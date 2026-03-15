@@ -283,7 +283,20 @@ async function insertIfNew(article) {
         if (m) thumbnail = m[1];
       }
 
-      // OG description → 본문 대체 (내용이 너무 짧을 때)
+      // 1) 기사 본문 직접 추출 시도
+      if (!content || content.length < 200) {
+        const bodyPatterns = [
+          /<article[^>]*>([\s\S]{200,}?)<\/article>/i,
+          /<div[^>]+class="[^"]*(?:article-body|article_body|articleBody|article-content|news-content|entry-content|cont_view|news_view|view_cont|article_txt)[^"]*"[^>]*>([\s\S]{200,}?)<\/div>/i,
+          /<div[^>]+id="[^"]*(?:article-view-content-div|articleBody|newsct_article)[^"]*"[^>]*>([\s\S]{200,}?)<\/div>/i,
+        ];
+        for (const pat of bodyPatterns) {
+          const bm = html.match(pat);
+          if (bm) { const t = cleanHtml(bm[1]); if (t.length > 150) { content = t.substring(0, 2000); break; } }
+        }
+      }
+      
+      // 2) OG description fallback
       if (!content || content.length < 100) {
         const descMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
                        || html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
@@ -294,6 +307,25 @@ async function insertIfNew(article) {
       }
     } catch(e) {
       // fetch 실패해도 계속 진행
+    }
+    
+    // 3) 그래도 내용 없으면 Gemini AI 요약 생성
+    if ((!content || content.length < 100) && GOOGLE_AI_KEY) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `다음 뉴스 기사 제목을 보고 3문장으로 한국어 요약해주세요. JSON만 반환: {"summary":"요약"}\n\n제목: ${title}\n출처: ${article.source}` }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 300 },
+          }),
+          signal: AbortSignal.timeout(8000),
+        });
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const m = text.match(/\{[\s\S]*\}/);
+        if (m) { const parsed = JSON.parse(m[0]); if (parsed.summary) content = parsed.summary; }
+      } catch(e) { /* AI 실패해도 계속 */ }
     }
 
     const result = await pool.query(
