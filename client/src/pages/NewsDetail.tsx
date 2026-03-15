@@ -230,12 +230,17 @@ export default function NewsDetail() {
                           src={relatedItem.thumbnail_url} 
                           alt={relatedItem.title}
                           className="w-full h-full object-cover rounded-t-xl"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
                         />
-                      ) : (
-                        <div className="text-primary/60 font-semibold text-sm">
-                          {relatedItem.source}
-                        </div>
-                      )}
+                      ) : null}
+                      <div className="text-primary/60 font-semibold text-sm" style={{display: relatedItem.thumbnail_url ? 'none' : 'flex'}}>
+                        {relatedItem.source}
+                      </div>
                     </div>
                     
                     <div className="p-4">
