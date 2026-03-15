@@ -122,6 +122,24 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 const MAX_REGISTRATIONS = 5;
 
+// Email notification helper (SendGrid)
+async function sendEmailAlert(subject: string, html: string) {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (!apiKey) { console.warn('SENDGRID_API_KEY not set'); return; }
+  try {
+    await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: 'info@buildkind.tech', name: 'Aaron @ DalKonnect' }] }],
+        from: { email: 'info@buildkind.tech', name: 'DalKonnect 알림' },
+        subject,
+        content: [{ type: 'text/html', value: html }],
+      }),
+    });
+  } catch (e) { console.error('Email alert failed:', e); }
+}
+
 // Telegram notification helper
 async function sendTelegramAlert(message: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -472,7 +490,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           `전화: ${sanitized.owner_phone}\n` +
           `카테고리: ${sanitized.category}\n` +
           `주소: ${sanitized.address}\n\n` +
-          `승인하려면 DB에서 status='approved'로 변경`
+          `승인: MC → /konnect → 등록 요청 탭`
+        );
+
+        // Send email notification
+        await sendEmailAlert(
+          `📝 [DalKonnect] 새 업체 등록 요청 — ${sanitized.name_ko || sanitized.name_en}`,
+          `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+            <h2 style="color:#0B1F3A;border-bottom:2px solid #00B4A6;padding-bottom:12px;">📝 새 업체 등록 요청</h2>
+            <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+              <tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;width:140px;">업체명</td><td style="padding:8px 12px;">${sanitized.name_ko || ''} ${sanitized.name_en}</td></tr>
+              <tr><td style="padding:8px 12px;font-weight:600;">카테고리</td><td style="padding:8px 12px;">${sanitized.category}</td></tr>
+              <tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;">주소</td><td style="padding:8px 12px;">${sanitized.address}${sanitized.city ? ', ' + sanitized.city : ''}</td></tr>
+              <tr><td style="padding:8px 12px;font-weight:600;">전화</td><td style="padding:8px 12px;">${sanitized.phone || '—'}</td></tr>
+              <tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;">웹사이트</td><td style="padding:8px 12px;">${sanitized.website || '—'}</td></tr>
+              <tr><td style="padding:8px 12px;font-weight:600;border-top:2px solid #e9ecef;">대표자</td><td style="padding:8px 12px;border-top:2px solid #e9ecef;">${sanitized.owner_name}</td></tr>
+              <tr><td style="padding:8px 12px;background:#f8f9fa;font-weight:600;">이메일</td><td style="padding:8px 12px;">${sanitized.owner_email}</td></tr>
+              <tr><td style="padding:8px 12px;font-weight:600;">연락처</td><td style="padding:8px 12px;">${sanitized.owner_phone}</td></tr>
+            </table>
+            <div style="margin-top:24px;padding:16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #22c55e;">
+              <p style="margin:0;font-weight:600;color:#166534;">✅ 승인하려면: Mission Control → /konnect → 📝 등록 요청 탭</p>
+              <p style="margin:8px 0 0;font-size:13px;color:#4b5563;">또는 직접 DB에서 status = 'approved' 변경</p>
+            </div>
+          </div>`
         );
         
         return res.status(201).json({
