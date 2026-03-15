@@ -72,13 +72,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const result = await pool.query(query, params);
       await pool.end();
 
-      // 뉴스 내용이 너무 짧으면 title로 대체 표시 (content = title인 경우)
       const enriched = result.rows.map((row: any) => ({
         ...row,
-        content: (row.content && row.content !== row.title && row.content.length > 80)
-          ? row.content
-          : row.title, // fallback: title만이라도 표시
-        has_full_content: row.content && row.content !== row.title && row.content.length > 80,
+        content: row.content || '',
+        has_full_content: !!(row.content && row.content !== row.title && row.content.length > 50),
       }));
       
       return res.status(200).json(enriched);
