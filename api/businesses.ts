@@ -131,8 +131,8 @@ async function sendEmailAlert(subject: string, html: string) {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        personalizations: [{ to: [{ email: 'info@buildkind.tech', name: 'Aaron @ DalKonnect' }] }],
-        from: { email: 'info@buildkind.tech', name: 'DalKonnect 알림' },
+        personalizations: [{ to: [{ email: 'info@dalkonnect.com', name: 'Aaron @ DalKonnect' }] }],
+        from: { email: 'info@dalkonnect.com', name: 'DalKonnect 알림' },
         subject,
         content: [{ type: 'text/html', value: html }],
       }),
