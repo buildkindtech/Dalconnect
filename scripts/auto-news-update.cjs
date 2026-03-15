@@ -12,8 +12,19 @@
 
 const pg = require('pg');
 const fs = require('fs');
+const admin = require('firebase-admin');
 const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
+
+// Firebase 초기화 (뉴스 캐시용)
+let firestore = null;
+try {
+  if (!admin.apps.length) {
+    const sa = JSON.parse(fs.readFileSync('/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/konnect-firebase-key.json', 'utf-8'));
+    admin.initializeApp({ credential: admin.credential.cert(sa) });
+  }
+  firestore = admin.firestore();
+} catch(e) { console.warn('Firebase 초기화 실패 (캐시 비활성화):', e.message); }
 
 // Load GOOGLE_AI_KEY from env or workspace .env file
 let GOOGLE_AI_KEY = process.env.GOOGLE_AI_KEY || '';
@@ -256,23 +267,37 @@ async function insertIfNew(article) {
     // Smart category for local sources
     article.category = smartCategory(article.category, title);
 
-    // Soompi/썸네일 없는 소스 → 기사 페이지에서 OG 이미지 fetch
+    // 기사 페이지에서 OG 이미지 + 본문 description fetch
     let thumbnail = article.thumbnail || null;
-    if (!thumbnail && ['Soompi', 'Murthy Law', 'American Immigration Council'].includes(article.source)) {
-      try {
-        const r = await fetch(article.url, {
-          headers: { 'User-Agent': 'Mozilla/5.0' },
-          signal: AbortSignal.timeout(5000)
-        });
-        const html = await r.text();
+    try {
+      const r = await fetch(article.url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
+        signal: AbortSignal.timeout(6000)
+      });
+      const html = await r.text();
+
+      // OG 이미지
+      if (!thumbnail) {
         const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
                 || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
         if (m) thumbnail = m[1];
-      } catch(e) {}
+      }
+
+      // OG description → 본문 대체 (내용이 너무 짧을 때)
+      if (!content || content.length < 100) {
+        const descMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
+                       || html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+                       || html.match(/<meta[^>]+content=["']([^"']{80,}?)["'][^>]+(?:property=["']og:description["']|name=["']description["'])/i);
+        if (descMatch && descMatch[1].length > 50) {
+          content = cleanHtml(descMatch[1]).substring(0, 800);
+        }
+      }
+    } catch(e) {
+      // fetch 실패해도 계속 진행
     }
 
-    await pool.query(
-      'INSERT INTO news (title, content, category, source, url, thumbnail_url, published_date, city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+    const result = await pool.query(
+      'INSERT INTO news (title, content, category, source, url, thumbnail_url, published_date, city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
       [
         title,
         content || title,
@@ -284,6 +309,22 @@ async function insertIfNew(article) {
         article.city || 'dallas',
       ]
     );
+
+    // Firebase Firestore 캐시 (뉴스 영속성 보장)
+    if (firestore) {
+      try {
+        const newsId = result.rows[0]?.id;
+        await firestore.collection('news_cache').doc(newsId).set({
+          id: newsId, title, content: content || title,
+          category: article.category, source: article.source,
+          url: article.url, thumbnail_url: thumbnail,
+          published_date: article.pubDate || new Date(),
+          city: article.city || 'dallas',
+          cached_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch(e) { /* 캐시 실패해도 DB 저장은 성공 */ }
+    }
+
     return true;
   } catch (e) {
     if (!e.message.includes('duplicate')) console.error('Insert error:', e.message);

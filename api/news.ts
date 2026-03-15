@@ -71,13 +71,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const result = await pool.query(query, params);
       await pool.end();
+
+      // 뉴스 내용이 너무 짧으면 title로 대체 표시 (content = title인 경우)
+      const enriched = result.rows.map((row: any) => ({
+        ...row,
+        content: (row.content && row.content !== row.title && row.content.length > 80)
+          ? row.content
+          : row.title, // fallback: title만이라도 표시
+        has_full_content: row.content && row.content !== row.title && row.content.length > 80,
+      }));
       
-      return res.status(200).json(result.rows);
+      return res.status(200).json(enriched);
     } catch (error: any) {
       console.error('news error:', error);
-      return res.status(500).json({
-        error: "서버 오류가 발생했습니다"
-      });
+      // Firestore fallback — DB 오류 시 캐시 데이터 반환
+      try {
+        const { initializeApp, getApps, cert } = await import('firebase-admin/app');
+        const { getFirestore } = await import('firebase-admin/firestore');
+        if (!getApps().length) {
+          const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '{}');
+          initializeApp({ credential: cert(sa) });
+        }
+        const db = getFirestore();
+        const snap = await db.collection('news_cache')
+          .where('city', '==', req.query.city || 'dallas')
+          .orderBy('published_date', 'desc')
+          .limit(parseInt(req.query.limit as string) || 20)
+          .get();
+        const cached = snap.docs.map(d => ({ ...d.data(), _from_cache: true }));
+        console.log(`DB fallback: returning ${cached.length} cached articles from Firestore`);
+        return res.status(200).json(cached);
+      } catch(cacheErr) {
+        return res.status(500).json({ error: "서버 오류가 발생했습니다" });
+      }
     }
   }
 
