@@ -312,7 +312,7 @@ async function insertIfNew(article) {
     // 3) 그래도 내용 없으면 Gemini AI 요약 생성
     if ((!content || content.length < 100) && GOOGLE_AI_KEY) {
       try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
