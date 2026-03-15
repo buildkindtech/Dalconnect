@@ -742,7 +742,7 @@ export default function Home() {
               {recentNews.map((news) => {
                 const categoryStyle = getNewsCategoryStyle(news.category);
                 return (
-                  <a key={news.id} href={news.url} target="_blank" rel="noopener noreferrer">
+                  <Link key={news.id} href={`/news/${news.id}`}>
                     <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
                       <CardContent className="p-0">
                         {hasValidImage(news.thumbnail_url) ? (
@@ -769,7 +769,7 @@ export default function Home() {
                         </div>
                       </CardContent>
                     </Card>
-                  </a>
+                  </Link>
                 );
               })}
             </div>

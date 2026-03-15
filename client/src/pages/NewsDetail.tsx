@@ -21,7 +21,7 @@ export default function NewsDetail() {
   const { data: newsItem, isLoading, error } = useQuery<NewsItem>({
     queryKey: ['news', params.id],
     queryFn: async () => {
-      const res = await fetch(`/api/news/${params.id}`);
+      const res = await fetch(`/api/news?id=${params.id}`);
       if (res.status === 404) return null;
       if (!res.ok) throw new Error('Failed to fetch news');
       return res.json();
@@ -119,18 +119,39 @@ export default function NewsDetail() {
 
             <div className="prose prose-lg max-w-none">
               {(() => {
+                const hasContent = newsItem.content && newsItem.content !== newsItem.title && newsItem.content.length >= 200;
+                
+                if (!hasContent) {
+                  // 내용 없을 때: 제목 + 출처 + 원문 버튼만 크게 표시
+                  return (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span className="text-3xl">📰</span>
+                      </div>
+                      <p className="text-slate-500 mb-2 text-sm">출처: <strong>{newsItem.source}</strong></p>
+                      <p className="text-slate-700 text-lg mb-8 leading-relaxed">
+                        이 기사는 원문 페이지에서 전체 내용을 확인할 수 있습니다.
+                      </p>
+                      <a href={newsItem.url} target="_blank" rel="noopener noreferrer">
+                        <Button size="lg" className="h-14 px-10 text-base bg-primary hover:bg-primary/90 shadow-lg">
+                          원문 기사 읽기
+                          <ExternalLink className="ml-2 h-5 w-5" />
+                        </Button>
+                      </a>
+                    </div>
+                  );
+                }
+                
                 const paragraphs = splitIntoParagraphs(newsItem.content || '');
                 return paragraphs.map((paragraph, index) => {
-                  // Check if paragraph ends abruptly (incomplete sentence)
                   const endsAbruptly = !paragraph.match(/[.!?…。]$/);
                   const displayText = endsAbruptly ? `${paragraph}...` : paragraph;
-                  
                   return (
                     <p 
                       key={index} 
                       className={`leading-relaxed text-slate-700 mb-6 ${
                         index === 0 
-                          ? 'text-lg md:text-xl font-medium text-slate-800' // Lead paragraph style
+                          ? 'text-lg md:text-xl font-medium text-slate-800'
                           : 'text-base md:text-lg'
                       }`}
                     >
@@ -139,18 +160,6 @@ export default function NewsDetail() {
                   );
                 });
               })()}
-              
-              {/* Content too short indicator */}
-              {(!newsItem.content || newsItem.content === newsItem.title || newsItem.content.length < 200) && (
-                <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border-l-4 border-blue-500">
-                  <p className="text-blue-900 font-medium mb-2">
-                    📖 요약본만 제공됩니다
-                  </p>
-                  <p className="text-sm text-blue-800">
-                    전체 기사 내용은 아래 "원문 기사 보기" 버튼을 클릭하여 확인하세요.
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Original Source Link - Prominent for short content */}
