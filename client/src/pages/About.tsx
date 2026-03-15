@@ -117,17 +117,17 @@ export default function About() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
             <div className="text-center p-6 bg-white rounded-2xl shadow-sm border">
               <MapPin className="h-8 w-8 text-primary mx-auto mb-3" />
-              <p className="text-4xl font-bold text-primary mb-1">1,100+</p>
+              <p className="text-4xl font-bold text-primary mb-1">1,170+</p>
               <p className="text-sm text-slate-500">등록된 한인 업체</p>
             </div>
             <div className="text-center p-6 bg-white rounded-2xl shadow-sm border">
               <Newspaper className="h-8 w-8 text-primary mx-auto mb-3" />
-              <p className="text-4xl font-bold text-primary mb-1">500+</p>
+              <p className="text-4xl font-bold text-primary mb-1">1,400+</p>
               <p className="text-sm text-slate-500">한글 뉴스 기사</p>
             </div>
             <div className="text-center p-6 bg-white rounded-2xl shadow-sm border">
               <BookOpen className="h-8 w-8 text-primary mx-auto mb-3" />
-              <p className="text-4xl font-bold text-primary mb-1">80+</p>
+              <p className="text-4xl font-bold text-primary mb-1">60+</p>
               <p className="text-sm text-slate-500">생활 가이드 블로그</p>
             </div>
             <div className="text-center p-6 bg-white rounded-2xl shadow-sm border">
