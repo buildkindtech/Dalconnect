@@ -399,7 +399,7 @@ async function run() {
   // Post-collection: translate any remaining English articles
   if (GOOGLE_AI_KEY) {
     console.log('\n🌐 영어 기사 번역 시작...');
-    const { rows } = await pool.query(`SELECT id, title, content FROM news WHERE title ~ '[A-Za-z]{5,}' AND title !~ '[가-힣]'`);
+    const { rows } = await pool.query(`SELECT id, title, content FROM news WHERE (title ~ '[A-Za-z]{5,}' AND title !~ '[가-힣]') OR (content IS NOT NULL AND content !~ '[가-힣]' AND content ~ '[a-zA-Z]{5,}')`);
     if (rows.length > 0) {
       console.log(`  번역 대상: ${rows.length}개`);
       let translated = 0;
