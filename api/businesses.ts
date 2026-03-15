@@ -186,9 +186,14 @@ function validateOrigin(req: VercelRequest): boolean {
   const origin = req.headers.origin || req.headers.referer || '';
   const allowedOrigins = [
     'https://dalconnect.vercel.app',
+    'https://dalconnect.buildkind.tech',
     'https://dalconnect.com',
+    'https://www.dalconnect.com',
+    'https://dalkonnect.com',
+    'https://www.dalkonnect.com',
     'http://localhost:5000',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'http://localhost:3000',
   ];
   return allowedOrigins.some(allowed => origin.includes(allowed));
 }
