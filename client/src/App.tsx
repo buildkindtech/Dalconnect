@@ -7,11 +7,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { CityProvider } from "./contexts/CityContext";
 
-// 페이지 이동 시 항상 맨 위로
+// 페이지 이동 시 항상 맨 위로 + GA4 페이지뷰 트래킹
 function ScrollToTop() {
   const [location] = useLocation();
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // GA4 SPA 페이지뷰 전송
+    if (typeof window.gtag === 'function') {
+      window.gtag('config', 'G-KSNNMJTP4C', { page_path: location });
+    }
   }, [location]);
   return null;
 }
