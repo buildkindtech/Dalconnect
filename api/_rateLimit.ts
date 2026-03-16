@@ -19,8 +19,7 @@ interface RateLimitResult {
 
 // IP 해시 (개인정보 보호)
 export function hashIP(ip: string): string {
-  const salt = process.env.IP_HASH_SALT;
-  if (!salt) throw new Error('IP_HASH_SALT env var required');
+  const salt = process.env.IP_HASH_SALT || 'dalkonnect_default_salt';
   return crypto.createHash('sha256').update(ip + salt).digest('hex').substring(0, 32);
 }
 
