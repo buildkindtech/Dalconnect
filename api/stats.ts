@@ -17,6 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Cache 5분
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
 
+  // 기준 베이스 (인스타 4013 뷰 + 일 방문 200 기본)
+  const BASE_TOTAL_VIEWS = 4013;
+  const BASE_TODAY_VIEWS = 200;
+
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
@@ -33,8 +37,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.json({
       totalBusinesses: businesses.rows[0].cnt,
       totalPosts: posts.rows[0].cnt,
-      totalViews: views.rows[0].total,
-      todayViews: views.rows[0].today,
+      totalViews: (views.rows[0].total || 0) + BASE_TOTAL_VIEWS,
+      todayViews: (views.rows[0].today || 0) + BASE_TODAY_VIEWS,
     });
   } catch (err: any) {
     console.error('stats error:', err?.message);
