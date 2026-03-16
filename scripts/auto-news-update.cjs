@@ -401,6 +401,63 @@ async function insertIfNew(article) {
   }
 }
 
+// ─── Reddit 달라스 생활정보 수집 ────────────────────────────────
+const REDDIT_SOURCES = [
+  { subreddit: 'Dallas', category: '달라스', label: 'r/Dallas' },
+  { subreddit: 'DFW', category: '달라스', label: 'r/DFW' },
+  { subreddit: 'FortWorth', category: '달라스', label: 'r/FortWorth' },
+];
+
+// 필터 아웃: 정치/범죄/논쟁성 글
+const REDDIT_SKIP = /\b(trump|biden|maga|democrat|republican|election|gerrymandering|ICE|arrest|murder|shooting|killed|victim|racist|sexist|fascist|nazi|abortion|gun|GOP|DNC|liberal|conservative|antifa|BLM|riot|protest|lawsuit|indicted|convicted|sentenced|defund|hate speech|pedo|politician|politician|cruelty|politician)\b/i;
+
+async function fetchRedditPosts() {
+  const allItems = [];
+  for (const src of REDDIT_SOURCES) {
+    try {
+      console.log(`\n🤖 Reddit ${src.label}...`);
+      const res = await fetch(`https://www.reddit.com/r/${src.subreddit}/hot.json?limit=25`, {
+        headers: { 'User-Agent': 'DalKonnect/1.0 (+https://dalkonnect.com)' },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const posts = data.data?.children?.map(c => c.data) || [];
+
+      let count = 0;
+      for (const p of posts) {
+        // 필터: 낮은 점수, 정치/논쟁 글, 너무 짧은 글 스킵
+        if (p.score < 5) continue;
+        if (REDDIT_SKIP.test(p.title) || REDDIT_SKIP.test(p.selftext || '')) continue;
+        if (p.over_18) continue;
+
+        const title = p.title.trim();
+        const content = (p.selftext || '').trim().slice(0, 500) || `${title} — r/${p.subreddit} 커뮤니티 게시글 (댓글 ${p.num_comments}개, 추천 ${p.score})`;
+        const thumbnail = p.thumbnail?.startsWith('http') ? p.thumbnail : null;
+        const url = `https://www.reddit.com${p.permalink}`;
+
+        allItems.push({
+          title,
+          content,
+          url,
+          thumbnail_url: thumbnail,
+          source: src.label,
+          category: src.category,
+          city: 'dallas',
+          translate: !/[\uAC00-\uD7AF]/.test(title), // 한글 없으면 번역
+          published_at: new Date(p.created_utc * 1000).toISOString(),
+        });
+        if (++count >= 8) break; // 서브레딧당 최대 8개
+      }
+      console.log(`  ${count}개 수집`);
+      await new Promise(r => setTimeout(r, 800));
+    } catch (e) {
+      console.log(`  ⚠️ ${src.label} 실패: ${e.message}`);
+    }
+  }
+  return allItems;
+}
+
 async function run() {
   console.log(`[${new Date().toISOString()}] DalConnect 뉴스 수집 v2 시작...`);
   let total = 0;
@@ -430,6 +487,27 @@ async function run() {
     // Rate limit between feeds
     await new Promise(r => setTimeout(r, 500));
   }
+
+  // ─── Reddit 달라스 생활정보 ───────────────────────────────────
+  console.log('\n\n━━━ Reddit 달라스 생활정보 수집 ━━━');
+  const redditPosts = await fetchRedditPosts();
+  let redditCount = 0;
+  for (const item of redditPosts) {
+    // 번역 필요한 글은 Gemini로 번역
+    if (item.translate && GOOGLE_AI_KEY) {
+      const t = await translateToKorean(item.title, item.content);
+      item.title = t.title || item.title;
+      item.content = t.content || item.content;
+      await new Promise(r => setTimeout(r, 300));
+    }
+    const inserted = await insertIfNew(item);
+    if (inserted) {
+      console.log(`  ✅ ${item.source}: ${item.title.substring(0, 55)}`);
+      redditCount++;
+      total++;
+    }
+  }
+  console.log(`  Reddit: ${redditCount}개 신규 추가`);
 
   console.log(`\n[수집 완료] ${total}개 새 기사 추가 (${errors}개 소스 실패)`);
   
