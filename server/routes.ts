@@ -6,6 +6,37 @@ import { db } from "./db";
 import { blogs, newsletterSubscribers, newsSubmissions, listings } from "../shared/schema";
 import { desc, sql, eq } from "drizzle-orm";
 
+// HTML entity decoder for news content
+function decodeHtmlEntities(text: string): string {
+  if (!text) return '';
+  const entities: Record<string, string> = {
+    '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"',
+    '&#039;': "'", '&apos;': "'", '&nbsp;': ' ',
+    '&lsquo;': '\u2018', '&rsquo;': '\u2019',
+    '&ldquo;': '\u201C', '&rdquo;': '\u201D',
+    '&laquo;': '«', '&raquo;': '»',
+    '&middot;': '·', '&bull;': '•', '&hellip;': '…',
+    '&ndash;': '–', '&mdash;': '—',
+    '&copy;': '©', '&reg;': '®', '&trade;': '™',
+    '&times;': '×', '&divide;': '÷',
+    '&yen;': '¥', '&euro;': '€', '&pound;': '£',
+  };
+  return text.replace(/&[a-zA-Z0-9#]+;/g, (match) => {
+    if (entities[match]) return entities[match];
+    if (match.startsWith('&#x')) return String.fromCharCode(parseInt(match.slice(3, -1), 16));
+    if (match.startsWith('&#')) return String.fromCharCode(parseInt(match.slice(2, -1), 10));
+    return match;
+  });
+}
+function sanitizeNewsItem(item: any) {
+  if (!item) return item;
+  return {
+    ...item,
+    title: decodeHtmlEntities(item.title || ''),
+    content: decodeHtmlEntities(item.content || ''),
+  };
+}
+
 export async function registerRoutes(
   httpServer: Server | null,
   app: Express
@@ -87,13 +118,13 @@ export async function registerRoutes(
       if (id) {
         const newsItem = await storage.getNewsById(id as string);
         if (!newsItem) return res.status(404).json({ error: "News not found" });
-        return res.json(newsItem);
+        return res.json(sanitizeNewsItem(newsItem));
       }
       const results = await storage.getNews(
         category as string | undefined,
         limit ? Number(limit) : undefined
       );
-      res.json(results);
+      res.json(results.map(sanitizeNewsItem));
     } catch (error) {
       console.error("GET /api/news error:", error);
       res.status(500).json({ error: "Failed to fetch news" });
@@ -110,12 +141,12 @@ export async function registerRoutes(
         if (!newsItem) {
           return res.status(404).json({ error: "News not found" });
         }
-        return res.json(newsItem);
+        return res.json(sanitizeNewsItem(newsItem));
       }
       
       // Otherwise, treat as category
       const results = await storage.getNews(param);
-      res.json(results);
+      res.json(results.map(sanitizeNewsItem));
     } catch (error) {
       console.error("GET /api/news/:idOrCategory error:", error);
       res.status(500).json({ error: "Failed to fetch news" });

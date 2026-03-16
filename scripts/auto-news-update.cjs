@@ -185,18 +185,43 @@ function extractTag(xml, tag) {
   return match ? match[1].trim() : null;
 }
 
+function decodeHtmlEntities(text) {
+  if (!text) return '';
+  // Named entities
+  const entities = {
+    '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"',
+    '&#039;': "'", '&apos;': "'", '&nbsp;': ' ',
+    '&lsquo;': '\u2018', '&rsquo;': '\u2019',
+    '&ldquo;': '\u201C', '&rdquo;': '\u201D',
+    '&laquo;': '«', '&raquo;': '»',
+    '&middot;': '·', '&bull;': '•', '&hellip;': '…',
+    '&ndash;': '–', '&mdash;': '—',
+    '&copy;': '©', '&reg;': '®', '&trade;': '™',
+    '&times;': '×', '&divide;': '÷',
+    '&acute;': '´', '&grave;': '`',
+    '&yen;': '¥', '&euro;': '€', '&pound;': '£',
+  };
+  let result = text.replace(/&[a-zA-Z0-9#]+;/g, (match) => {
+    if (entities[match]) return entities[match];
+    // Numeric entities
+    if (match.startsWith('&#x')) {
+      return String.fromCharCode(parseInt(match.slice(3, -1), 16));
+    }
+    if (match.startsWith('&#')) {
+      return String.fromCharCode(parseInt(match.slice(2, -1), 10));
+    }
+    return match;
+  });
+  return result;
+}
+
 function cleanHtml(text) {
   if (!text) return '';
   let c = text
     .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+  c = decodeHtmlEntities(c);
   // 수집 즉시 junk 제거
   const ttsIdx = c.indexOf('기사를 읽어드립니다');
   if (ttsIdx >= 0) c = c.substring(ttsIdx + 9).replace(/^[^가-힣]*/, '');

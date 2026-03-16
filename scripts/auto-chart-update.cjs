@@ -31,75 +31,34 @@ async function fetchWithTimeout(url, opts = {}, timeoutMs = 15000) {
   }
 }
 
-// ─── Music Chart: Melon via RSS/Web ───────────────────────────────
+// ─── Music Chart: iTunes Korea Top Songs ────────────────────────
 async function fetchMusicChart() {
-  console.log('🎵 Music chart (Melon/Circle)...');
+  console.log('🎵 Music chart (iTunes Korea Top Songs)...');
   const items = [];
-  
+
   try {
-    // Try Melon chart page via Bugs Music RSS (more accessible)
-    const res = await fetchWithTimeout('https://music.bugs.co.kr/chart/track/realtime/total');
+    // iTunes RSS Feed — Korean Top Songs (no auth, stable, includes artwork)
+    const res = await fetchWithTimeout(
+      'https://rss.applemarketingtools.com/api/v2/kr/music/most-played/10/songs.json'
+    );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    
-    // Parse top 10 from Bugs chart HTML
-    const rowRegex = /class="ranking"[^>]*>(\d+)<[\s\S]*?class="title"[^>]*>\s*<a[^>]*>([^<]+)<[\s\S]*?class="artist"[^>]*>[\s\S]*?<a[^>]*>([^<]+)</g;
-    let match;
-    let rank = 0;
-    while ((match = rowRegex.exec(html)) !== null && rank < 10) {
-      rank++;
+    const data = await res.json();
+    const feed = data?.feed?.results || [];
+    feed.slice(0, 10).forEach((track, i) => {
       items.push({
         chart_type: 'music',
-        rank,
-        title_ko: match[2].trim(),
-        title_en: match[2].trim(),
-        artist: match[3].trim(),
-        platform: 'Bugs Music',
-        score: String(99 - rank * 2),
+        rank: i + 1,
+        title_ko: track.name,
+        title_en: track.name,
+        artist: track.artistName,
+        platform: 'iTunes Korea',
+        thumbnail_url: track.artworkUrl100?.replace('100x100bb', '500x500bb') || track.artworkUrl100 || null,
+        score: String(99 - i * 2),
       });
-    }
+    });
+    console.log(`  ✅ iTunes 뮤직 ${items.length}개`);
   } catch (e) {
-    console.log(`  ⚠️ Bugs chart failed: ${e.message}`);
-  }
-
-  // Fallback: Spotify Korea Top 50 via available chart sources
-  if (items.length === 0) {
-    try {
-      const res = await fetchWithTimeout('https://raw.githubusercontent.com/nickspaargaren/spotify-chart/master/charts/south-korea/daily.json');
-      if (res.ok) {
-        const data = await res.json();
-        const tracks = (data.entries || data).slice(0, 10);
-        tracks.forEach((track, i) => {
-          items.push({
-            chart_type: 'music',
-            rank: i + 1,
-            title_ko: track.trackName || track.name || `Track ${i+1}`,
-            title_en: track.trackName || track.name || `Track ${i+1}`,
-            artist: track.artistName || track.artist || 'Unknown',
-            platform: 'Spotify Korea',
-            score: String(99 - i * 2),
-          });
-        });
-      }
-    } catch (e) {
-      console.log(`  ⚠️ Spotify chart fallback failed: ${e.message}`);
-    }
-  }
-
-  // iTunes 아트워크 추가 (없는 것만)
-  for (const item of items) {
-    if (!item.thumbnail_url && item.artist && item.title_ko) {
-      try {
-        const q = encodeURIComponent((item.artist + ' ' + item.title_ko).slice(0, 80));
-        const r = await fetchWithTimeout(`https://itunes.apple.com/search?term=${q}&entity=musicTrack&country=KR&limit=1`);
-        if (r.ok) {
-          const d = await r.json();
-          const art = d.results?.[0]?.artworkUrl100;
-          if (art) item.thumbnail_url = art.replace('100x100bb', '500x500bb');
-        }
-        await new Promise(r => setTimeout(r, 200));
-      } catch(_) {}
-    }
+    console.log(`  ⚠️ iTunes chart failed: ${e.message}`);
   }
 
   return items;
@@ -197,49 +156,24 @@ async function fetchNetflixChart() {
 async function fetchMovieChart() {
   console.log('🎬 Movie chart (TMDB 한국 상영작)...');
   const items = [];
-  
-  // KOBIS 웹 스크래이핑 + TMDB 포스터
+  const TMDB_KEY = process.env.TMDB_API_KEY;
+
+  // Primary: TMDB now_playing KR
   try {
-    const TMDB_KEY = process.env.TMDB_API_KEY;
-    const res = await fetchWithTimeout('https://www.kobis.or.kr/kobis/business/stat/boxs/findDailyBoxOfficeList.do', {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    // tbody에서 순위/제목 파싱
-    const rows = [...html.matchAll(/<tr[^>]*>[\s\S]*?<\/tr>/g)];
-    let rank = 0;
-    for (const row of rows) {
-      if (rank >= 10) break;
-      const cells = [...row[0].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(m => m[1].replace(/<[^>]+>/g,'').trim().replace(/\s+/g,' '));
-      if (cells.length < 3 || !/^\d+$/.test(cells[0])) continue;
-      rank++;
-      const title = cells[1].replace(/\s*동일|\s*상승|\s*하락|\s*\d+/g,'').trim();
-      let poster = null;
-      if (TMDB_KEY) {
-        try {
-          const tr = await fetchWithTimeout(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=ko-KR`);
-          const td = await tr.json();
-          const p = td.results?.[0]?.poster_path;
-          if (p) poster = `https://image.tmdb.org/t/p/w342${p}`;
-        } catch(_) {}
-      }
-      items.push({ chart_type:'movie', rank, title_ko:title, title_en:title, platform:'영화관', thumbnail_url:poster, score:String(98-(rank-1)*2) });
-    }
-    console.log(`  ✅ KOBIS 영화 ${items.length}개`);
+    if (!TMDB_KEY) throw new Error('TMDB_API_KEY 없음');
+    const r = await fetchWithTimeout(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=ko-KR&region=KR`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    d.results?.filter(m => m.poster_path).slice(0, 10).forEach((m, i) => items.push({
+      chart_type: 'movie', rank: i + 1,
+      title_ko: m.title, title_en: m.original_title,
+      platform: '영화관',
+      thumbnail_url: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
+      score: String((m.vote_average * 10).toFixed(1))
+    }));
+    console.log(`  ✅ TMDB 영화 ${items.length}개`);
   } catch (e) {
-    console.log(`  ⚠️ KOBIS 스크래이핑 실패: ${e.message} → TMDB fallback`);
-    // Fallback: TMDB now_playing
-    try {
-      const TMDB_KEY = process.env.TMDB_API_KEY;
-      const r2 = await fetchWithTimeout(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=ko-KR&region=KR`);
-      const d2 = await r2.json();
-      d2.results?.slice(0,10).forEach((m, i) => items.push({
-        chart_type:'movie', rank:i+1, title_ko:m.title, title_en:m.original_title, platform:'영화관',
-        thumbnail_url: m.poster_path ? `https://image.tmdb.org/t/p/w342${m.poster_path}` : null,
-        score: String((m.vote_average*10).toFixed(1))
-      }));
-    } catch(_) {}
+    console.log(`  ⚠️ TMDB 영화 실패: ${e.message}`);
   }
 
   return items;
