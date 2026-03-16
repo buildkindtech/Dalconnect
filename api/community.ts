@@ -1,10 +1,17 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from './_db';
-import { communityPosts, communityComments, communityTrends } from '../shared/schema';
-import { eq, desc, sql, and, like, or, ilike } from 'drizzle-orm';
+import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { checkRateLimit as dbCheckRateLimit, getClientIP, hashIP } from './_rateLimit';
+
+function getPool() {
+  return new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    max: 1,
+  });
+}
+
 function handleCors(req: any, res: any): boolean {
   const origin = (req.headers?.origin) || '';
   const allowed = ['https://dalconnect.vercel.app','https://dalconnect.buildkind.tech','https://dalconnect.com','https://www.dalconnect.com','https://dalkonnect.com','https://www.dalkonnect.com','http://localhost:5000','http://localhost:5173'];
@@ -15,309 +22,187 @@ function handleCors(req: any, res: any): boolean {
   return false;
 }
 
-// Rate limiting storage (in-memory for simplicity)
-// Rate limiting — DB 기반으로 교체 (인메모리는 Vercel 서버리스에서 무효)
-
-// Helper function to sanitize HTML content
 function sanitizeContent(content: string): string {
   return content
     .replace(/<script[^>]*>.*?<\/script>/gi, '')
     .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-    .replace(/<object[^>]*>.*?<\/object>/gi, '')
-    .replace(/<embed[^>]*>/gi, '')
     .replace(/javascript:/gi, '')
     .replace(/on\w+\s*=/gi, '');
-}
-
-// Helper function to extract keywords from content
-function extractKeywords(content: string): string[] {
-  const text = content.replace(/<[^>]*>/g, ' ').toLowerCase();
-  const words = text.match(/[가-힣a-z]+/g) || [];
-  const stopWords = new Set(['의', '가', '이', '은', '는', '을', '를', '에', '와', '과', '으로', '로', 'and', 'the', 'to', 'of', 'in', 'for', 'is', 'it', 'on', 'with']);
-  return words.filter(word => word.length > 1 && !stopWords.has(word)).slice(0, 10);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
 
-  const db = getDb();
   const { action } = req.query;
   const clientIP = getClientIP(req);
   const ipHash = hashIP(clientIP);
+  const pool = getPool();
 
   try {
     switch (action) {
       case 'posts':
-        return await handleGetPosts(db, req, res);
-      
+        return await handleGetPosts(pool, req, res);
       case 'post':
-        return await handleGetPost(db, req, res);
-      
+        return await handleGetPost(pool, req, res);
       case 'create':
-        return await handleCreatePost(db, req, res, ipHash);
-      
+        return await handleCreatePost(pool, req, res, ipHash);
       case 'comment':
-        return await handleCreateComment(db, req, res, ipHash);
-      
+        return await handleCreateComment(pool, req, res, ipHash);
       case 'like':
-        return await handleLike(db, req, res);
-      
+        return await handleLike(pool, req, res);
       case 'delete':
-        return await handleDelete(db, req, res);
-      
+        return await handleDelete(pool, req, res);
       case 'trending':
-        return await handleGetTrending(db, req, res);
-      
+        return await handleGetTrending(res);
       case 'search':
-        return await handleSearch(db, req, res);
-      
+        return await handleSearch(pool, req, res);
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
   } catch (error) {
     console.error('Community API error:', error);
-    return res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    return res.status(500).json({ error: '서버 오류가 발생했습니다' });
+  } finally {
+    await pool.end().catch(() => {});
   }
 }
 
-// Get posts list
-async function handleGetPosts(db: any, req: VercelRequest, res: VercelResponse) {
-  const { category, city, page = 1, limit = 20, sort = 'latest' } = req.query;
+// ─── GET POSTS ────────────────────────────────────────────────────
+async function handleGetPosts(pool: pg.Pool, req: VercelRequest, res: VercelResponse) {
+  const { category, city, page = '1', limit = '20', sort = 'latest' } = req.query;
   const offset = (Number(page) - 1) * Number(limit);
+  const targetCity = (Array.isArray(city) ? city[0] : city as string) || 'dallas';
 
-  let query = db.select({
-    id: communityPosts.id,
-    title: communityPosts.title,
-    nickname: communityPosts.nickname,
-    category: communityPosts.category,
-    views: communityPosts.views,
-    likes: communityPosts.likes,
-    comment_count: communityPosts.comment_count,
-    is_pinned: communityPosts.is_pinned,
-    created_at: communityPosts.created_at,
-  }).from(communityPosts);
-
-  // Default to dallas if no city specified (backward compatibility)
-  const targetCity: string = (Array.isArray(city) ? city[0] : String(city)) || 'dallas';
-  const filters = [eq(communityPosts.city, targetCity)];
+  const params: any[] = [targetCity, Number(limit), offset];
+  let where = 'WHERE city = $1';
 
   if (category && category !== 'all') {
-    filters.push(eq(communityPosts.category, category as string));
+    where += ` AND category = $${params.length + 1}`;
+    params.push(category);
   }
 
-  if (filters.length > 0) {
-    query = query.where(and(...filters));
-  }
+  let orderBy = 'ORDER BY is_pinned DESC, created_at DESC';
+  if (sort === 'popular') orderBy = 'ORDER BY likes DESC, views DESC';
+  else if (sort === 'comments') orderBy = 'ORDER BY comment_count DESC';
 
-  // Sorting
-  if (sort === 'popular') {
-    query = query.orderBy(desc(communityPosts.likes), desc(communityPosts.views));
-  } else if (sort === 'comments') {
-    query = query.orderBy(desc(communityPosts.comment_count));
-  } else {
-    query = query.orderBy(desc(communityPosts.is_pinned), desc(communityPosts.created_at));
-  }
+  const { rows: posts } = await pool.query(
+    `SELECT id, title, nickname, category, views, likes, comment_count, is_pinned, created_at
+     FROM community_posts ${where} ${orderBy}
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
 
-  const posts = await query.limit(Number(limit)).offset(offset);
-  
-  return res.json({ posts });
+  return res.json({ success: true, data: posts });
 }
 
-// Get single post with comments
-async function handleGetPost(db: any, req: VercelRequest, res: VercelResponse) {
+// ─── GET SINGLE POST ──────────────────────────────────────────────
+async function handleGetPost(pool: pg.Pool, req: VercelRequest, res: VercelResponse) {
   const { id } = req.query;
-  
-  if (!id) {
-    return res.status(400).json({ error: 'Post ID required' });
-  }
+  if (!id) return res.status(400).json({ error: 'Post ID required' });
 
-  // Get post and increment view count
-  const [post] = await db.select().from(communityPosts).where(eq(communityPosts.id, id as string));
-  
-  if (!post) {
-    return res.status(404).json({ error: 'Post not found' });
-  }
+  const { rows } = await pool.query('SELECT * FROM community_posts WHERE id = $1', [id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Post not found' });
 
-  // Increment view count
-  await db.update(communityPosts)
-    .set({ views: sql`${communityPosts.views} + 1` })
-    .where(eq(communityPosts.id, id as string));
+  // Increment views
+  await pool.query('UPDATE community_posts SET views = views + 1 WHERE id = $1', [id]).catch(() => {});
 
-  // Get comments (with nested structure)
-  const comments = await db.select().from(communityComments)
-    .where(eq(communityComments.post_id, id as string))
-    .orderBy(communityComments.created_at);
+  // Get comments
+  const { rows: comments } = await pool.query(
+    'SELECT * FROM community_comments WHERE post_id = $1 ORDER BY created_at ASC', [id]
+  );
 
-  // Organize comments into tree structure
-  const commentMap = new Map();
-  const topLevelComments: any[] = [];
-
-  comments.forEach((comment: any) => {
-    comment.replies = [];
-    commentMap.set(comment.id, comment);
+  // Tree structure
+  const map = new Map<string, any>();
+  const top: any[] = [];
+  comments.forEach(c => { c.replies = []; map.set(c.id, c); });
+  comments.forEach(c => {
+    if (c.parent_id && map.has(c.parent_id)) map.get(c.parent_id).replies.push(c);
+    else top.push(c);
   });
 
-  comments.forEach((comment: any) => {
-    if (comment.parent_id) {
-      const parent = commentMap.get(comment.parent_id);
-      if (parent) {
-        parent.replies.push(comment);
-      }
-    } else {
-      topLevelComments.push(comment);
-    }
-  });
-
-  return res.json({ 
-    post: { ...post, views: post.views + 1 }, 
-    comments: topLevelComments 
-  });
+  return res.json({ post: { ...rows[0], views: rows[0].views + 1 }, comments: top });
 }
 
-// Create new post
-async function handleCreatePost(db: any, req: VercelRequest, res: VercelResponse, ipHash: string) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+// ─── CREATE POST ─────────────────────────────────────────────────
+async function handleCreatePost(pool: pg.Pool, req: VercelRequest, res: VercelResponse, ipHash: string) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // DB 기반 rate limit — 시간당 5회
   const rl = await dbCheckRateLimit(req, 'community_post', 5, 3600);
-  if (!rl.allowed) return res.status(429).json({ error: rl.message || 'Rate limit exceeded.' });
+  if (!rl.allowed) return res.status(429).json({ error: rl.message });
 
-  const { nickname, password, title, content, category = '자유게시판', tags = [] } = req.body;
-
-  if (!nickname || !password || !title || !content) {
-    return res.status(400).json({ error: 'Required fields missing' });
-  }
+  const { nickname, password, title, content, category = '자유게시판', tags = [], city = 'dallas' } = req.body;
+  if (!nickname || !password || !title || !content) return res.status(400).json({ error: 'Required fields missing' });
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const sanitizedContent = sanitizeContent(content);
-
-  const [newPost] = await db.insert(communityPosts).values({
-    nickname: nickname.substring(0, 50),
-    password_hash: passwordHash,
-    title: title.substring(0, 200),
-    content: sanitizedContent,
-    category,
-    tags: Array.isArray(tags) ? tags.slice(0, 5) : [],
-    ip_hash: ipHash,
-  }).returning();
-
-  return res.json({ post: newPost });
+  const { rows } = await pool.query(
+    `INSERT INTO community_posts (id, nickname, password_hash, title, content, category, tags, city, ip_hash, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *`,
+    [nickname.slice(0,50), passwordHash, title.slice(0,200), sanitizeContent(content),
+     category, JSON.stringify(tags), city, ipHash]
+  );
+  return res.json({ post: rows[0] });
 }
 
-// Create comment
-async function handleCreateComment(db: any, req: VercelRequest, res: VercelResponse, ipHash: string) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+// ─── CREATE COMMENT ───────────────────────────────────────────────
+async function handleCreateComment(pool: pg.Pool, req: VercelRequest, res: VercelResponse, ipHash: string) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // DB 기반 rate limit — 시간당 20회
   const rlc = await dbCheckRateLimit(req, 'community_comment', 20, 3600);
-  if (!rlc.allowed) return res.status(429).json({ error: rlc.message || 'Rate limit exceeded.' });
+  if (!rlc.allowed) return res.status(429).json({ error: rlc.message });
 
   const { post_id, parent_id, nickname, password, content } = req.body;
-
-  if (!post_id || !nickname || !password || !content) {
-    return res.status(400).json({ error: 'Required fields missing' });
-  }
+  if (!post_id || !nickname || !password || !content) return res.status(400).json({ error: 'Required fields missing' });
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const sanitizedContent = sanitizeContent(content);
+  const { rows } = await pool.query(
+    `INSERT INTO community_comments (id, post_id, parent_id, nickname, password_hash, content, ip_hash, created_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW()) RETURNING *`,
+    [post_id, parent_id || null, nickname.slice(0,50), passwordHash, sanitizeContent(content), ipHash]
+  );
 
-  const [newComment] = await db.insert(communityComments).values({
-    post_id,
-    parent_id: parent_id || null,
-    nickname: nickname.substring(0, 50),
-    password_hash: passwordHash,
-    content: sanitizedContent,
-    ip_hash: ipHash,
-  }).returning();
-
-  // Update comment count
-  await db.update(communityPosts)
-    .set({ comment_count: sql`${communityPosts.comment_count} + 1` })
-    .where(eq(communityPosts.id, post_id));
-
-  return res.json({ comment: newComment });
+  await pool.query('UPDATE community_posts SET comment_count = comment_count + 1 WHERE id = $1', [post_id]).catch(() => {});
+  return res.json({ comment: rows[0] });
 }
 
-// Handle likes
-async function handleLike(db: any, req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+// ─── LIKE ─────────────────────────────────────────────────────────
+async function handleLike(pool: pg.Pool, req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { post_id, comment_id } = req.body;
 
   if (post_id) {
-    await db.update(communityPosts)
-      .set({ likes: sql`${communityPosts.likes} + 1` })
-      .where(eq(communityPosts.id, post_id));
+    await pool.query('UPDATE community_posts SET likes = likes + 1 WHERE id = $1', [post_id]);
   } else if (comment_id) {
-    await db.update(communityComments)
-      .set({ likes: sql`${communityComments.likes} + 1` })
-      .where(eq(communityComments.id, comment_id));
+    await pool.query('UPDATE community_comments SET likes = likes + 1 WHERE id = $1', [comment_id]);
   } else {
     return res.status(400).json({ error: 'post_id or comment_id required' });
   }
-
   return res.json({ success: true });
 }
 
-// Handle deletion
-async function handleDelete(db: any, req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+// ─── DELETE ───────────────────────────────────────────────────────
+async function handleDelete(pool: pg.Pool, req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { id, password, type } = req.body;
-
-  if (!id || !password || !type) {
-    return res.status(400).json({ error: 'Required fields missing' });
-  }
+  if (!id || !password || !type) return res.status(400).json({ error: 'Required fields missing' });
 
   if (type === 'post') {
-    const [post] = await db.select().from(communityPosts).where(eq(communityPosts.id, id));
-    
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
-
-    const isValid = await bcrypt.compare(password, post.password_hash);
-    if (!isValid) {
-      return res.status(403).json({ error: 'Invalid password' });
-    }
-
-    await db.delete(communityPosts).where(eq(communityPosts.id, id));
+    const { rows } = await pool.query('SELECT password_hash FROM community_posts WHERE id = $1', [id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Post not found' });
+    if (!await bcrypt.compare(password, rows[0].password_hash)) return res.status(403).json({ error: 'Invalid password' });
+    await pool.query('DELETE FROM community_posts WHERE id = $1', [id]);
   } else if (type === 'comment') {
-    const [comment] = await db.select().from(communityComments).where(eq(communityComments.id, id));
-    
-    if (!comment) {
-      return res.status(404).json({ error: 'Comment not found' });
-    }
-
-    const isValid = await bcrypt.compare(password, comment.password_hash);
-    if (!isValid) {
-      return res.status(403).json({ error: 'Invalid password' });
-    }
-
-    await db.delete(communityComments).where(eq(communityComments.id, id));
-    
-    // Update comment count
-    await db.update(communityPosts)
-      .set({ comment_count: sql`${communityPosts.comment_count} - 1` })
-      .where(eq(communityPosts.id, comment.post_id));
+    const { rows } = await pool.query('SELECT password_hash, post_id FROM community_comments WHERE id = $1', [id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Comment not found' });
+    if (!await bcrypt.compare(password, rows[0].password_hash)) return res.status(403).json({ error: 'Invalid password' });
+    await pool.query('DELETE FROM community_comments WHERE id = $1', [id]);
+    await pool.query('UPDATE community_posts SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = $1', [rows[0].post_id]).catch(() => {});
   }
-
   return res.json({ success: true });
 }
 
-// Get trending topics and keywords
-async function handleGetTrending(db: any, req: VercelRequest, res: VercelResponse) {
-  // For now, return some mock trending data
-  // In the future, this would be populated by a background job
-  const mockTrending = {
+// ─── TRENDING ────────────────────────────────────────────────────
+async function handleGetTrending(res: VercelResponse) {
+  return res.json({
     trending_topics: [
       { topic: '맛집 추천', count: 15, sentiment: 'positive' },
       { topic: '육아', count: 12, sentiment: 'neutral' },
@@ -327,55 +212,31 @@ async function handleGetTrending(db: any, req: VercelRequest, res: VercelRespons
       { keyword: '달라스', count: 25 },
       { keyword: '한식당', count: 18 },
       { keyword: '학교', count: 15 },
-      { keyword: '병원', count: 12 },
     ],
-    recommended_content: [],
-  };
-
-  return res.json(mockTrending);
+  });
 }
 
-// Search posts
-async function handleSearch(db: any, req: VercelRequest, res: VercelResponse) {
-  const { q: query, category, city, page = 1, limit = 20 } = req.query;
-  
-  if (!query) {
-    return res.status(400).json({ error: 'Search query required' });
-  }
+// ─── SEARCH ──────────────────────────────────────────────────────
+async function handleSearch(pool: pg.Pool, req: VercelRequest, res: VercelResponse) {
+  const { q, category, city, page = '1', limit = '20' } = req.query;
+  if (!q) return res.status(400).json({ error: 'Search query required' });
 
   const offset = (Number(page) - 1) * Number(limit);
-  
-  let searchQuery = db.select({
-    id: communityPosts.id,
-    title: communityPosts.title,
-    nickname: communityPosts.nickname,
-    category: communityPosts.category,
-    views: communityPosts.views,
-    likes: communityPosts.likes,
-    comment_count: communityPosts.comment_count,
-    created_at: communityPosts.created_at,
-  }).from(communityPosts);
+  const targetCity = (Array.isArray(city) ? city[0] : city as string) || 'dallas';
+  const params: any[] = [`%${q}%`, `%${q}%`, targetCity, Number(limit), offset];
 
-  // Search in title and content
-  const searchCondition = or(
-    ilike(communityPosts.title, `%${query}%`),
-    ilike(communityPosts.content, `%${query}%`)
-  );
-
-  // Default to dallas if no city specified (backward compatibility)
-  const targetCity2: string = (Array.isArray(city) ? city[0] : String(city)) || 'dallas';
-  const filters = [searchCondition, eq(communityPosts.city, targetCity2)];
-
+  let where = 'WHERE (title ILIKE $1 OR content ILIKE $2) AND city = $3';
   if (category && category !== 'all') {
-    filters.push(eq(communityPosts.category, category as string));
+    where += ` AND category = $${params.length + 1}`;
+    params.push(category);
   }
 
-  searchQuery = searchQuery.where(and(...filters));
+  const { rows } = await pool.query(
+    `SELECT id, title, nickname, category, views, likes, comment_count, created_at
+     FROM community_posts ${where}
+     ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
 
-  const posts = await searchQuery
-    .orderBy(desc(communityPosts.created_at))
-    .limit(Number(limit))
-    .offset(offset);
-
-  return res.json({ posts });
+  return res.json({ posts: rows, total: rows.length });
 }
