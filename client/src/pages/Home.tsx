@@ -1124,7 +1124,22 @@ export default function Home() {
                 
                 return (
                   <Link key={listing.id} href={`/marketplace/${listing.id}`}>
-                    <Card className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl">
+                    <Card className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl overflow-hidden">
+                      {/* 매물 사진 */}
+                      {listing.photos && listing.photos.length > 0 ? (
+                        <div className="w-full h-44 overflow-hidden bg-slate-100">
+                          <img
+                            src={listing.photos[0]}
+                            alt={listing.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                          <ShoppingBag className="w-10 h-10 text-slate-300" />
+                        </div>
+                      )}
                       <CardContent className="p-6">
                         <div className="flex items-center gap-2 mb-4 flex-wrap">
                           <Badge variant="outline" className="text-xs font-medium">
@@ -1305,6 +1320,106 @@ export default function Home() {
               </Link>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* 마트 픽 섹션 */}
+      <section className="py-20 bg-gradient-to-b from-white to-slate-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-3">
+              <ShoppingCart className="h-8 w-8 text-primary" />
+              <div>
+                <h2 className="text-xl md:text-4xl font-bold">마트 픽 🛒</h2>
+                <p className="text-slate-500 mt-1 text-sm md:text-base">DFW 인기 마트 신상 & 핫 아이템</p>
+              </div>
+            </div>
+            <Link href="/shopping">
+              <Button variant="ghost" className="gap-2">
+                전체 보기 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {/* 마트 카드 4개 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {[
+              {
+                id: "costco",
+                emoji: "🔴",
+                name: "코스트코",
+                tagline: "대용량 & 가성비",
+                color: "from-red-600 to-red-700",
+                items: ["비비고 만두", "커클랜드 코코넛오일", "치킨 브레스트"],
+              },
+              {
+                id: "traderjoes",
+                emoji: "🌿",
+                name: "트레이더 조",
+                tagline: "유니크 & 시즌 픽",
+                color: "from-orange-500 to-red-500",
+                items: ["오렌지 치킨", "베이글 시즈닝", "쿠키 버터"],
+              },
+              {
+                id: "centralmarket",
+                emoji: "🌟",
+                name: "센트럴 마켓",
+                tagline: "프리미엄 식재료",
+                color: "from-green-600 to-emerald-700",
+                items: ["부라타 치즈", "자연산 연어", "아사이베리"],
+              },
+              {
+                id: "heb",
+                emoji: "🤠",
+                name: "HEB",
+                tagline: "텍사스 로컬 신상",
+                color: "from-red-700 to-red-800",
+                items: ["타말레스", "텍사스 자몽", "크리미 아이스크림"],
+              },
+            ].map((store) => (
+              <Link key={store.id} href={`/shopping#${store.id}`}>
+                <div
+                  className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group h-full"
+                  onClick={() => {}}
+                >
+                  {/* 컬러 상단 */}
+                  <div className={`bg-gradient-to-br ${store.color} p-5 text-white`}>
+                    <div className="text-3xl mb-2">{store.emoji}</div>
+                    <div className="font-bold text-lg leading-tight">{store.name}</div>
+                    <div className="text-white/80 text-xs mt-1">{store.tagline}</div>
+                  </div>
+                  {/* 아이템 미리보기 */}
+                  <div className="bg-white p-4 border border-t-0 rounded-b-2xl">
+                    <ul className="space-y-1.5">
+                      {store.items.map((item, i) => (
+                        <li key={i} className="text-sm text-slate-700 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-3 flex items-center gap-1 text-xs text-primary font-medium group-hover:gap-2 transition-all">
+                      더 보기 <ArrowRight className="h-3 w-3" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Glass Cart 배지 */}
+          <div className="mt-5 flex items-center gap-2 justify-center">
+            <span className="text-xs text-slate-400">콘텐츠 제공:</span>
+            <a
+              href="https://youtube.com/channel/UCzikZfE3N5Lx3t9xWlh8wUg"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-red-600 hover:underline"
+            >
+              <Gift className="h-3 w-3" />
+              Glass Cart YouTube
+            </a>
+          </div>
         </div>
       </section>
 
