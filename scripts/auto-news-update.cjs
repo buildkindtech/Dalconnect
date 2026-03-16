@@ -401,22 +401,32 @@ async function insertIfNew(article) {
   }
 }
 
-// ─── Reddit 달라스 생활정보 수집 ────────────────────────────────
+// ─── Reddit 엄마/육아/생활정보 수집 ─────────────────────────────
+// 전략: ① 엄마/육아 전문 서브레딧 (hot) ② DFW 로컬 키워드 검색
 const REDDIT_SOURCES = [
-  { subreddit: 'Dallas', category: '달라스', label: 'r/Dallas' },
-  { subreddit: 'DFW', category: '달라스', label: 'r/DFW' },
-  { subreddit: 'FortWorth', category: '달라스', label: 'r/FortWorth' },
+  // 엄마/육아 전문
+  { type: 'hot',    subreddit: 'Mommit',       category: '육아',    label: 'r/Mommit',         minScore: 20 },
+  { type: 'hot',    subreddit: 'beyondthebump', category: '육아',    label: 'r/beyondthebump',  minScore: 15 },
+  { type: 'hot',    subreddit: 'Parenting',     category: '육아',    label: 'r/Parenting',      minScore: 20 },
+  { type: 'hot',    subreddit: 'toddlers',      category: '육아',    label: 'r/toddlers',       minScore: 15 },
+  // DFW 로컬 — 가족/아이 관련 키워드 검색
+  { type: 'search', subreddit: 'Dallas',        category: '달라스',  label: 'r/Dallas 이벤트',   q: 'kids events activities toddler playground school', minScore: 10 },
+  { type: 'search', subreddit: 'DFW',           category: '달라스',  label: 'r/DFW 가족',        q: 'family kids baby daycare school activities',       minScore: 5  },
 ];
 
-// 필터 아웃: 정치/범죄/논쟁성 글
-const REDDIT_SKIP = /\b(trump|biden|maga|democrat|republican|election|gerrymandering|ICE|arrest|murder|shooting|killed|victim|racist|sexist|fascist|nazi|abortion|gun|GOP|DNC|liberal|conservative|antifa|BLM|riot|protest|lawsuit|indicted|convicted|sentenced|defund|hate speech|pedo|politician|politician|cruelty|politician)\b/i;
+// 필터 아웃: 정치/범죄/논쟁 글
+const REDDIT_SKIP = /\b(trump|biden|maga|democrat|republican|election|ICE|arrest|murder|shooting|killed|victim|racist|fascist|nazi|abortion|gun|GOP|DNC|antifa|BLM|riot|protest|lawsuit|indicted|convicted|defund|hate speech|pedo|cruelty)\b/i;
 
 async function fetchRedditPosts() {
   const allItems = [];
   for (const src of REDDIT_SOURCES) {
     try {
       console.log(`\n🤖 Reddit ${src.label}...`);
-      const res = await fetch(`https://www.reddit.com/r/${src.subreddit}/hot.json?limit=25`, {
+      const url = src.type === 'search'
+        ? `https://www.reddit.com/r/${src.subreddit}/search.json?q=${encodeURIComponent(src.q)}&sort=new&restrict_sr=1&limit=20`
+        : `https://www.reddit.com/r/${src.subreddit}/hot.json?limit=25`;
+
+      const res = await fetch(url, {
         headers: { 'User-Agent': 'DalKonnect/1.0 (+https://dalkonnect.com)' },
         signal: AbortSignal.timeout(10000),
       });
@@ -426,28 +436,27 @@ async function fetchRedditPosts() {
 
       let count = 0;
       for (const p of posts) {
-        // 필터: 낮은 점수, 정치/논쟁 글, 너무 짧은 글 스킵
-        if (p.score < 5) continue;
+        if (p.score < src.minScore) continue;
         if (REDDIT_SKIP.test(p.title) || REDDIT_SKIP.test(p.selftext || '')) continue;
         if (p.over_18) continue;
 
         const title = p.title.trim();
-        const content = (p.selftext || '').trim().slice(0, 500) || `${title} — r/${p.subreddit} 커뮤니티 게시글 (댓글 ${p.num_comments}개, 추천 ${p.score})`;
+        const content = (p.selftext || '').trim().slice(0, 500) ||
+          `${title} — ${src.label} 커뮤니티 게시글 (댓글 ${p.num_comments}개, 추천 ${p.score})`;
         const thumbnail = p.thumbnail?.startsWith('http') ? p.thumbnail : null;
-        const url = `https://www.reddit.com${p.permalink}`;
 
         allItems.push({
           title,
           content,
-          url,
+          url: `https://www.reddit.com${p.permalink}`,
           thumbnail_url: thumbnail,
           source: src.label,
           category: src.category,
-          city: 'dallas',
-          translate: !/[\uAC00-\uD7AF]/.test(title), // 한글 없으면 번역
+          city: src.subreddit === 'Dallas' || src.subreddit === 'DFW' ? 'dallas' : null,
+          translate: !/[\uAC00-\uD7AF]/.test(title),
           published_at: new Date(p.created_utc * 1000).toISOString(),
         });
-        if (++count >= 8) break; // 서브레딧당 최대 8개
+        if (++count >= 6) break;
       }
       console.log(`  ${count}개 수집`);
       await new Promise(r => setTimeout(r, 800));
