@@ -710,6 +710,11 @@ export default function Home() {
                 </Card>
               ))}
             </div>
+          ) : recentNews.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <div className="text-4xl mb-3">📰</div>
+              <p>뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
               {recentNews.map((news) => {

@@ -95,14 +95,14 @@ function SideAdStrip({ biz, side }: { biz: any; side: 'left' | 'right' }) {
             </div>
             <div className="absolute bottom-0 p-2.5">
               <p className="text-white text-xs font-bold leading-tight line-clamp-2">{name}</p>
-              <p className="text-white/70 text-[10px] mt-0.5">⭐ {parseFloat(biz.rating || '0').toFixed(1)} · {biz.category}</p>
+              <p className="text-white/70 text-[10px] mt-0.5">⭐ {Number(biz.rating || 0).toFixed(1)} · {biz.category}</p>
             </div>
           </div>
         ) : (
           <div className="h-[200px] bg-gradient-to-br from-blue-600 to-indigo-700 flex flex-col items-center justify-center p-3 gap-2">
             <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-bold">광고</span>
             <p className="text-white text-xs font-bold text-center leading-tight">{name}</p>
-            <p className="text-white/70 text-[10px]">⭐ {parseFloat(biz.rating || '0').toFixed(1)}</p>
+            <p className="text-white/70 text-[10px]">⭐ {Number(biz.rating || 0).toFixed(1)}</p>
           </div>
         )}
       </div>

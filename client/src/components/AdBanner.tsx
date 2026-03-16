@@ -21,7 +21,7 @@ interface Business {
 // rating이 string으로 내려올 수 있음 (DB varchar) → number로 변환
 function toRating(r?: number | string): string {
   if (r == null) return "0.0";
-  const n = typeof r === "string" ? parseFloat(r) : r;
+  const n = Number(r);
   return isNaN(n) ? "0.0" : n.toFixed(1);
 }
 

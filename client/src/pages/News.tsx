@@ -199,7 +199,7 @@ export default function News() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const categoryTabsRef = useRef<HTMLDivElement>(null);
   
-  const { data: allNewsItems, isLoading } = useNews(
+  const { data: allNewsItems, isLoading, error: newsError } = useNews(
     selectedCategory === 'all' ? undefined : { category: selectedCategory }
   );
 
@@ -334,7 +334,7 @@ export default function News() {
             )}
 
             {/* 헤드라인 아래 광고 배너 */}
-            {featuredBusinesses.length > 0 && (
+            {allFeaturedNews.length > 0 && (
               <div className="mb-8">
                 <AdBanner size="leaderboard" businesses={newsLeaderboard} />
               </div>
@@ -365,7 +365,7 @@ export default function News() {
                       </div>
                     </div>
                     {/* 2섹션마다 인피드 3-카드 광고 스트립 */}
-                    {(sectionIdx + 1) % 2 === 0 && featuredBusinesses.length > 0 && (
+                    {(sectionIdx + 1) % 2 === 0 && allFeaturedNews.length > 0 && (
                       <AdBanner size="infeed-strip" businesses={newsInfeed} />
                     )}
                   </>
@@ -377,7 +377,18 @@ export default function News() {
           /* ===== FILTERED VIEW ===== */
           <div>
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
-              {newsItems.length > 0 ? (
+              {isLoading ? (
+                <div className="p-12 text-center text-slate-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <p>뉴스를 불러오는 중...</p>
+                </div>
+              ) : newsError ? (
+                <div className="p-12 text-center text-slate-500">
+                  <div className="text-4xl mb-4">⚠️</div>
+                  <p className="text-lg font-ko">뉴스를 불러오지 못했습니다</p>
+                  <p className="text-sm text-slate-400 mt-2">잠시 후 다시 시도해주세요</p>
+                </div>
+              ) : newsItems.length > 0 ? (
                 newsItems.map((news: NewsItem) => (
                   <NewsListItem key={news.id} news={news} />
                 ))
@@ -387,6 +398,7 @@ export default function News() {
                   <p className="text-lg font-ko">
                     "{CATEGORIES.find(c => c.id === selectedCategory)?.label}" 뉴스가 아직 없습니다
                   </p>
+                  <p className="text-sm text-slate-400 mt-2">전체 뉴스에서 확인해보세요</p>
                 </div>
               )}
             </div>
