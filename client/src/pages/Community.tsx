@@ -157,8 +157,8 @@ export default function Community() {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
                   <p className="mt-4 text-gray-600">게시글을 불러오는 중...</p>
                 </div>
-              ) : postsData?.posts?.length > 0 ? (
-                postsData.posts.map((post: CommunityPost) => (
+              ) : ((postsData?.data || postsData?.posts) as CommunityPost[])?.length > 0 ? (
+                ((postsData?.data || postsData?.posts) as CommunityPost[]).map((post: CommunityPost) => (
                   <Link key={post.id} href={`/community/${post.id}`}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer">
                       <CardContent className="p-4">
@@ -210,7 +210,7 @@ export default function Community() {
             </div>
 
             {/* Pagination */}
-            {postsData?.posts?.length === 20 && (
+            {((postsData?.data || postsData?.posts) as CommunityPost[])?.length === 20 && (
               <div className="mt-6 flex justify-center">
                 <Button
                   variant="outline"
@@ -240,7 +240,7 @@ export default function Community() {
                   실시간 인기글 TOP 5
                 </h3>
                 <div className="space-y-3">
-                  {popularPosts?.posts?.slice(0, 5).map((post: CommunityPost, index: number) => (
+                  {((popularPosts?.data || popularPosts?.posts) as CommunityPost[])?.slice(0, 5).map((post: CommunityPost, index: number) => (
                     <Link key={post.id} href={`/community/${post.id}`}>
                       <div className="flex items-start space-x-2 p-2 rounded hover:bg-gray-50 cursor-pointer">
                         <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 text-xs font-bold rounded-full flex items-center justify-center">
