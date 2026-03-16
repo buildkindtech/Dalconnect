@@ -531,7 +531,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Post not found" });
       }
       // Also fetch comments if table exists
-      let comments = [];
+      let comments: any[] = [];
       try {
         const commentResult = await db.execute(
           sql`SELECT * FROM community_comments WHERE post_id = ${id} ORDER BY created_at ASC`
@@ -558,10 +558,8 @@ export async function registerRoutes(
           return res.status(400).json({ success: false, message: '필수 항목 누락' });
         }
         const id = `cmt_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-        const bcrypt = await import('bcrypt').catch(() => null);
-        const passwordHash = bcrypt
-          ? await bcrypt.default.hash(password, 10)
-          : Buffer.from(password).toString('base64');
+        
+        const passwordHash = require('crypto').createHash('sha256').update(String(password)).digest('hex');
 
         // community_comments 테이블 없으면 생성
         await db.execute(sql`
@@ -618,11 +616,10 @@ export async function registerRoutes(
         if (!result.rows?.length) {
           return res.status(404).json({ success: false, message: '게시글 없음' });
         }
-        const bcrypt = await import('bcrypt').catch(() => null);
+        
         const stored = result.rows[0].password_hash as string;
-        const valid = bcrypt
-          ? await bcrypt.default.compare(password, stored).catch(() => password === stored)
-          : Buffer.from(password).toString('base64') === stored || password === stored;
+        const hashedInput = require('crypto').createHash('sha256').update(String(password)).digest('hex');
+        const valid = hashedInput === stored || password === stored;
         if (!valid) return res.status(403).json({ success: false, message: '비밀번호 오류' });
         if (type === 'post') {
           await db.execute(sql`DELETE FROM community_posts WHERE id = ${id}`);
@@ -639,10 +636,8 @@ export async function registerRoutes(
           return res.status(400).json({ success: false, message: '필수 항목 누락' });
         }
         const id = `post_user_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-        const bcrypt = await import('bcrypt').catch(() => null);
-        const passwordHash = bcrypt
-          ? await bcrypt.default.hash(password, 10)
-          : Buffer.from(password).toString('base64');
+        
+        const passwordHash = require('crypto').createHash('sha256').update(String(password)).digest('hex');
         const tagJson = Array.isArray(tags) ? JSON.stringify(tags) : (tags || '[]');
         await db.execute(sql`
           INSERT INTO community_posts (id, nickname, password_hash, title, content, category, tags, views, likes, comment_count, is_pinned, created_at, updated_at, city)
@@ -1045,6 +1040,25 @@ Sitemap: https://dalkonnect.com/sitemap.xml`);
 </html>`);
     } catch (e) {
       next();
+    }
+  });
+
+  // ─── Mart Videos API ──────────────────────────────────────────────
+  app.get('/api/mart-videos', async (req: any, res: any) => {
+    try {
+      const store = (req.query.store as string) || 'costco';
+      const limit = parseInt(req.query.limit as string) || 6;
+      const result = await (db as any).execute(
+        sql.raw(`SELECT id, video_id, title, title_clean, store, channel_name, thumbnail_url, published_at::date as date, youtube_url
+                 FROM mart_videos
+                 WHERE store = '${store.replace(/'/g, "''")}'
+                 ORDER BY published_at DESC
+                 LIMIT ${limit}`)
+      );
+      res.json(result.rows || result);
+    } catch (err: any) {
+      // 테이블 없으면 빈 배열 반환 (첫 배포 시)
+      res.json([]);
     }
   });
 

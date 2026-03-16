@@ -30,7 +30,7 @@ const SORT_OPTIONS = [
 
 // ── FilterSidebar must live OUTSIDE Businesses to prevent remount on re-render (IME fix) ──
 interface FilterSidebarProps {
-  searchInputRef: React.RefObject<HTMLInputElement>;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
   composingRef: React.MutableRefObject<boolean>;
   defaultSearchValue: string;
   onSearchChange: (val: string) => void;

@@ -143,9 +143,9 @@ export default function BusinessDetail() {
     kakao.Share.sendDefault({
       objectType: 'location',
       address: business.address || '달라스, TX',
-      addressTitle: business.name,
+      addressTitle: business.name_ko || business.name_en,
       content: {
-        title: business.name,
+        title: business.name_ko || business.name_en,
         description: `${business.category || ''} · ${business.city || 'Dallas'} | DalKonnect 달라스 한인 업소록`,
         imageUrl: business.photos?.[0] || 'https://dalkonnect.com/logo.png',
         link: {

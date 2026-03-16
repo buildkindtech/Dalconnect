@@ -148,9 +148,9 @@ export default function CommunityPost() {
     },
     onSuccess: (_, variables) => {
       const targetId = variables.post_id || variables.comment_id || '';
-      const newLiked = new Set([...likedIds, targetId]);
+      const newLiked = new Set(Array.from(likedIds).concat(targetId));
       setLikedIds(newLiked);
-      localStorage.setItem('dk_liked', JSON.stringify([...newLiked]));
+      localStorage.setItem('dk_liked', JSON.stringify(Array.from(newLiked)));
       queryClient.invalidateQueries({ queryKey: ['community-post', postId] });
     },
   });
