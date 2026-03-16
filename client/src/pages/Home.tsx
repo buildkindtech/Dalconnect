@@ -12,6 +12,7 @@ import { getBlogCategoryStyle, getNewsCategoryStyle } from "@/lib/blogNewsDefaul
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import BusinessCard from "@/components/BusinessCard";
 import * as Icons from "lucide-react";
+import { AdBanner } from "@/components/AdBanner";
 
 const CATEGORIES = [
   { id: '식당', name: '식당', icon: UtensilsCrossed, color: 'bg-red-500' },
@@ -707,6 +708,15 @@ export default function Home() {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+      )}
+
+      {/* 광고 배너 — 뉴스 섹션 바로 위 */}
+      {featured.length > 0 && (
+        <section className="py-4 bg-white border-t border-slate-100">
+          <div className="container mx-auto px-4">
+            <AdBanner size="leaderboard" businesses={featured} />
           </div>
         </section>
       )}

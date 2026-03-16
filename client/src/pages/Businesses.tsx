@@ -12,6 +12,7 @@ import { useBusinesses, useCategories } from "@/lib/api";
 import BusinessCard from "@/components/BusinessCard";
 import { getCategoryColor, getCategoryIcon, hasValidImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import * as Icons from "lucide-react";
+import { AdBanner, useFeaturedBusinesses } from "@/components/AdBanner";
 
 const CITIES = [
   'Dallas', 'Plano', 'Carrollton', 'Irving', 'Richardson', 'Frisco',
@@ -143,6 +144,22 @@ const FilterSidebar = ({
     </div>
   </div>
 );
+
+// 사이드바 광고 컴포넌트
+function SidebarAds({ selectedCategory }: { selectedCategory: string }) {
+  const featuredBusinesses = useFeaturedBusinesses(12);
+  if (featuredBusinesses.length === 0) return null;
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <AdBanner
+        size="rectangle"
+        businesses={featuredBusinesses}
+        category={selectedCategory || undefined}
+        label="✨ 추천 업체"
+      />
+    </div>
+  );
+}
 
 export default function Businesses() {
   const [, setLocation] = useLocation();
@@ -348,20 +365,25 @@ export default function Businesses() {
         <div className="flex gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0">
-            <div className="sticky top-24 bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <SlidersHorizontal className="h-5 w-5 text-primary" />
-                필터
-              </h2>
-              <FilterSidebar
-                searchInputRef={searchInputRef} composingRef={composingRef}
-                defaultSearchValue={searchQuery} onSearchChange={setSearchQuery}
-                hasActiveFilters={!!hasActiveFilters} activeFilterCount={activeFilterCount}
-                selectedCategory={selectedCategory} selectedCity={selectedCity}
-                debouncedSearch={debouncedSearch} onRemoveFilter={handleRemoveFilter}
-                onClearAll={clearAllFilters} categoriesData={categoriesData}
-                onCategoryClick={handleCategoryClick} onCityClick={handleCityClick}
-              />
+            <div className="sticky top-24 space-y-4">
+              {/* 필터 */}
+              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                  <SlidersHorizontal className="h-5 w-5 text-primary" />
+                  필터
+                </h2>
+                <FilterSidebar
+                  searchInputRef={searchInputRef} composingRef={composingRef}
+                  defaultSearchValue={searchQuery} onSearchChange={setSearchQuery}
+                  hasActiveFilters={!!hasActiveFilters} activeFilterCount={activeFilterCount}
+                  selectedCategory={selectedCategory} selectedCity={selectedCity}
+                  debouncedSearch={debouncedSearch} onRemoveFilter={handleRemoveFilter}
+                  onClearAll={clearAllFilters} categoriesData={categoriesData}
+                  onCategoryClick={handleCategoryClick} onCityClick={handleCityClick}
+                />
+              </div>
+              {/* 광고 사이드바 */}
+              <SidebarAds selectedCategory={selectedCategory} />
             </div>
           </aside>
 

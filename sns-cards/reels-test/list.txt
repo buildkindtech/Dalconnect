@@ -1,0 +1,11 @@
+file '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/sns-cards/reels-test/slide-01-hook.png'
+duration 3
+file '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/sns-cards/reels-test/slide-02-galveston.png'
+duration 3
+file '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/sns-cards/reels-test/slide-03-austin-waco.png'
+duration 3
+file '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/sns-cards/reels-test/slide-04-dallas.png'
+duration 3
+file '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/sns-cards/reels-test/slide-05-cta.png'
+duration 3
+file '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/sns-cards/reels-test/slide-05-cta.png'

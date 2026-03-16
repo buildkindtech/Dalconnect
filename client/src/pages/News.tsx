@@ -8,6 +8,7 @@ import { useState, useRef } from "react";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { NewsSubmissionDialog } from "@/components/NewsSubmissionDialog";
 import { getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
+import { AdBanner, useFeaturedBusinesses } from "@/components/AdBanner";
 
 // 관심도 순 카테고리 정렬
 const CATEGORIES = [
@@ -256,6 +257,8 @@ export default function News() {
 
   const headlineIds = new Set(headlines.map(h => h.id));
 
+  const featuredBusinesses = useFeaturedBusinesses(12);
+
   return (
     <div className="bg-slate-50 min-h-screen py-8 md:py-12">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -327,29 +330,48 @@ export default function News() {
               </div>
             )}
 
+            {/* 헤드라인 아래 광고 배너 */}
+            {featuredBusinesses.length > 0 && (
+              <div className="mb-8">
+                <AdBanner size="leaderboard" businesses={featuredBusinesses} />
+              </div>
+            )}
+
             {/* Category Sections */}
             {Object.entries(groupedByCategory)
               .sort(([a], [b]) => (CATEGORY_PRIORITY[a] || 99) - (CATEGORY_PRIORITY[b] || 99))
-              .map(([catId, items]) => {
+              .map(([catId, items], sectionIdx) => {
                 const cat = CATEGORIES.find(c => c.id === catId);
                 if (!cat) return null;
                 const displayItems = items.filter((n: NewsItem) => !headlineIds.has(n.id)).slice(0, 5);
                 if (displayItems.length === 0) return null;
                 
                 return (
-                  <div key={catId} className="mb-8">
-                    <SectionHeader 
-                      emoji={cat.emoji} 
-                      title={cat.label} 
-                      count={items.length}
-                      onViewAll={() => handleCategoryChange(catId)}
-                    />
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                      {displayItems.map((news: NewsItem) => (
-                        <NewsListItem key={news.id} news={news} />
-                      ))}
+                  <>
+                    <div key={catId} className="mb-8">
+                      <SectionHeader 
+                        emoji={cat.emoji} 
+                        title={cat.label} 
+                        count={items.length}
+                        onViewAll={() => handleCategoryChange(catId)}
+                      />
+                      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        {displayItems.map((news: NewsItem) => (
+                          <NewsListItem key={news.id} news={news} />
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                    {/* 3섹션마다 인피드 광고 */}
+                    {(sectionIdx + 1) % 3 === 0 && featuredBusinesses.length > 0 && (
+                      <div className="mb-8">
+                        <AdBanner
+                          size="inline"
+                          businesses={featuredBusinesses}
+                          className="mb-2"
+                        />
+                      </div>
+                    )}
+                  </>
                 );
               })
             }

@@ -14,7 +14,7 @@ function ScrollToTop() {
     window.scrollTo({ top: 0, behavior: 'instant' });
     // GA4 SPA 페이지뷰 전송
     if (typeof window.gtag === 'function') {
-      window.gtag('config', 'G-KSNNMJTP4C', { page_path: location });
+      window.gtag('config', 'G-P18WWHS2MF', { page_path: location });
     }
   }, [location]);
   return null;
