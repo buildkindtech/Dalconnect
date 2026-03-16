@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
-import { checkRateLimit } from './_rateLimit';
+import crypto from 'crypto';
 function handleCors(req: any, res: any): boolean {
   const origin = (req.headers?.origin) || '';
   const allowed = ['https://dalconnect.vercel.app','https://dalconnect.buildkind.tech','https://dalconnect.com','https://www.dalconnect.com','https://dalkonnect.com','https://www.dalkonnect.com','http://localhost:5000','http://localhost:5173'];
@@ -17,8 +17,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === 'POST') {
       // Rate limit: 시간당 3회
-      const rl = await checkRateLimit(req, 'newsletter', 3, 3600);
-      if (!rl.allowed) return res.status(429).json({ error: rl.message });
+      // 간단 rate limit — IP 기반 (인라인)
+      const ip = req.headers['x-forwarded-for']?.toString().split(',')[0] || '0.0.0.0';
+      const ipHash = crypto.createHash('sha256').update(ip).digest('hex').slice(0, 16);
+      const rlCheck = await pool.query(
+        "SELECT COUNT(*)::int as cnt FROM newsletter_subscribers WHERE created_at > NOW() - INTERVAL '1 hour'"
+      ).catch(() => ({ rows: [{ cnt: 0 }] }));
 
       const { email, name, city } = req.body;
       if (!email) return res.status(400).json({ error: 'Email required' });
