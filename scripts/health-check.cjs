@@ -157,15 +157,51 @@ async function testBusinesses() {
 async function testCommunity() {
   console.log('\n💬 커뮤니티 테스트...');
   try {
-    const data = await fetchJSON('/api/community?limit=5');
+    const data = await fetchJSON('/api/community?action=posts&limit=5');
     const posts = data.data || data.posts || data;
     if (Array.isArray(posts) && posts.length > 0) {
-      pass('커뮤니티 API', `${posts.length}개 포스트`);
+      pass('커뮤니티 목록 API', `${posts.length}개 포스트`);
+      // 첫 번째 포스트 상세도 확인
+      const firstId = posts[0].id;
+      try {
+        const detail = await fetchJSON(`/api/community?action=post&id=${firstId}`);
+        if (detail.post) pass('커뮤니티 상세 API', `id=${firstId.slice(0,8)}...`);
+        else fail('커뮤니티 상세 API', '응답에 post 없음');
+      } catch(e2) {
+        fail('커뮤니티 상세 API', e2.message);
+      }
     } else {
       warn('커뮤니티 API', '포스트 없음 (시드 필요할 수 있음)');
     }
   } catch (e) {
     fail('커뮤니티 API', e.message);
+  }
+}
+
+// ──────────────────────────────────────────────
+// 4b. 매물 테스트
+// ──────────────────────────────────────────────
+async function testListings() {
+  console.log('\n🛍️ 매물 테스트...');
+  try {
+    const data = await fetchJSON('/api/listings?limit=3');
+    const items = data.items || data.listings || data;
+    if (Array.isArray(items) && items.length > 0) {
+      pass('매물 목록 API', `${items.length}개`);
+      // 매물 상세 클릭 테스트
+      const firstId = items[0].id;
+      try {
+        const detail = await fetchJSON(`/api/listings/${firstId}`);
+        if (detail.id) pass('매물 상세 API', `id=${firstId.slice(0,15)}...`);
+        else fail('매물 상세 API', '응답에 id 없음');
+      } catch(e2) {
+        fail('매물 상세 API', e2.message);
+      }
+    } else {
+      warn('매물 API', '매물 없음');
+    }
+  } catch (e) {
+    fail('매물 API', e.message);
   }
 }
 
@@ -203,6 +239,7 @@ async function main() {
   await testNews();
   await testBusinesses();
   await testCommunity();
+  await testListings();
   await testSearch();
 
   const total = passed + failed;
