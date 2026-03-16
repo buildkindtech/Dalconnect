@@ -29,12 +29,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Single news detail
       if (id) {
-        const result = await pool.query('SELECT * FROM news WHERE id = $1', [id]);
-        await pool.end();
-        if (result.rows.length === 0) {
-          return res.status(404).json({ error: "News not found" });
+        try {
+          const result = await pool.query('SELECT * FROM news WHERE id = $1', [id]);
+          await pool.end();
+          if (result.rows.length === 0) {
+            return res.status(404).json({ error: "News not found" });
+          }
+          return res.status(200).json(result.rows[0]);
+        } catch (dbErr: any) {
+          console.error('single news fetch error:', dbErr?.message);
+          return res.status(500).json({ error: "일시적인 서버 오류입니다. 잠시 후 다시 시도해주세요." });
         }
-        return res.status(200).json(result.rows[0]);
       }
       
       let query = 'SELECT * FROM news WHERE 1=1';

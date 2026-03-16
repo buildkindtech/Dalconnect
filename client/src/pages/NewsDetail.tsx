@@ -64,7 +64,7 @@ export default function NewsDetail() {
     enabled: !!newsItem?.category
   });
 
-  if (isLoading) {
+  if (isLoading || (!newsItem && !error)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">로딩 중...</p>
@@ -74,8 +74,10 @@ export default function NewsDetail() {
 
   if (error || !newsItem) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold mb-4">뉴스를 찾을 수 없습니다</h1>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="text-5xl">📰</div>
+        <h1 className="text-2xl font-bold">기사를 불러올 수 없습니다</h1>
+        <p className="text-muted-foreground text-sm">일시적인 오류이거나 삭제된 기사입니다.</p>
         <Link href="/news">
           <Button>뉴스 목록으로 돌아가기</Button>
         </Link>
