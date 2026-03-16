@@ -8,7 +8,27 @@ import { useQuery } from "@tanstack/react-query";
 
 // Helper function to split content into paragraphs
 function splitIntoParagraphs(content: string): string[] {
-  return content.split('\n\n').filter(paragraph => paragraph.trim().length > 0);
+  // 먼저 \n\n으로 분리 시도
+  const byNewline = content.split('\n\n').filter(p => p.trim().length > 0);
+  
+  // 이미 잘 나뉘어 있으면 그대로 사용
+  if (byNewline.length >= 3) return byNewline.map(p => p.replace(/\n/g, ' ').trim());
+  
+  // 아니면 문장 단위로 스마트 분리 (3~5문장마다 단락)
+  const sentences = content
+    .replace(/\n/g, ' ')
+    .split(/(?<=[.!?…。])\s+(?=[가-힣A-Z"'《【『])/g)
+    .filter(s => s.trim().length > 10);
+  
+  if (sentences.length <= 2) return [content.replace(/\n/g, ' ').trim()];
+  
+  const paragraphs: string[] = [];
+  const chunkSize = 3; // 3문장씩 묶기
+  for (let i = 0; i < sentences.length; i += chunkSize) {
+    const chunk = sentences.slice(i, i + chunkSize).join(' ').trim();
+    if (chunk) paragraphs.push(chunk);
+  }
+  return paragraphs;
 }
 
 // Helper function to calculate reading time
@@ -63,9 +83,9 @@ export default function NewsDetail() {
     );
   }
 
-  const metaTitle = news?.title ? `${news.title} | DalKonnect` : "달라스 한인 뉴스 | DalKonnect";
-  const metaDesc = news?.content ? news.content.slice(0, 160) : "달라스 DFW 한인 커뮤니티 최신 뉴스";
-  const metaImage = news?.thumbnail_url || "https://dalkonnect.com/og-image.png";
+  const metaTitle = newsItem?.title ? `${newsItem.title} | DalKonnect` : "달라스 한인 뉴스 | DalKonnect";
+  const metaDesc = newsItem?.content ? newsItem.content.slice(0, 160) : "달라스 DFW 한인 커뮤니티 최신 뉴스";
+  const metaImage = newsItem?.thumbnail_url || "https://dalkonnect.com/og-image.png";
 
   return (
     <>
@@ -76,7 +96,7 @@ export default function NewsDetail() {
       <meta property="og:description" content={metaDesc} />
       <meta property="og:image" content={metaImage} />
       <meta property="og:type" content="article" />
-      <link rel="canonical" href={`https://dalkonnect.com/news/${news?.id}`} />
+      <link rel="canonical" href={`https://dalkonnect.com/news/${newsItem?.id}`} />
     </Helmet>
     <div className="bg-slate-50 min-h-screen py-12">
       <div className="container mx-auto px-4 max-w-4xl">

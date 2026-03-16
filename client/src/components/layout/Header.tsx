@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Search, Menu, X, ChevronDown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +29,15 @@ export default function Header() {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // 사이트 통계
+  const [stats, setStats] = useState<{ totalBusinesses: number; totalPosts: number; totalViews: number; todayViews: number } | null>(null);
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(d => { if (d && typeof d.totalBusinesses === 'number') setStats(d); })
+      .catch(() => {});
+  }, []);
 
   const handleCityClick = (city: City) => {
     if (city.active) {
@@ -121,7 +130,32 @@ export default function Header() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* 사이트 실시간 통계 */}
+            {stats && (
+              <div className="hidden xl:flex items-center gap-2.5 text-[11px] text-muted-foreground border-l border-r border-slate-200 px-3 py-1">
+                <span className="flex items-center gap-1">
+                  <span className="text-blue-500 font-bold">{stats.totalBusinesses.toLocaleString()}</span>
+                  <span>업체</span>
+                </span>
+                <span className="text-slate-300">·</span>
+                <span className="flex items-center gap-1">
+                  <span className="text-purple-500 font-bold">{stats.totalPosts.toLocaleString()}</span>
+                  <span>글</span>
+                </span>
+                <span className="text-slate-300">·</span>
+                <span className="flex items-center gap-1">
+                  <span className="text-orange-500 font-bold">{stats.totalViews.toLocaleString()}</span>
+                  <span>총방문</span>
+                </span>
+                <span className="text-slate-300">·</span>
+                <span className="flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className="font-bold text-green-600">{stats.todayViews.toLocaleString()}</span>
+                  <span>오늘</span>
+                </span>
+              </div>
+            )}
             <Link href="/register-business">
               <Button className="hidden xl:flex bg-primary hover:bg-primary/90 rounded-full">
                 업체 등록

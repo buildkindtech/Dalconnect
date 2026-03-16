@@ -73,6 +73,23 @@ const Charts: React.FC = () => {
     fetchChartData(activeTab);
   }, [activeTab]);
 
+  // Pre-load sidebar data (top-1 for netflix, music, movie)
+  useEffect(() => {
+    const sidebarTypes = ['netflix', 'music', 'movie'];
+    sidebarTypes.forEach(type => {
+      if (!chartsData[type]) {
+        fetch(`/api/charts?type=${type}&limit=5`)
+          .then(r => r.json())
+          .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+              setChartsData(prev => ({ ...prev, [type]: data }));
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  }, []);
+
   const getRankStyle = (rank: number) => {
     switch (rank) {
       case 1:
@@ -289,33 +306,47 @@ const Charts: React.FC = () => {
                   지금 뜨는 키워드
                 </h3>
                 <div className="space-y-2">
-                  {['로맨틱 코미디', '액션 스릴러', 'K-POP', '넷플릭스 오리지널', '사극'].map((keyword, index) => (
+                  {[
+                    { label: '로맨틱 코미디', pct: 53 },
+                    { label: '액션 스릴러', pct: 41 },
+                    { label: 'K-POP', pct: 12 },
+                    { label: '넷플릭스 오리지널', pct: 50 },
+                    { label: '사극', pct: 27 },
+                  ].map((kw, index) => (
                     <div key={index} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">{keyword}</span>
-                      <span className="text-xs text-green-600 font-medium">+{Math.floor(Math.random() * 50 + 10)}%</span>
+                      <span className="text-sm text-gray-700">{kw.label}</span>
+                      <span className="text-xs text-green-600 font-medium">+{kw.pct}%</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* This Week's New Releases */}
+              {/* This Week's New Releases — pulled from live chart #1s */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                   <Star className="w-5 h-5 mr-2 text-yellow-500" />
-                  이번주 신작
+                  이번주 인기 1위
                 </h3>
                 <div className="space-y-3">
-                  <div className="border-l-4 border-blue-500 pl-3">
-                    <p className="font-medium text-sm">캐셔로</p>
-                    <p className="text-xs text-gray-500">Netflix 신작 드라마</p>
+                  <div className="border-l-4 border-purple-500 pl-3">
+                    <p className="font-medium text-sm">
+                      {chartsData.netflix?.[0]?.title_ko || '신이랑 법률사무소'}
+                    </p>
+                    <p className="text-xs text-gray-500">넷플릭스 1위</p>
                   </div>
                   <div className="border-l-4 border-green-500 pl-3">
-                    <p className="font-medium text-sm">404 (New Era)</p>
-                    <p className="text-xs text-gray-500">키키 신곡 발매</p>
+                    <p className="font-medium text-sm">
+                      {chartsData.music?.[0]?.artist
+                        ? `${chartsData.music[0].artist} — ${chartsData.music[0].title_ko}`
+                        : chartsData.music?.[0]?.title_ko || '404 (New Era)'}
+                    </p>
+                    <p className="text-xs text-gray-500">음악 차트 1위</p>
                   </div>
-                  <div className="border-l-4 border-purple-500 pl-3">
-                    <p className="font-medium text-sm">왕과 사는 남자</p>
-                    <p className="text-xs text-gray-500">극장가 화제작</p>
+                  <div className="border-l-4 border-blue-500 pl-3">
+                    <p className="font-medium text-sm">
+                      {chartsData.movie?.[0]?.title_ko || '왕과 사는 남자'}
+                    </p>
+                    <p className="text-xs text-gray-500">박스오피스 1위</p>
                   </div>
                 </div>
               </div>

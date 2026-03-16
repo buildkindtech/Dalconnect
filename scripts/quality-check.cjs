@@ -28,18 +28,33 @@ function decodeEntities(t) {
 function deepClean(text) {
   if (!text) return text;
   let c = text;
+  // 1. TTS 마커 이후 실제 내용만 추출 (한겨레/중앙 등)
   const ttsIdx = c.indexOf('기사를 읽어드립니다');
   if (ttsIdx >= 0) { c = c.substring(ttsIdx + 9).replace(/^[^가-힣]*/, ''); }
-  c = c.replace(/Your browser does not support\s*the\s*audio element\.?\s*[\d:."]*/gi, '');
-  c = c.replace(/수정\s*\d{4}-\d{2}-\d{2}\s*\d{2}:\d{2}/g, '');
-  c = c.replace(/등록\s*\d{4}-\d{2}-\d{2}\s*\d{2}:\d{2}/g, '');
-  c = c.replace(/[가-힣]{2,4}(,[가-힣]{2,4})*\s*기자/g, '');
-  c = c.replace(/^본문[가-힣\s\/·]*?(?=[가-힣]{10,})/m, '');
-  c = c.replace(/광고\s*(?=[가-힣])/g, '');
-  c = c.replace(/Nation\/World\s*/gi, ''); c = c.replace(/Local News\s*/gi, '');
+  // 2. 오디오 플레이어 잔재
+  c = c.replace(/Your browser does not support\s*the?\s*audio element\.?/gi, '');
+  c = c.replace(/\b\d{1,2}:\d{2}\b\s*(다음)?/g, '');
+  // 3. 날짜/기자/등록 헤더
+  c = c.replace(/수정\s*\d{4}-\d{2}-\d{2}[^가-힣]{0,20}/g, '');
+  c = c.replace(/등록\s*\d{4}-\d{2}-\d{2}[^가-힣]{0,20}/g, '');
+  c = c.replace(/[가-힣]{2,5}(,[가-힣]{2,5})*\s*기자/g, '');
+  // 4. 브레드크럼/섹션 헤더 ("본문미래&과학과학" 류)
+  c = c.replace(/^본문[가-힣\s\/·&]+?(?=[가-힣]{10,})/m, '');
+  c = c.replace(/^[가-힣\/·&]{1,20}(?=[가-힣]{10,}[^\s])/m, ''); // 짧은 카테고리 prefix
+  // 5. 이미지 크레딧
+  c = c.replace(/픽사베이\s*광고?/g, '');
+  c = c.replace(/게티이미지뱅크\s*/g, '');
+  c = c.replace(/이미지투데이\s*/g, '');
+  c = c.replace(/연합뉴스\s*(?=\s)/g, '');
   c = c.replace(/Credit:\s*[A-Za-z\/\s\.\-]+(?=\s|$)/g, '');
+  // 6. 광고 텍스트
+  c = c.replace(/광고\s*(?=[가-힣])/g, '');
+  // 7. 영문 쓰레기
+  c = c.replace(/Nation\/World\s*/gi, '');
+  c = c.replace(/Local News\s*/gi, '');
+  // 8. 중복 단어 제거
   c = c.replace(/([가-힣]{2,6})\1/g, '$1');
-  return c.replace(/\s{2,}/g,' ').trim();
+  return c.replace(/\s{2,}/g, ' ').trim();
 }
 function isEnglish(t) {
   const k = (t.match(/[가-힣]/g)||[]).length;
@@ -119,7 +134,7 @@ async function run() {
       COUNT(*) FILTER (WHERE content IS NULL OR length(content) < 50) as no_content,
       COUNT(*) FILTER (WHERE thumbnail_url IS NULL) as no_thumb,
       COUNT(*) FILTER (WHERE content ~ '[A-Za-z ]{60,}' AND content !~ '[가-힣]{15,}') as english,
-      COUNT(*) FILTER (WHERE content LIKE '%기사를 읽어드립니다%' OR content LIKE '%Local News%' OR content LIKE '%본문%') as junk
+      COUNT(*) FILTER (WHERE content LIKE '%기사를 읽어드립니다%' OR content LIKE '%Local News%' OR content LIKE '%본문%' OR content LIKE '%픽사베이%' OR content LIKE '%audio element%' OR content LIKE '%게티이미지%' OR content LIKE '%이미지투데이%') as junk
     FROM news
     WHERE created_at > NOW() - INTERVAL '24 hours'
   `);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,10 @@ export default function CommunityPost() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [deleteForm, setDeleteForm] = useState({ id: '', password: '', type: '' });
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [likedIds, setLikedIds] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('dk_liked') || '[]')); }
+    catch { return new Set(); }
+  });
 
   const postId = params?.id;
 
@@ -123,6 +127,15 @@ export default function CommunityPost() {
     enabled: !!postData?.post,
   });
 
+  const handleLike = (post_id?: string, comment_id?: string) => {
+    const targetId = post_id || comment_id || '';
+    if (likedIds.has(targetId)) {
+      toast({ description: '이미 좋아요를 눌렀어요 ❤️' });
+      return;
+    }
+    likeMutation.mutate({ post_id, comment_id });
+  };
+
   const likeMutation = useMutation({
     mutationFn: async ({ post_id, comment_id }: { post_id?: string; comment_id?: string }) => {
       const response = await fetch('/api/community?action=like', {
@@ -133,7 +146,11 @@ export default function CommunityPost() {
       if (!response.ok) throw new Error('Like failed');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      const targetId = variables.post_id || variables.comment_id || '';
+      const newLiked = new Set([...likedIds, targetId]);
+      setLikedIds(newLiked);
+      localStorage.setItem('dk_liked', JSON.stringify([...newLiked]));
       queryClient.invalidateQueries({ queryKey: ['community-post', postId] });
     },
   });
@@ -243,10 +260,10 @@ export default function CommunityPost() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => likeMutation.mutate({ comment_id: comment.id })}
-              className="px-2 h-8"
+              onClick={() => handleLike(undefined, comment.id)}
+              className={`px-2 h-8 ${likedIds.has(comment.id) ? 'text-red-500' : ''}`}
             >
-              <Heart className="w-4 h-4 mr-1" />
+              <Heart className={`w-4 h-4 mr-1 ${likedIds.has(comment.id) ? 'fill-red-500' : ''}`} />
               {comment.likes}
             </Button>
             <Button
@@ -384,10 +401,10 @@ export default function CommunityPost() {
                   <div className="flex items-center gap-4">
                     <Button
                       variant="outline"
-                      onClick={() => likeMutation.mutate({ post_id: post.id })}
-                      className="flex items-center gap-2"
+                      onClick={() => handleLike(post.id)}
+                      className={`flex items-center gap-2 ${likedIds.has(post.id) ? 'text-red-500 border-red-300' : ''}`}
                     >
-                      <Heart className="w-4 h-4" />
+                      <Heart className={`w-4 h-4 ${likedIds.has(post.id) ? 'fill-red-500' : ''}`} />
                       좋아요 {post.likes}
                     </Button>
                     <span className="flex items-center gap-1 text-gray-600">

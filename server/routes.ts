@@ -516,7 +516,115 @@ export async function registerRoutes(
   });
 
   app.post("/api/community", async (req, res) => {
-    return res.json({ success: true });
+    try {
+      const { action } = req.query as Record<string, string>;
+      const body = req.body || {};
+
+      // ── 댓글 등록 ─────────────────────────────────────────────
+      if (action === 'comment') {
+        const { post_id, nickname, password, content } = body;
+        if (!post_id || !nickname || !password || !content) {
+          return res.status(400).json({ success: false, message: '필수 항목 누락' });
+        }
+        const id = `cmt_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        const bcrypt = await import('bcrypt').catch(() => null);
+        const passwordHash = bcrypt
+          ? await bcrypt.default.hash(password, 10)
+          : Buffer.from(password).toString('base64');
+
+        // community_comments 테이블 없으면 생성
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS community_comments (
+            id TEXT PRIMARY KEY,
+            post_id TEXT NOT NULL,
+            parent_id TEXT,
+            nickname TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            content TEXT NOT NULL,
+            likes INTEGER DEFAULT 0,
+            ip_hash TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+
+        await db.execute(sql`
+          INSERT INTO community_comments (id, post_id, parent_id, nickname, password_hash, content, likes, created_at)
+          VALUES (${id}, ${post_id}, ${body.parent_id || null}, ${nickname}, ${passwordHash}, ${content}, 0, NOW())
+        `);
+
+        // comment_count 업데이트
+        await db.execute(sql`
+          UPDATE community_posts SET comment_count = comment_count + 1, updated_at = NOW() WHERE id = ${post_id}
+        `);
+
+        return res.json({ success: true, id });
+      }
+
+      // ── 좋아요 ────────────────────────────────────────────────
+      if (action === 'like') {
+        const { post_id, comment_id } = body;
+        if (post_id) {
+          await db.execute(sql`UPDATE community_posts SET likes = likes + 1 WHERE id = ${post_id}`);
+        } else if (comment_id) {
+          await db.execute(sql`UPDATE community_comments SET likes = likes + 1 WHERE id = ${comment_id}`).catch(() => {});
+        }
+        return res.json({ success: true });
+      }
+
+      // ── 게시글 삭제 ───────────────────────────────────────────
+      if (action === 'delete') {
+        const { id, type, password } = body;
+        if (!id || !type || !password) {
+          return res.status(400).json({ success: false, message: '필수 항목 누락' });
+        }
+        const table = type === 'post' ? 'community_posts' : 'community_comments';
+        const result = await db.execute(
+          type === 'post'
+            ? sql`SELECT password_hash FROM community_posts WHERE id = ${id}`
+            : sql`SELECT password_hash FROM community_comments WHERE id = ${id}`
+        );
+        if (!result.rows?.length) {
+          return res.status(404).json({ success: false, message: '게시글 없음' });
+        }
+        const bcrypt = await import('bcrypt').catch(() => null);
+        const stored = result.rows[0].password_hash as string;
+        const valid = bcrypt
+          ? await bcrypt.default.compare(password, stored).catch(() => password === stored)
+          : Buffer.from(password).toString('base64') === stored || password === stored;
+        if (!valid) return res.status(403).json({ success: false, message: '비밀번호 오류' });
+        if (type === 'post') {
+          await db.execute(sql`DELETE FROM community_posts WHERE id = ${id}`);
+        } else {
+          await db.execute(sql`DELETE FROM community_comments WHERE id = ${id}`).catch(() => {});
+        }
+        return res.json({ success: true });
+      }
+
+      // ── 게시글 등록 (신규 글 작성) ────────────────────────────
+      if (action === 'post' || !action) {
+        const { nickname, password, title, content, category, tags } = body;
+        if (!nickname || !password || !title || !content || !category) {
+          return res.status(400).json({ success: false, message: '필수 항목 누락' });
+        }
+        const id = `post_user_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        const bcrypt = await import('bcrypt').catch(() => null);
+        const passwordHash = bcrypt
+          ? await bcrypt.default.hash(password, 10)
+          : Buffer.from(password).toString('base64');
+        const tagJson = Array.isArray(tags) ? JSON.stringify(tags) : (tags || '[]');
+        await db.execute(sql`
+          INSERT INTO community_posts (id, nickname, password_hash, title, content, category, tags, views, likes, comment_count, is_pinned, created_at, updated_at, city)
+          VALUES (${id}, ${nickname}, ${passwordHash}, ${title}, ${content}, ${category}, ${tagJson}, 0, 0, 0, false, NOW(), NOW(), 'dallas')
+        `);
+        return res.json({ success: true, id });
+      }
+
+      return res.json({ success: true });
+    } catch (e: any) {
+      console.error('Community POST error:', e.message);
+      return res.status(500).json({ success: false, message: e.message });
+    }
   });
 
   // /api/search - search across businesses, news, listings
@@ -525,19 +633,76 @@ export async function registerRoutes(
     if (!q) return res.json({ businesses: [], news: [], listings: [] });
     try {
       const term = `%${q}%`;
-      const [bizResults, newsResults, listingResults] = await Promise.all([
-        db.execute(sql`SELECT id, name_en as name, name_ko, category, address, city, rating FROM businesses WHERE name_en ILIKE ${term} OR name_ko ILIKE ${term} OR category ILIKE ${term} LIMIT 5`),
-        db.execute(sql`SELECT id, title, category, source, published_at FROM news WHERE title ILIKE ${term} LIMIT 5`),
-        db.execute(sql`SELECT id, title, category, price, location FROM listings WHERE title ILIKE ${term} AND status = 'active' LIMIT 5`),
-      ]);
+      const biz = await db.execute(sql`
+        SELECT id, name_en as name, name_ko, category, address, city, rating, cover_url
+        FROM businesses
+        WHERE name_en ILIKE ${term}
+           OR COALESCE(name_ko,'') ILIKE ${term}
+           OR category ILIKE ${term}
+           OR COALESCE(description,'') ILIKE ${term}
+        LIMIT 8
+      `).catch(() => ({ rows: [] }));
+
+      const news = await db.execute(
+        sql`SELECT id, title, category, source, published_at FROM news WHERE title ILIKE ${term} LIMIT 5`
+      ).catch(() => ({ rows: [] }));
+
+      const listings = await db.execute(
+        sql`SELECT id, title, category, price, location FROM listings WHERE title ILIKE ${term} AND status = 'active' LIMIT 5`
+      ).catch(() => ({ rows: [] }));
+
       return res.json({
-        businesses: bizResults.rows || [],
-        news: newsResults.rows || [],
-        listings: listingResults.rows || [],
+        businesses: biz.rows || [],
+        news: news.rows || [],
+        listings: listings.rows || [],
       });
     } catch (e) {
       return res.json({ businesses: [], news: [], listings: [] });
     }
+  });
+
+  // 업체 등록 신청 (관리자 검토 후 등록)
+  app.post("/api/businesses/register", async (req, res) => {
+    try {
+      const { name_en, name_ko, category, address, city, phone, email, website, description } = req.body || {};
+      if (!name_en || !category || !address) {
+        return res.status(400).json({ success: false, message: '업체명, 카테고리, 주소는 필수입니다' });
+      }
+      // pending_businesses 테이블 없으면 생성
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS pending_businesses (
+          id SERIAL PRIMARY KEY,
+          name_en TEXT NOT NULL,
+          name_ko TEXT,
+          category TEXT NOT NULL,
+          address TEXT NOT NULL,
+          city TEXT DEFAULT 'dallas',
+          phone TEXT,
+          email TEXT,
+          website TEXT,
+          description TEXT,
+          status TEXT DEFAULT 'pending',
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `).catch(() => {});
+      await db.execute(sql`
+        INSERT INTO pending_businesses (name_en, name_ko, category, address, city, phone, email, website, description)
+        VALUES (${name_en}, ${name_ko || null}, ${category}, ${address}, ${city || 'dallas'}, ${phone || null}, ${email || null}, ${website || null}, ${description || null})
+      `);
+      return res.json({ success: true, message: '등록 신청이 접수되었습니다. 검토 후 등록됩니다.' });
+    } catch (e: any) {
+      console.error('Business register error:', e.message);
+      return res.status(500).json({ success: false, message: '등록 신청 중 오류가 발생했습니다' });
+    }
+  });
+
+  // 업체 문의 이메일 (stub — 실제 메일 발송은 SendGrid 연동 시)
+  app.post("/api/businesses/:id/contact", async (req, res) => {
+    const { name, email, message, phone } = req.body || {};
+    if (!name || !message) return res.status(400).json({ success: false, message: '이름과 문의내용은 필수입니다' });
+    // TODO: SendGrid 연동 시 실제 메일 발송
+    console.log(`[업체문의] 업체ID:${req.params.id} | ${name}(${email}): ${message?.slice(0,50)}`);
+    return res.json({ success: true, message: '문의가 접수되었습니다. 업체에 전달됩니다.' });
   });
 
   // /api/deals
@@ -638,8 +803,25 @@ export async function registerRoutes(
       return res.json({ success: false, data: [] });
     }
     if (action === 'visit') {
-      // Track visit (no-op for now)
-      return res.json({ success: true });
+      // 방문 기록 + 통계 반환
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        await db.execute(sql`
+          INSERT INTO page_views (date, views, unique_views)
+          VALUES (${today}, 1, 1)
+          ON CONFLICT (date) DO UPDATE SET views = page_views.views + 1
+        `).catch(() => {}); // 테이블 없으면 skip
+        const totalRes = await db.execute(sql`SELECT COALESCE(SUM(views),0) as total FROM page_views`).catch(() => ({ rows: [{ total: 0 }] }));
+        const todayRes = await db.execute(sql`SELECT COALESCE(SUM(views),0) as today FROM page_views WHERE date = ${today}`).catch(() => ({ rows: [{ today: 0 }] }));
+        return res.json({
+          success: true,
+          totalViews: Number(totalRes.rows[0]?.total ?? 0),
+          todayUnique: Number(todayRes.rows[0]?.today ?? 0),
+          todayViews: Number(todayRes.rows[0]?.today ?? 0),
+        });
+      } catch {
+        return res.json({ success: true, totalViews: 0, todayUnique: 0, todayViews: 0 });
+      }
     }
     // Default: return category counts from businesses
     try {
@@ -649,6 +831,28 @@ export async function registerRoutes(
       return res.json(result.rows || []);
     } catch (e) {
       return res.json([]);
+    }
+  });
+
+  // ─── 사이트 통계 (네브바용) ───────────────────────────────────────
+  app.get("/api/stats", async (req, res) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const [bizRes, newsRes, blogRes, totalRes, todayRes] = await Promise.all([
+        db.execute(sql`SELECT COUNT(*) as count FROM businesses`),
+        db.execute(sql`SELECT COUNT(*) as count FROM news WHERE content IS NOT NULL AND length(content) > 50`).catch(() => ({ rows: [{ count: 0 }] })),
+        db.execute(sql`SELECT COUNT(*) as count FROM blogs`).catch(() => ({ rows: [{ count: 0 }] })),
+        db.execute(sql`SELECT COALESCE(SUM(views),0) as total FROM page_views`).catch(() => ({ rows: [{ total: 0 }] })),
+        db.execute(sql`SELECT COALESCE(SUM(views),0) as today FROM page_views WHERE date = ${today}`).catch(() => ({ rows: [{ today: 0 }] })),
+      ]);
+      return res.json({
+        totalBusinesses: Number(bizRes.rows[0]?.count ?? 0),
+        totalPosts: Number(newsRes.rows[0]?.count ?? 0) + Number(blogRes.rows[0]?.count ?? 0),
+        totalViews: Number(totalRes.rows[0]?.total ?? 0),
+        todayViews: Number(todayRes.rows[0]?.today ?? 0),
+      });
+    } catch (e) {
+      return res.json({ totalBusinesses: 0, totalPosts: 0, totalViews: 0, todayViews: 0 });
     }
   });
 

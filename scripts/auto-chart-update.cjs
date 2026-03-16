@@ -86,14 +86,57 @@ async function fetchMusicChart() {
     }
   }
 
+  // iTunes 아트워크 추가 (없는 것만)
+  for (const item of items) {
+    if (!item.thumbnail_url && item.artist && item.title_ko) {
+      try {
+        const q = encodeURIComponent((item.artist + ' ' + item.title_ko).slice(0, 80));
+        const r = await fetchWithTimeout(`https://itunes.apple.com/search?term=${q}&entity=musicTrack&country=KR&limit=1`);
+        if (r.ok) {
+          const d = await r.json();
+          const art = d.results?.[0]?.artworkUrl100;
+          if (art) item.thumbnail_url = art.replace('100x100bb', '500x500bb');
+        }
+        await new Promise(r => setTimeout(r, 200));
+      } catch(_) {}
+    }
+  }
+
   return items;
 }
 
 // ─── Netflix Chart: flixpatrol ────────────────────────────────────
 async function fetchNetflixChart() {
-  console.log('📺 Netflix chart (flixpatrol)...');
+  console.log('📺 Netflix chart (TMDB 넷플릭스 한국)...');
   const items = [];
   
+  try {
+    const TMDB_KEY = process.env.TMDB_API_KEY;
+    if (!TMDB_KEY) throw new Error('TMDB_API_KEY 없음');
+    const res = await fetchWithTimeout(
+      `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&language=ko-KR&with_watch_providers=8&watch_region=KR&with_origin_country=KR&sort_by=first_air_date.desc&page=1`
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    data.results?.filter(t => t.poster_path).slice(0, 10).forEach((t, i) => {
+      items.push({
+        chart_type: 'netflix',
+        rank: i + 1,
+        title_ko: t.name,
+        title_en: t.original_name,
+        platform: 'Netflix',
+        thumbnail_url: `https://image.tmdb.org/t/p/w342${t.poster_path}`,
+        score: String((t.vote_average * 10).toFixed(1)),
+        description: `평점 ${t.vote_average.toFixed(1)} | 첫방송: ${t.first_air_date}`,
+      });
+    });
+    console.log(`  ✅ Netflix ${items.length}개`);
+    return items;
+  } catch (e) {
+    console.log(`  ⚠️ TMDB Netflix 실패: ${e.message}`);
+  }
+
+  // Fallback: flixpatrol 스크래이핑
   try {
     const res = await fetchWithTimeout('https://flixpatrol.com/top10/netflix/south-korea/', {
       headers: { 'Accept': 'text/html', 'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8' }
@@ -150,72 +193,86 @@ async function fetchNetflixChart() {
   return items;
 }
 
-// ─── Movie Chart: KOBIS (Korean Box Office) ──────────────────────
+// ─── Movie Chart: TMDB 한국 현재 상영작 ──────────────────────────
 async function fetchMovieChart() {
-  console.log('🎬 Movie chart (KOBIS)...');
+  console.log('🎬 Movie chart (TMDB 한국 상영작)...');
   const items = [];
   
-  // KOBIS open API (free, no key needed for daily box office)
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0].replace(/-/g, '');
-  
+  // KOBIS 웹 스크래이핑 + TMDB 포스터
   try {
-    const kobisKey = '3c47f2fa81c79c2fe49c6d6a46a844ea'; // KOBIS open API key (public)
-    const res = await fetchWithTimeout(
-      `https://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=${kobisKey}&targetDt=${yesterday}`
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    
-    const movies = data?.boxOfficeResult?.dailyBoxOfficeList || [];
-    movies.slice(0, 10).forEach((movie, i) => {
-      items.push({
-        chart_type: 'movie',
-        rank: parseInt(movie.rank) || i + 1,
-        title_ko: movie.movieNm || `Movie ${i+1}`,
-        title_en: movie.movieNm || `Movie ${i+1}`,
-        artist: movie.director || '',
-        platform: '영화관',
-        score: String(parseFloat(movie.audiAcc || 0) > 1000000 ? 98 - i : 90 - i * 2),
-        description: `관객수: ${parseInt(movie.audiCnt || 0).toLocaleString()}명 | 누적: ${parseInt(movie.audiAcc || 0).toLocaleString()}명`,
-      });
+    const TMDB_KEY = process.env.TMDB_API_KEY;
+    const res = await fetchWithTimeout('https://www.kobis.or.kr/kobis/business/stat/boxs/findDailyBoxOfficeList.do', {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' }
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    // tbody에서 순위/제목 파싱
+    const rows = [...html.matchAll(/<tr[^>]*>[\s\S]*?<\/tr>/g)];
+    let rank = 0;
+    for (const row of rows) {
+      if (rank >= 10) break;
+      const cells = [...row[0].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(m => m[1].replace(/<[^>]+>/g,'').trim().replace(/\s+/g,' '));
+      if (cells.length < 3 || !/^\d+$/.test(cells[0])) continue;
+      rank++;
+      const title = cells[1].replace(/\s*동일|\s*상승|\s*하락|\s*\d+/g,'').trim();
+      let poster = null;
+      if (TMDB_KEY) {
+        try {
+          const tr = await fetchWithTimeout(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=ko-KR`);
+          const td = await tr.json();
+          const p = td.results?.[0]?.poster_path;
+          if (p) poster = `https://image.tmdb.org/t/p/w342${p}`;
+        } catch(_) {}
+      }
+      items.push({ chart_type:'movie', rank, title_ko:title, title_en:title, platform:'영화관', thumbnail_url:poster, score:String(98-(rank-1)*2) });
+    }
+    console.log(`  ✅ KOBIS 영화 ${items.length}개`);
   } catch (e) {
-    console.log(`  ⚠️ KOBIS failed: ${e.message}`);
+    console.log(`  ⚠️ KOBIS 스크래이핑 실패: ${e.message} → TMDB fallback`);
+    // Fallback: TMDB now_playing
+    try {
+      const TMDB_KEY = process.env.TMDB_API_KEY;
+      const r2 = await fetchWithTimeout(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=ko-KR&region=KR`);
+      const d2 = await r2.json();
+      d2.results?.slice(0,10).forEach((m, i) => items.push({
+        chart_type:'movie', rank:i+1, title_ko:m.title, title_en:m.original_title, platform:'영화관',
+        thumbnail_url: m.poster_path ? `https://image.tmdb.org/t/p/w342${m.poster_path}` : null,
+        score: String((m.vote_average*10).toFixed(1))
+      }));
+    } catch(_) {}
   }
 
   return items;
 }
 
-// ─── Drama Chart: via web scraping ───────────────────────────────
+// ─── Drama Chart: TMDB 한국 드라마 인기순 ────────────────────────
 async function fetchDramaChart() {
-  console.log('📺 Drama chart...');
+  console.log('📺 Drama chart (TMDB 한국 드라마)...');
   const items = [];
-  
   try {
-    // Try flixpatrol for Korean drama content
-    const res = await fetchWithTimeout('https://flixpatrol.com/top10/netflix/south-korea/2025-03-12/tv/', {
-      headers: { 'Accept': 'text/html' }
+    const TMDB_KEY = process.env.TMDB_API_KEY;
+    if (!TMDB_KEY) throw new Error('TMDB_API_KEY 없음');
+    const res = await fetchWithTimeout(
+      `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&language=ko-KR&with_origin_country=KR&sort_by=popularity.desc&first_air_date.gte=2025-01-01&page=1`
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    data.results?.slice(0, 10).forEach((t, i) => {
+      items.push({
+        chart_type: 'drama',
+        rank: i + 1,
+        title_ko: t.name,
+        title_en: t.original_name,
+        platform: 'TV드라마',
+        thumbnail_url: t.poster_path ? `https://image.tmdb.org/t/p/w342${t.poster_path}` : null,
+        score: String((t.vote_average * 10).toFixed(1)),
+        description: `평점 ${t.vote_average.toFixed(1)} | 첫방송: ${t.first_air_date}`,
+      });
     });
-    if (res.ok) {
-      const html = await res.text();
-      const tableRegex = /<tr[^>]*>[\s\S]*?<td[^>]*>(\d+)<\/td>[\s\S]*?class="table-title"[^>]*>\s*<a[^>]*>([^<]+)</g;
-      let match;
-      while ((match = tableRegex.exec(html)) !== null && items.length < 10) {
-        items.push({
-          chart_type: 'drama',
-          rank: parseInt(match[1]),
-          title_ko: match[2].trim(),
-          title_en: match[2].trim(),
-          artist: '',
-          platform: 'TV',
-          score: String(98 - items.length * 2),
-        });
-      }
-    }
+    console.log(`  ✅ TMDB 드라마 ${items.length}개`);
   } catch (e) {
-    console.log(`  ⚠️ Drama chart scrape failed: ${e.message}`);
+    console.log(`  ⚠️ Drama chart 실패: ${e.message}`);
   }
-
   return items;
 }
 
@@ -224,13 +281,19 @@ async function fetchYouTubeChart() {
   console.log('▶️ YouTube Korea trending...');
   const items = [];
   
-  // Use popular Korean music/entertainment YouTube channels RSS feeds
+  // 한국 주요 유튜브 채널
   const channels = [
-    { id: 'UCEf_Bc-KVd7onSeifS3py9g', name: 'BANGTANTV' },       // BTS
-    { id: 'UCkbbMCA40i3sHRzSgnSCa_A', name: '1theK' },           // K-Pop label
-    { id: 'UCbmNph6atAoGfqLoCL_duAg', name: 'HYBE LABELS' },     // HYBE
-    { id: 'UC3IZKseVpdzPSBo2Mk4c5cw', name: 'BLACKPINK' },       // BLACKPINK
-    { id: 'UCVwlkqoMJJCmUAF0opTiOlw', name: 'SMTOWN' },          // SM Entertainment
+    { id: 'UCEf_Bc-KVd7onSeifS3py9g', name: 'BANGTANTV' },
+    { id: 'UCkbbMCA40i3sHRzSgnSCa_A', name: '1theK' },
+    { id: 'UCbmNph6atAoGfqLoCL_duAg', name: 'HYBE LABELS' },
+    { id: 'UC3IZKseVpdzPSBo2Mk4c5cw', name: 'BLACKPINK' },
+    { id: 'UCVwlkqoMJJCmUAF0opTiOlw', name: 'SMTOWN' },
+    { id: 'UCrDkAvwZum-UTjHmzDI2iIw', name: 'BLACKPINK' },       // BLACKPINK Official
+    { id: 'UCsikuIGEkyNMNAi_RCgRZ6g', name: 'NewJeans' },
+    { id: 'UC6tXGmtm1MMbsmEzPMQvMHg', name: 'aespa' },
+    { id: 'UC3IZKseVpdzPSBo2Mk4c5cw', name: 'IVE' },
+    { id: 'UCx4sLMFWlRIBKRqBVEIPGpw', name: 'STAYC' },
+    { id: 'UC3IZKseVpdzPSBo2Mk4c5cw', name: 'LE SSERAFIM' },
   ];
   
   const allVideos = [];
@@ -288,7 +351,7 @@ async function fetchYouTubeChart() {
       platform: 'YouTube',
       score: String(99 - i * 2),
       youtube_url: `https://www.youtube.com/watch?v=${video.videoId}`,
-      thumbnail_url: `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`,
+      thumbnail_url: `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`,
     });
   });
 

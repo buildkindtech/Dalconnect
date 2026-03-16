@@ -187,7 +187,7 @@ function extractTag(xml, tag) {
 
 function cleanHtml(text) {
   if (!text) return '';
-  return text
+  let c = text
     .replace(/<[^>]+>/g, '')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
@@ -197,6 +197,18 @@ function cleanHtml(text) {
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+  // 수집 즉시 junk 제거
+  const ttsIdx = c.indexOf('기사를 읽어드립니다');
+  if (ttsIdx >= 0) c = c.substring(ttsIdx + 9).replace(/^[^가-힣]*/, '');
+  c = c.replace(/Your browser does not support\s*the?\s*audio element\.?/gi, '');
+  c = c.replace(/\b\d{1,2}:\d{2}\b/g, '');
+  c = c.replace(/픽사베이\s*광고?/g, '');
+  c = c.replace(/게티이미지뱅크\s*/g, '');
+  c = c.replace(/이미지투데이\s*/g, '');
+  c = c.replace(/수정\s*\d{4}-\d{2}-\d{2}[^가-힣]{0,20}/g, '');
+  c = c.replace(/등록\s*\d{4}-\d{2}-\d{2}[^가-힣]{0,20}/g, '');
+  c = c.replace(/광고\s*(?=[가-힣])/g, '');
+  return c.replace(/\s{2,}/g, ' ').trim();
 }
 
 async function fetchFeed(feedConfig) {

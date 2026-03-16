@@ -147,7 +147,9 @@ const FilterSidebar = ({
 
 // 사이드바 광고 컴포넌트
 function SidebarAds({ selectedCategory }: { selectedCategory: string }) {
-  const featuredBusinesses = useFeaturedBusinesses(12);
+  const allFeaturedBiz = useFeaturedBusinesses(24);
+  // 사이드바는 중간 8개 — leaderboard(앞), infeed(뒤)와 겹치지 않게
+  const featuredBusinesses = allFeaturedBiz.slice(8, 16);
   if (featuredBusinesses.length === 0) return null;
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">

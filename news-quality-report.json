@@ -1,33 +1,33 @@
 {
-  "lastRun": "2026-03-16T00:04:36.946Z",
-  "lastRunKST": "2026. 3. 15. 19시 4분 36초",
-  "status": "ok",
+  "lastRun": "2026-03-16T04:04:33.466Z",
+  "lastRunKST": "2026. 3. 15. 23시 4분 33초",
+  "status": "warning",
   "checklist": [
     {
       "label": "신규 기사 수집",
-      "value": "485개",
+      "value": "499개",
       "ok": true
     },
     {
       "label": "내용 없는 기사",
+      "value": "2개",
+      "ok": false
+    },
+    {
+      "label": "썸네일 없는 기사",
       "value": "0개",
       "ok": true
     },
     {
-      "label": "썸네일 없는 기사",
-      "value": "14개",
-      "ok": false
-    },
-    {
       "label": "자동 픽스",
-      "value": "내용+0 번역+4 정리+30",
+      "value": "내용+6 번역+3 정리+73",
       "ok": true
     }
   ],
   "fixes": {
-    "content": 0,
-    "translation": 4,
-    "junk": 30
+    "content": 6,
+    "translation": 3,
+    "junk": 73
   },
-  "totalNews": 1830
+  "totalNews": 1909
 }

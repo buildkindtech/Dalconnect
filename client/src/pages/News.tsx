@@ -257,7 +257,10 @@ export default function News() {
 
   const headlineIds = new Set(headlines.map(h => h.id));
 
-  const featuredBusinesses = useFeaturedBusinesses(12);
+  const allFeaturedNews = useFeaturedBusinesses(24);
+  // 뉴스 페이지: leaderboard = 앞 8개, infeed = 뒤 8개 (겹치지 않게)
+  const newsLeaderboard = allFeaturedNews.slice(0, 8);
+  const newsInfeed = allFeaturedNews.slice(8, 24);
 
   return (
     <div className="bg-slate-50 min-h-screen py-8 md:py-12">
@@ -333,7 +336,7 @@ export default function News() {
             {/* 헤드라인 아래 광고 배너 */}
             {featuredBusinesses.length > 0 && (
               <div className="mb-8">
-                <AdBanner size="leaderboard" businesses={featuredBusinesses} />
+                <AdBanner size="leaderboard" businesses={newsLeaderboard} />
               </div>
             )}
 
@@ -361,15 +364,9 @@ export default function News() {
                         ))}
                       </div>
                     </div>
-                    {/* 3섹션마다 인피드 광고 */}
-                    {(sectionIdx + 1) % 3 === 0 && featuredBusinesses.length > 0 && (
-                      <div className="mb-8">
-                        <AdBanner
-                          size="inline"
-                          businesses={featuredBusinesses}
-                          className="mb-2"
-                        />
-                      </div>
+                    {/* 2섹션마다 인피드 3-카드 광고 스트립 */}
+                    {(sectionIdx + 1) % 2 === 0 && featuredBusinesses.length > 0 && (
+                      <AdBanner size="infeed-strip" businesses={newsInfeed} />
                     )}
                   </>
                 );

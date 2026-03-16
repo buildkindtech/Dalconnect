@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame, MessageCircle, Trophy, Music, Film, Tv, Gift } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -334,7 +334,32 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const featured = featuredBusinesses?.slice(0, 6) ?? [];
+  // 추천 업체 랜덤 로테이션 (8초마다 6개 교체)
+  const [featuredSlot, setFeaturedSlot] = useState(0);
+  const allFeatured = featuredBusinesses ?? [];
+  useEffect(() => {
+    if (allFeatured.length <= 6) return;
+    const t = setInterval(() => setFeaturedSlot(s => s + 1), 8000);
+    return () => clearInterval(t);
+  }, [allFeatured.length]);
+  // 3등분 — 각 배너 타입이 겹치지 않는 업체 풀 사용
+  const { leaderboardPool, infeedPool } = useMemo(() => {
+    if (allFeatured.length === 0) return { leaderboardPool: [], infeedPool: [] };
+    const third = Math.ceil(allFeatured.length / 3);
+    return {
+      leaderboardPool: allFeatured.slice(0, third),
+      infeedPool: allFeatured.slice(third * 2),
+    };
+  }, [allFeatured]);
+
+  const shuffledFeatured = useMemo(() => {
+    if (allFeatured.length === 0) return [];
+    // featuredSlot 기반으로 섞되, 매번 다른 6개
+    const arr = [...allFeatured];
+    const offset = (featuredSlot * 6) % arr.length;
+    return [...arr.slice(offset), ...arr.slice(0, offset)].slice(0, 6);
+  }, [allFeatured, featuredSlot]);
+  const featured = shuffledFeatured;
   const recentNews = newsItems?.slice(0, 3) ?? [];
   const recentBlogs = blogPosts?.slice(0, 3) ?? [];
   const recentListings = listingsData?.items ?? [];
@@ -388,11 +413,13 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section — 100vw 탈출 (사이드 광고 컬럼 무시) */}
       <section 
         className="relative h-[600px] flex items-center justify-center bg-cover bg-center"
         style={{ 
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url(https://images.unsplash.com/photo-1545194445-dddb8f4487c6?w=1600&q=80)` 
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url(https://images.unsplash.com/photo-1545194445-dddb8f4487c6?w=1600&q=80)`,
+          width: '100vw',
+          marginLeft: 'calc(50% - 50vw)',
         }}
       >
         <div className="container mx-auto px-4 text-center text-white">
@@ -483,82 +510,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Visitor Counter */}
-      {visitorStats && (
-        <section className="py-4 bg-slate-100 border-y border-slate-200">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap gap-6 justify-center items-center text-sm text-slate-700">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="font-semibold">총 {(1210).toLocaleString()}개 업체</span>
-              </div>
-              <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-blue-600" />
-                <span>오늘 <span className="font-bold text-blue-600">{visitorStats.todayUnique.toLocaleString()}</span>명 방문</span>
-              </div>
-              <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-orange-600" />
-                <span>총 <span className="font-bold text-orange-600">{visitorStats.totalViews.toLocaleString()}</span>회 방문</span>
-              </div>
-            </div>
+      {/* 히어로 바로 아래 광고 배너 */}
+      {featured.length > 0 && (
+        <section className="bg-white pt-4 pb-2">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <AdBanner size="leaderboard" businesses={leaderboardPool} />
           </div>
         </section>
       )}
 
-      {/* Categories Grid - WITH COUNTS */}
-      <section className="py-8 md:py-16 bg-slate-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-4xl font-bold text-center mb-6 md:mb-10">인기 카테고리</h2>
-          {/* 모바일: 가로 슬라이드 / 데스크탑: 그리드 */}
-          <div className="flex md:hidden overflow-x-auto gap-3 pb-2 scrollbar-hide -mx-4 px-4">
-            {CATEGORIES.map((category) => {
-              const IconComponent = category.icon;
-              const count = getCategoryCount(category.id);
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryClick(category.id)}
-                  className="bg-white rounded-xl p-3 flex-shrink-0 flex flex-col items-center justify-center gap-2 group shadow-sm w-20"
-                >
-                  <div className={`${category.color} w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <IconComponent className="h-6 w-6 text-white" />
-                  </div>
-                  <span className="font-semibold text-xs text-slate-800 block leading-tight text-center">{category.name}</span>
-                  {count !== null && count > 0 && (
-                    <span className="text-[10px] text-slate-400 -mt-1 block">({count})</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          {/* 데스크탑: 그리드 */}
-          <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
-            {CATEGORIES.map((category) => {
-              const IconComponent = category.icon;
-              const count = getCategoryCount(category.id);
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryClick(category.id)}
-                  className="bg-white rounded-xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-4 group"
-                >
-                  <div className={`${category.color} w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <IconComponent className="h-8 w-8 text-white" />
-                  </div>
-                  <div className="text-center">
-                    <span className="font-semibold text-lg text-slate-800 block">{category.name}</span>
-                    {count !== null && count > 0 && (
-                      <span className="text-sm text-slate-500 mt-1 block">({count})</span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+
+
+
 
       {/* Restaurant of the Day */}
       {restaurantOfDay && (
@@ -716,7 +679,7 @@ export default function Home() {
       {featured.length > 0 && (
         <section className="py-4 bg-white border-t border-slate-100">
           <div className="container mx-auto px-4">
-            <AdBanner size="leaderboard" businesses={featured} />
+            <AdBanner size="leaderboard" businesses={leaderboardPool} />
           </div>
         </section>
       )}
@@ -818,9 +781,28 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+            <div
+              key={featuredSlot}
+              className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 transition-opacity duration-500"
+              style={{ animation: 'fadeIn 0.5s ease' }}
+            >
               {featured.map((business) => (
                 <BusinessCard key={business.id} business={business} />
+              ))}
+            </div>
+          )}
+          {/* 로테이션 인디케이터 */}
+          {allFeatured.length > 6 && (
+            <div className="flex justify-center mt-6 gap-1.5">
+              {Array.from({ length: Math.ceil(allFeatured.length / 6) }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setFeaturedSlot(i)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    Math.floor((featuredSlot * 6) / allFeatured.length) === i || (featuredSlot % Math.ceil(allFeatured.length / 6)) === i
+                      ? 'w-6 bg-primary' : 'w-1.5 bg-slate-300'
+                  }`}
+                />
               ))}
             </div>
           )}
