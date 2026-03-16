@@ -1,5 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -71,6 +72,7 @@ import CommunityPost from "./pages/CommunityPost";
 import CommunityNew from "./pages/CommunityNew";
 import Charts from "./pages/Charts";
 import Deals from "./pages/Deals";
+import Shopping from "./pages/Shopping";
 
 // 양쪽 광고 한 줄 배너 (히어로 아래 콘텐츠 구간에 표시)
 function SideAdStrip({ biz, side }: { biz: any; side: 'left' | 'right' }) {
@@ -109,7 +111,10 @@ function SideAdStrip({ biz, side }: { biz: any; side: 'left' | 'right' }) {
 }
 
 function Router() {
+  const [currentPath] = useLocation();
   const [adBusinesses, setAdBusinesses] = useState<any[]>([]);
+  const [location] = useLocation();
+
   useEffect(() => {
     fetch('/api/featured')
       .then(r => r.json())
@@ -128,6 +133,7 @@ function Router() {
         <div className="flex gap-4 max-w-[1440px] mx-auto">
           <SideAdStrip biz={leftAd} side="left" />
           <div className="flex-1 min-w-0">
+        <ErrorBoundary resetKey={currentPath}>
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/businesses" component={Businesses} />
@@ -145,6 +151,7 @@ function Router() {
           <Route path="/community/:id" component={CommunityPost} />
           <Route path="/deals" component={Deals} />
           <Route path="/charts" component={Charts} />
+          <Route path="/shopping" component={Shopping} />
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
           <Route path="/pricing" component={Pricing} />
@@ -152,6 +159,7 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route component={NotFound} />
         </Switch>
+        </ErrorBoundary>
           </div>
           <SideAdStrip biz={rightAd} side="right" />
         </div>
