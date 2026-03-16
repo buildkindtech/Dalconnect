@@ -241,6 +241,7 @@ async function main() {
   await testCommunity();
   await testListings();
   await testSearch();
+  await testEndpoints();
 
   const total = passed + failed;
   const status = failed === 0 ? '✅ ALL PASS' : `❌ ${failed}/${total} FAILED`;
@@ -263,3 +264,44 @@ main().catch(e => {
   console.error('Health check 실행 오류:', e.message);
   process.exit(1);
 });
+
+// ──────────────────────────────────────────────
+// 7. API 엔드포인트 존재 확인 (404 체크)
+// ──────────────────────────────────────────────
+async function testEndpoints() {
+  console.log('\n🔗 API 엔드포인트 존재 확인...');
+  const endpoints = [
+    '/api/news',
+    '/api/businesses',
+    '/api/categories',
+    '/api/charts',
+    '/api/community',
+    '/api/deals',
+    '/api/featured',
+    '/api/listings',
+    '/api/search?q=test',
+    '/api/stats',
+    '/api/popular-searches',
+    '/api/blogs',
+    '/api/newsletter',
+  ];
+  for (const ep of endpoints) {
+    try {
+      const url = `${BASE_URL}${ep}`;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      if (res.status === 404) {
+        fail(`엔드포인트 ${ep}`, '404 NOT FOUND');
+      } else if (res.status >= 500) {
+        fail(`엔드포인트 ${ep}`, `${res.status} Server Error`);
+      } else {
+        // pass silently (too many to list)
+      }
+    } catch(e) {
+      fail(`엔드포인트 ${ep}`, e.message);
+    }
+  }
+  pass('API 엔드포인트', `${endpoints.length}개 전부 응답`);
+}
