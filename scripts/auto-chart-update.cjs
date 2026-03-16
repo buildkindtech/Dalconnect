@@ -393,6 +393,15 @@ async function run() {
 
   console.log(`\n[완료] ${totalNew}개 차트 항목 업데이트`);
   await pool.end();
+
+  // 업데이트 후 자동 헬스체크
+  console.log('\n🔍 업데이트 후 헬스체크 실행...');
+  try {
+    const { execSync } = require('child_process');
+    execSync('node scripts/health-check.cjs', { stdio: 'inherit', cwd: __dirname + '/..' });
+  } catch (e) {
+    console.error('⚠️ 헬스체크 실패 — 수동 확인 필요');
+  }
 }
 
 run().catch(e => { console.error(e); process.exit(1); });
