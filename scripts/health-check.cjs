@@ -158,7 +158,7 @@ async function testCommunity() {
   console.log('\n💬 커뮤니티 테스트...');
   try {
     const data = await fetchJSON('/api/community?limit=5');
-    const posts = data.posts || data;
+    const posts = data.data || data.posts || data;
     if (Array.isArray(posts) && posts.length > 0) {
       pass('커뮤니티 API', `${posts.length}개 포스트`);
     } else {
