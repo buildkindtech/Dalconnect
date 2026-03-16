@@ -1,4 +1,5 @@
 import { useParams, Link } from "wouter";
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ExternalLink, Calendar, Building, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,7 +63,21 @@ export default function NewsDetail() {
     );
   }
 
+  const metaTitle = news?.title ? `${news.title} | DalKonnect` : "달라스 한인 뉴스 | DalKonnect";
+  const metaDesc = news?.content ? news.content.slice(0, 160) : "달라스 DFW 한인 커뮤니티 최신 뉴스";
+  const metaImage = news?.thumbnail_url || "https://dalkonnect.com/og-image.png";
+
   return (
+    <>
+    <Helmet>
+      <title>{metaTitle}</title>
+      <meta name="description" content={metaDesc} />
+      <meta property="og:title" content={metaTitle} />
+      <meta property="og:description" content={metaDesc} />
+      <meta property="og:image" content={metaImage} />
+      <meta property="og:type" content="article" />
+      <link rel="canonical" href={`https://dalkonnect.com/news/${news?.id}`} />
+    </Helmet>
     <div className="bg-slate-50 min-h-screen py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         <Link href="/news">
@@ -280,5 +295,6 @@ export default function NewsDetail() {
         </div>
       </div>
     </div>
+    </>
   );
 }

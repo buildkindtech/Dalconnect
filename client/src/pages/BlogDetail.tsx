@@ -1,4 +1,5 @@
 import { useRoute, Link } from "wouter";
+import { Helmet } from "react-helmet-async";
 import { Calendar, User, ArrowLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +49,20 @@ export default function BlogDetail() {
     );
   }
 
+  const metaTitle = blog.title ? `${blog.title} | DalKonnect` : "달라스 한인 블로그 | DalKonnect";
+  const metaDesc = blog.content ? blog.content.replace(/[#*[\]()]/g, "").slice(0, 160) : "달라스 DFW 한인 커뮤니티 블로그";
+
   return (
+    <>
+    <Helmet>
+      <title>{metaTitle}</title>
+      <meta name="description" content={metaDesc} />
+      <meta property="og:title" content={metaTitle} />
+      <meta property="og:description" content={metaDesc} />
+      {blog.cover_image && <meta property="og:image" content={blog.cover_image} />}
+      <meta property="og:type" content="article" />
+      <link rel="canonical" href={`https://dalkonnect.com/blog/${blog.slug}`} />
+    </Helmet>
     <div className="min-h-screen bg-slate-50">
       {/* Back Button */}
       <div className="bg-white border-b">
@@ -152,5 +166,6 @@ export default function BlogDetail() {
         </div>
       </section>
     </div>
+    </>
   );
 }

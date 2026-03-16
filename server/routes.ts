@@ -652,5 +652,166 @@ export async function registerRoutes(
     }
   });
 
+  // ─── SEO: 동적 Sitemap ───────────────────────────────────────────
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const BASE = "https://dalkonnect.com";
+      const now = new Date().toISOString().split("T")[0];
+
+      // 정적 페이지
+      const staticPages = [
+        { url: "/", priority: "1.0", changefreq: "daily" },
+        { url: "/businesses", priority: "0.9", changefreq: "weekly" },
+        { url: "/news", priority: "0.9", changefreq: "hourly" },
+        { url: "/blog", priority: "0.8", changefreq: "daily" },
+        { url: "/marketplace", priority: "0.7", changefreq: "daily" },
+        { url: "/community", priority: "0.7", changefreq: "daily" },
+        { url: "/charts", priority: "0.6", changefreq: "weekly" },
+        { url: "/about", priority: "0.5", changefreq: "monthly" },
+      ];
+
+      // 뉴스 개별 URL
+      const newsRows = await db.execute(
+        sql`SELECT id, published_at FROM news WHERE content IS NOT NULL AND length(content) > 50 ORDER BY published_at DESC LIMIT 1000`
+      );
+
+      // 블로그 개별 URL
+      const blogRows = await db.execute(
+        sql`SELECT slug, published_at FROM blogs WHERE slug IS NOT NULL ORDER BY published_at DESC`
+      );
+
+      const urls: string[] = [];
+
+      // 정적
+      for (const p of staticPages) {
+        urls.push(`  <url>
+    <loc>${BASE}${p.url}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`);
+      }
+
+      // 뉴스
+      for (const row of (newsRows.rows || [])) {
+        const d = row.published_at ? new Date(row.published_at as string).toISOString().split("T")[0] : now;
+        urls.push(`  <url>
+    <loc>${BASE}/news/${row.id}</loc>
+    <lastmod>${d}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`);
+      }
+
+      // 블로그
+      for (const row of (blogRows.rows || [])) {
+        const d = row.published_at ? new Date(row.published_at as string).toISOString().split("T")[0] : now;
+        urls.push(`  <url>
+    <loc>${BASE}/blog/${row.slug}</loc>
+    <lastmod>${d}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`);
+      }
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join("\n")}
+</urlset>`;
+
+      res.set("Content-Type", "application/xml");
+      res.set("Cache-Control", "public, max-age=3600");
+      res.send(xml);
+    } catch (e) {
+      res.status(500).send("Sitemap error");
+    }
+  });
+
+  // ─── SEO: robots.txt ─────────────────────────────────────────────
+  app.get("/robots.txt", (req, res) => {
+    res.set("Content-Type", "text/plain");
+    res.send(`User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://dalkonnect.com/sitemap.xml`);
+  });
+
+  // ─── SEO: 뉴스 상세 메타태그 SSR ──────────────────────────────────
+  app.get("/news/:id", async (req, res, next) => {
+    const ua = req.headers["user-agent"] || "";
+    // 봇 또는 소셜 크롤러에게만 SSR 메타 주입
+    const isBot = /googlebot|bingbot|slurp|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|discordbot|applebot|yandex/i.test(ua);
+    if (!isBot) return next();
+
+    try {
+      const newsItem = await storage.getNewsById(req.params.id);
+      if (!newsItem) return next();
+
+      const title = `${(newsItem as any).title || "달라스 한인 뉴스"} | DalKonnect`;
+      const desc = ((newsItem as any).content || "").slice(0, 160).replace(/"/g, "&quot;");
+      const thumb = (newsItem as any).thumbnail_url || "https://dalkonnect.com/og-image.png";
+      const url = `https://dalkonnect.com/news/${req.params.id}`;
+
+      res.send(`<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<meta name="description" content="${desc}">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${desc}">
+<meta property="og:image" content="${thumb}">
+<meta property="og:url" content="${url}">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ko_KR">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="${url}">
+</head>
+<body><p>${desc}</p></body>
+</html>`);
+    } catch (e) {
+      next();
+    }
+  });
+
+  // ─── SEO: 블로그 상세 메타태그 SSR ──────────────────────────────────
+  app.get("/blog/:slug", async (req, res, next) => {
+    const ua = req.headers["user-agent"] || "";
+    const isBot = /googlebot|bingbot|slurp|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|discordbot|applebot|yandex/i.test(ua);
+    if (!isBot) return next();
+
+    try {
+      const blogItem = await db.execute(
+        sql`SELECT title, content, slug, published_at FROM blogs WHERE slug = ${req.params.slug} LIMIT 1`
+      );
+      const row = blogItem.rows?.[0];
+      if (!row) return next();
+
+      const title = `${row.title || "달라스 한인 블로그"} | DalKonnect`;
+      const desc = ((row.content as string) || "").replace(/<[^>]+>/g, "").slice(0, 160).replace(/"/g, "&quot;");
+      const url = `https://dalkonnect.com/blog/${req.params.slug}`;
+
+      res.send(`<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<meta name="description" content="${desc}">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${desc}">
+<meta property="og:url" content="${url}">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ko_KR">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="${url}">
+</head>
+<body><p>${desc}</p></body>
+</html>`);
+    } catch (e) {
+      next();
+    }
+  });
+
   return httpServer;
 }
