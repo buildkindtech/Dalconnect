@@ -154,26 +154,34 @@ async function fetchNetflixChart() {
 
 // ─── Movie Chart: TMDB 한국 현재 상영작 ──────────────────────────
 async function fetchMovieChart() {
-  console.log('🎬 Movie chart (TMDB 한국 상영작)...');
+  console.log('🎬 Movie chart (KOBIS 한국 박스오피스)...');
   const items = [];
-  const TMDB_KEY = process.env.TMDB_API_KEY;
-
-  // Primary: TMDB now_playing KR
+  const KOBIS_KEY = process.env.KOBIS_API_KEY || 'cc02361f9de3b4490515a837ff0d49b9';
+  
   try {
-    if (!TMDB_KEY) throw new Error('TMDB_API_KEY 없음');
-    const r = await fetchWithTimeout(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=ko-KR&region=KR`);
+    // 어제 날짜 (YYYYMMDD)
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10).replace(/-/g,'');
+    const r = await fetchWithTimeout(
+      `https://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=${KOBIS_KEY}&targetDt=${yesterday}`
+    );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
-    d.results?.filter(m => m.poster_path).slice(0, 10).forEach((m, i) => items.push({
-      chart_type: 'movie', rank: i + 1,
-      title_ko: m.title, title_en: m.original_title,
-      platform: '영화관',
-      thumbnail_url: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
-      score: String((m.vote_average * 10).toFixed(1))
-    }));
-    console.log(`  ✅ TMDB 영화 ${items.length}개`);
+    const list = d?.boxOfficeResult?.dailyBoxOfficeList || [];
+    list.slice(0, 10).forEach((m, i) => {
+      items.push({
+        chart_type: 'movie',
+        rank: i + 1,
+        title_ko: m.movieNm,
+        title_en: m.movieNmEn || m.movieNm,
+        platform: '영화관',
+        thumbnail_url: null,
+        score: m.audiCnt, // 당일 관객수
+        description: `누적 ${Number(m.audiAcc).toLocaleString()}명 | 개봉 ${m.openDt}`,
+      });
+    });
+    console.log(`  ✅ KOBIS 박스오피스 ${items.length}개 (${yesterday})`);
   } catch (e) {
-    console.log(`  ⚠️ TMDB 영화 실패: ${e.message}`);
+    console.log(`  ⚠️ KOBIS 실패: ${e.message}`);
   }
 
   return items;

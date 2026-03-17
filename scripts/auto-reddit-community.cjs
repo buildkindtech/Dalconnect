@@ -31,16 +31,58 @@ console.log('Gemini API:', GOOGLE_AI_KEY ? '✅' : '❌ MISSING');
 
 // ─── Reddit 소스 설정 ────────────────────────────────────────────
 const REDDIT_SOURCES = [
-  // 엄마/육아 전문 서브레딧
-  { type: 'hot',    sub: 'Mommit',       category: '육아',   nickname: '맘스코너',  minScore: 20 },
-  { type: 'hot',    sub: 'beyondthebump', category: '육아',   nickname: '육아정보',  minScore: 15 },
-  { type: 'hot',    sub: 'Parenting',     category: '육아',   nickname: '부모이야기', minScore: 20 },
-  { type: 'hot',    sub: 'toddlers',      category: '육아',   nickname: '육아정보',  minScore: 15 },
-  // 달라스 로컬 — 가족/이벤트 키워드
-  { type: 'search', sub: 'Dallas',        category: '달라스', nickname: '달라스소식', minScore: 10,
-    q: 'kids events activities toddler playground family school daycare' },
-  { type: 'search', sub: 'DFW',           category: '달라스', nickname: '달라스소식', minScore: 5,
-    q: 'family kids baby activities events school' },
+  // 육아
+  { type: 'hot',    sub: 'Mommit',            category: '육아',   nickname: '맘스코너',   minScore: 20 },
+  { type: 'hot',    sub: 'beyondthebump',      category: '육아',   nickname: '육아정보',   minScore: 15 },
+  { type: 'hot',    sub: 'Parenting',          category: '육아',   nickname: '부모이야기', minScore: 20 },
+  { type: 'hot',    sub: 'toddlers',           category: '육아',   nickname: '육아정보',   minScore: 15 },
+
+  // 달라스 로컬
+  { type: 'search', sub: 'Dallas',             category: '달라스', nickname: '달라스소식', minScore: 10,
+    q: 'kids events activities family school daycare restaurant' },
+  { type: 'hot',    sub: 'DFW',                category: '달라스', nickname: '달라스소식', minScore: 5 },
+
+  // 맛집/음식
+  { type: 'hot',    sub: 'KoreanFood',         category: '맛집',   nickname: '맛집정보',   minScore: 30 },
+  { type: 'hot',    sub: 'foodhacks',          category: '맛집',   nickname: '요리꿀팁',   minScore: 20 },
+  { type: 'search', sub: 'Dallas',             category: '맛집',   nickname: '달라스맛집', minScore: 10,
+    q: 'restaurant food korean bbq ramen pho brunch' },
+
+  // 부동산
+  { type: 'hot',    sub: 'FirstTimeHomeBuyer', category: '부동산', nickname: '부동산정보', minScore: 30 },
+  { type: 'hot',    sub: 'RealEstate',         category: '부동산', nickname: '부동산이야기', minScore: 25 },
+  { type: 'search', sub: 'DFW',                category: '부동산', nickname: '달라스부동산', minScore: 5,
+    q: 'housing rent buy home mortgage apartment' },
+
+  // 건강
+  { type: 'hot',    sub: 'nutrition',          category: '건강',   nickname: '영양정보',   minScore: 30 },
+  { type: 'hot',    sub: 'loseit',             category: '건강',   nickname: '다이어트',   minScore: 25 },
+  { type: 'hot',    sub: 'fitness',            category: '건강',   nickname: '운동정보',   minScore: 30 },
+
+  // 생활정보
+  { type: 'hot',    sub: 'personalfinance',    category: '생활정보', nickname: '재정관리',  minScore: 50 },
+  { type: 'hot',    sub: 'frugal',             category: '생활정보', nickname: '절약꿀팁',  minScore: 30 },
+  { type: 'hot',    sub: 'lifehacks',          category: '생활정보', nickname: '생활꿀팁',  minScore: 40 },
+
+  // 반려동물
+  { type: 'hot',    sub: 'dogs',               category: '반려동물', nickname: '강아지',    minScore: 50 },
+  { type: 'hot',    sub: 'cats',               category: '반려동물', nickname: '고양이',    minScore: 50 },
+  { type: 'hot',    sub: 'pets',               category: '반려동물', nickname: '펫라이프',  minScore: 30 },
+
+  // 취업/커리어
+  { type: 'hot',    sub: 'careerguidance',     category: '취업',   nickname: '커리어조언', minScore: 30 },
+  { type: 'hot',    sub: 'cscareerquestions',  category: '취업',   nickname: 'IT취업',     minScore: 40 },
+  { type: 'search', sub: 'jobs',               category: '취업',   nickname: '취업정보',   minScore: 20,
+    q: 'advice resume interview salary remote' },
+
+  // 교육
+  { type: 'hot',    sub: 'homeschool',         category: '교육',   nickname: '홈스쿨',     minScore: 20 },
+  { type: 'search', sub: 'Parenting',          category: '교육',   nickname: '교육정보',   minScore: 15,
+    q: 'school education learning tutoring college' },
+
+  // 여행
+  { type: 'hot',    sub: 'solotravel',         category: '여행',   nickname: '여행이야기', minScore: 30 },
+  { type: 'hot',    sub: 'travel',             category: '여행',   nickname: '여행정보',   minScore: 50 },
 ];
 
 // 정치/논쟁/성인 필터
