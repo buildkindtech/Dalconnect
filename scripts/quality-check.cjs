@@ -218,6 +218,44 @@ async function run() {
   console.log(`\n${status} | 자동픽스: 내용+${fixes.content} 번역+${fixes.translation} 정리+${fixes.junk}`);
   console.log(`리포트 저장: ${REPORT_PATH}`);
 
+  // 영어 기사 잔여 확인
+  const { rows: engRows } = await pool.query(`
+    SELECT COUNT(*) as cnt FROM news
+    WHERE content ~ '[A-Za-z ]{80,}' AND content !~ '[가-힣]{20,}'
+    AND created_at > NOW() - INTERVAL '24 hours'
+  `);
+  const engCount = parseInt(engRows[0].cnt || 0);
+
+  // 텔레그램 알림 (직접 전송 — AI agent 판단 없이)
+  try {
+    const tgConf = JSON.parse(fs.readFileSync('/Users/aaron/.openclaw/openclaw.json','utf8'));
+    const tgList = tgConf.channels?.telegram;
+    const tg = Array.isArray(tgList) ? tgList[0] : tgList;
+    const botToken = tg?.botToken || tg?.token;
+    const chatId = '-5280678324';
+    if (botToken) {
+      const runTime = now.toLocaleString('ko-KR', { timeZone:'America/Chicago', hour12:false });
+      let msg = '';
+      if (engCount > 0 || parseInt(f.no_content) > 0) {
+        msg = `⚠️ DalKonnect 뉴스 품질 이슈\n`
+            + `❌ 영어 기사 잔여: ${engCount}개\n`
+            + `❌ 내용 없는 기사: ${f.no_content}개\n`
+            + `🔧 자동픽스: 내용+${fixes.content} 번역+${fixes.translation} 정리+${fixes.junk}\n`
+            + `🕐 ${runTime}`;
+      } else {
+        msg = `✅ DalKonnect 뉴스 정상\n`
+            + `📰 24h 신규: ${recent.length}개 | 영어잔여: 0개\n`
+            + `🔧 자동픽스: +${fixes.content+fixes.translation+fixes.junk}건\n`
+            + `🕐 ${runTime}`;
+      }
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id: chatId, text: msg })
+      });
+      console.log('📱 텔레그램 알림 전송:', engCount > 0 ? '⚠️ 이슈' : '✅ 정상');
+    }
+  } catch(e) { console.log('텔레그램 알림 실패:', e.message); }
+
   await pool.end();
   return report;
 }
