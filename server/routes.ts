@@ -5,6 +5,7 @@ import { createCheckoutSession, verifyWebhook, handleSubscriptionCreated, handle
 import { db } from "./db";
 import { blogs, newsletterSubscribers, newsSubmissions, listings } from "../shared/schema";
 import { desc, sql, eq } from "drizzle-orm";
+import crypto from "crypto";
 
 // HTML entity decoder for news content
 function decodeHtmlEntities(text: string): string {
@@ -559,7 +560,7 @@ export async function registerRoutes(
         }
         const id = `cmt_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
         
-        const passwordHash = require('crypto').createHash('sha256').update(String(password)).digest('hex');
+        const passwordHash = crypto.createHash('sha256').update(String(password)).digest('hex');
 
         // community_comments 테이블 없으면 생성
         await db.execute(sql`
@@ -618,7 +619,7 @@ export async function registerRoutes(
         }
         
         const stored = result.rows[0].password_hash as string;
-        const hashedInput = require('crypto').createHash('sha256').update(String(password)).digest('hex');
+        const hashedInput = crypto.createHash('sha256').update(String(password)).digest('hex');
         const valid = hashedInput === stored || password === stored;
         if (!valid) return res.status(403).json({ success: false, message: '비밀번호 오류' });
         if (type === 'post') {
@@ -637,7 +638,7 @@ export async function registerRoutes(
         }
         const id = `post_user_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
         
-        const passwordHash = require('crypto').createHash('sha256').update(String(password)).digest('hex');
+        const passwordHash = crypto.createHash('sha256').update(String(password)).digest('hex');
         const tagJson = Array.isArray(tags) ? JSON.stringify(tags) : (tags || '[]');
         await db.execute(sql`
           INSERT INTO community_posts (id, nickname, password_hash, title, content, category, tags, views, likes, comment_count, is_pinned, created_at, updated_at, city)

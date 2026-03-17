@@ -185,7 +185,7 @@ async function fetchRedditPosts() {
           category: src.category,
           nickname: src.nickname,
           city: ['Dallas','DFW','FortWorth'].includes(src.sub) ? 'dallas' : null,
-          tags: ['reddit', src.category === '육아' ? '육아' : '달라스'],
+          tags: [src.category, src.sub.toLowerCase()].filter(Boolean),
           redditUrl: `https://www.reddit.com${p.permalink}`,
           score: p.score,
           needsTranslation: !/[\uAC00-\uD7AF]{3,}/.test(rawTitle),

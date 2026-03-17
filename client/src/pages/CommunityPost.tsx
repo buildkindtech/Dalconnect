@@ -215,7 +215,7 @@ export default function CommunityPost() {
 
   const formatTimeAgo = (dateString: string) => {
     const now = new Date();
-    const postDate = new Date(dateString);
+    const postDate = new Date(dateString.endsWith('Z') ? dateString : dateString + 'Z');
     const diffInMinutes = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60));
     
     if (diffInMinutes < 60) {
