@@ -514,11 +514,45 @@ export default function Home() {
 
 
 
-      {/* 히어로 바로 아래 광고 배너 */}
+      {/* 히어로 바로 아래 광고 배너 (데스크탑) */}
       {featured.length > 0 && (
-        <section className="bg-white pt-4 pb-2">
+        <section className="bg-white pt-4 pb-2 hidden md:block">
           <div className="container mx-auto px-4 max-w-4xl">
             <AdBanner size="leaderboard" businesses={leaderboardPool} />
+          </div>
+        </section>
+      )}
+
+      {/* 모바일 전용: 히어로 아래 가로 스크롤 광고 strip */}
+      {leaderboardPool.length > 0 && (
+        <section className="md:hidden bg-white py-3">
+          <div className="px-3 mb-1.5 flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">추천 업체</span>
+            <span className="text-[10px] text-gray-400 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">광고</span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto px-3 pb-1 scrollbar-hide" style={{ scrollSnapType: 'x mandatory' }}>
+            {leaderboardPool.slice(0, 10).map((biz: any) => {
+              const name = biz.name_ko || biz.name_en || '';
+              const rating = Number(biz.rating || 0).toFixed(1);
+              return (
+                <a key={biz.id} href={`/business/${biz.id}`}
+                  className="flex-shrink-0 w-[120px] rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-white"
+                  style={{ scrollSnapAlign: 'start' }}>
+                  {biz.cover_url ? (
+                    <div className="h-[80px] w-full relative"
+                      style={{ backgroundImage: `url(${biz.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    </div>
+                  ) : (
+                    <div className="h-[80px] bg-gradient-to-br from-blue-500 to-indigo-600" />
+                  )}
+                  <div className="p-2">
+                    <p className="text-[11px] font-bold text-gray-800 leading-tight line-clamp-2">{name}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">⭐ {rating} · {biz.category}</p>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </section>
       )}

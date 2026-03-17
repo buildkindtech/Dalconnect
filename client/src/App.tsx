@@ -112,26 +112,7 @@ function SideAdStrip({ bizList, side, isHome }: { bizList: any[]; side: 'left' |
           );
         })}
       </div>
-      {/* 모바일: 화면 옆 플로팅 뱃지 3개 세로 */}
-      <div className={`xl:hidden fixed ${side === 'left' ? 'left-1' : 'right-1'} top-16 z-40 flex flex-col gap-1.5`}>
-        {bizList.slice(0, 3).map((biz: any) => {
-          const name = biz.name_ko || biz.name_en || '';
-          const rating = Number(biz.rating || 0).toFixed(1);
-          return (
-            <a key={biz.id} href={`/business/${biz.id}`}
-              className="bg-white shadow-xl rounded-xl border border-gray-200 overflow-hidden w-[68px]">
-              {biz.cover_url && (
-                <div className="h-[48px] w-full" style={{ backgroundImage: `url(${biz.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-              )}
-              <div className="px-1 py-1 text-center">
-                <span className="text-[7px] bg-amber-400 text-black px-1 py-0.5 rounded font-bold">광고</span>
-                <p className="text-[9px] font-bold text-gray-800 leading-tight mt-0.5 line-clamp-2">{name}</p>
-                <p className="text-[8px] text-gray-500">⭐{rating}</p>
-              </div>
-            </a>
-          );
-        })}
-      </div>
+      {/* 모바일: 제거 — 가로 스크롤 광고는 Home.tsx에서 처리 */}
     </>
   );
 }
