@@ -39,8 +39,10 @@ console.log('Gemini API:', GOOGLE_AI_KEY ? 'loaded' : 'MISSING');
 
 async function translateToKorean(title, content) {
   if (!GOOGLE_AI_KEY) return { title, content };
-  // Skip if already Korean
-  if (/[\uAC00-\uD7AF]/.test(title)) return { title, content };
+  const titleIsKorean = /[\uAC00-\uD7AF]{3,}/.test(title);
+  const contentIsKorean = /[\uAC00-\uD7AF]{3,}/.test(content || '');
+  // Skip if both already Korean
+  if (titleIsKorean && contentIsKorean) return { title, content };
   
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
@@ -49,16 +51,15 @@ async function translateToKorean(title, content) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `뉴스 제목과 내용을 자연스러운 한국어로 번역하세요. 반드시 JSON만 반환: {"title":"번역된제목","content":"번역된내용"}\n\n제목: ${title}\n내용: ${(content || '').substring(0, 300)}`
+            text: `뉴스 제목과 내용을 자연스러운 한국어로 번역하세요. 반드시 JSON만 반환: {"title":"번역된제목","content":"번역된내용"}\n\n제목: ${title}\n내용: ${(content || '').substring(0, 1500)}`
           }]
         }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
+        generationConfig: { temperature: 0.2, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 0 } },
       }),
     });
     if (!res.ok) return { title, content };
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    // Extract JSON from response (might have markdown code blocks)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return { title, content };
     const parsed = JSON.parse(jsonMatch[0]);
