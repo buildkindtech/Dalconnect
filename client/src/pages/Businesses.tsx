@@ -366,8 +366,7 @@ export default function Businesses() {
       <div className="container mx-auto px-4 py-6 md:py-8">
         <div className="flex gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0">
-            <div className="sticky top-24 space-y-4">
+          <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0 space-y-4">
               {/* 필터 */}
               <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
@@ -384,9 +383,10 @@ export default function Businesses() {
                   onCategoryClick={handleCategoryClick} onCityClick={handleCityClick}
                 />
               </div>
-              {/* 광고 사이드바 */}
-              <SidebarAds selectedCategory={selectedCategory} />
-            </div>
+              {/* 광고 사이드바 - sticky */}
+              <div className="sticky top-24">
+                <SidebarAds selectedCategory={selectedCategory} />
+              </div>
           </aside>
 
           {/* Results */}

@@ -224,9 +224,10 @@ export default function Home() {
           if (data.businesses && data.businesses.length > 0) {
             const koreanRegex = /[가-힣]/;
             const koreanRestaurants = data.businesses.filter((b: any) =>
-              koreanRegex.test(b.name_ko || '') || koreanRegex.test(b.name_en || '')
+              (koreanRegex.test(b.name_ko || '') || koreanRegex.test(b.name_en || '')) && b.cover_url
             );
-            const pool = koreanRestaurants.length > 0 ? koreanRestaurants : data.businesses;
+            const withImage = koreanRestaurants.length > 0 ? koreanRestaurants : data.businesses.filter((b: any) => b.cover_url);
+            const pool = withImage.length > 0 ? withImage : data.businesses;
             const randomIndex = Math.floor(Math.random() * pool.length);
             setRestaurantOfDay(pool[randomIndex]);
           }
@@ -343,22 +344,23 @@ export default function Home() {
     return () => clearInterval(t);
   }, [allFeatured.length]);
   // 3등분 — 각 배너 타입이 겹치지 않는 업체 풀 사용
-  const { leaderboardPool, infeedPool } = useMemo(() => {
-    if (allFeatured.length === 0) return { leaderboardPool: [], infeedPool: [] };
-    const third = Math.ceil(allFeatured.length / 3);
+  const { leaderboardPool, leaderboard2Pool, infeedPool } = useMemo(() => {
+    if (allFeatured.length === 0) return { leaderboardPool: [], leaderboard2Pool: [], infeedPool: [] };
+    const f = [...allFeatured];
+    // 3등분: 배너1(0-19) | 배너2(20-39) | 그리드(40+)
     return {
-      leaderboardPool: allFeatured.slice(0, third),
-      infeedPool: allFeatured.slice(third * 2),
+      leaderboardPool:  f.slice(0, 20),
+      leaderboard2Pool: f.slice(20, 40),
+      infeedPool:       f.slice(40),
     };
   }, [allFeatured]);
 
   const shuffledFeatured = useMemo(() => {
-    if (allFeatured.length === 0) return [];
-    // featuredSlot 기반으로 섞되, 매번 다른 6개
-    const arr = [...allFeatured];
+    const arr = infeedPool.length > 0 ? [...infeedPool] : [...allFeatured];
+    if (arr.length === 0) return [];
     const offset = (featuredSlot * 6) % arr.length;
     return [...arr.slice(offset), ...arr.slice(0, offset)].slice(0, 6);
-  }, [allFeatured, featuredSlot]);
+  }, [allFeatured, infeedPool, featuredSlot]);
   const featured = shuffledFeatured;
   const recentNews = newsItems?.slice(0, 3) ?? [];
   const recentBlogs = blogPosts?.slice(0, 3) ?? [];
@@ -509,6 +511,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+
 
       {/* 히어로 바로 아래 광고 배너 */}
       {featured.length > 0 && (
@@ -679,7 +683,7 @@ export default function Home() {
       {featured.length > 0 && (
         <section className="py-4 bg-white border-t border-slate-100">
           <div className="container mx-auto px-4">
-            <AdBanner size="leaderboard" businesses={leaderboardPool} />
+            <AdBanner size="leaderboard" businesses={leaderboard2Pool.length > 0 ? leaderboard2Pool : leaderboardPool} />
           </div>
         </section>
       )}

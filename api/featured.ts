@@ -66,17 +66,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       // Original featured businesses endpoint
       if (!action) {
-        // Featured businesses from all DFW cities (no city filter)
+        // 시간 기반 시드로 랜덤 로테이션 (1시간마다 바뀜)
+        // featured=true 우선, 나머지는 전체 풀에서 랜덤
+        const hourSeed = Math.floor(Date.now() / (1000 * 60 * 60)); // 1시간마다 변경
         const query = `
-          SELECT * FROM businesses 
-          WHERE featured = true 
-          ORDER BY rating DESC NULLS LAST, created_at DESC
+          (SELECT *, 1 as priority FROM businesses 
+           WHERE featured = true AND cover_url IS NOT NULL
+           ORDER BY md5(id || $1::text)
+           LIMIT 6)
+          UNION ALL
+          (SELECT *, 2 as priority FROM businesses 
+           WHERE (featured IS NOT TRUE OR featured IS NULL) 
+             AND rating >= 4.0 
+             AND cover_url IS NOT NULL
+           ORDER BY md5(id || $1::text)
+           LIMIT 6)
+          ORDER BY priority, md5(id || $1::text)
           LIMIT 12
         `;
 
-        const result = await pool.query(query);
+        const result = await pool.query(query, [String(hourSeed)]);
+        // priority 컬럼 제거
+        const rows = result.rows.map(({ priority, ...rest }: any) => rest);
         await pool.end();
-        return res.status(200).json(result.rows);
+        
+        // Cache 1시간
+        res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=300');
+        return res.status(200).json(rows);
       }
     }
 

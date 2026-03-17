@@ -392,7 +392,11 @@ export default function CommunityPost() {
               <CardContent>
                 <div 
                   className="prose max-w-none mb-6"
-                  dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br>') }}
+                  dangerouslySetInnerHTML={{ __html: post.content
+                    // 마크다운 링크 [텍스트](url) → <a> 태그
+                    .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">$1 ↗</a>')
+                    .replace(/\n/g, '<br>')
+                  }}
                 />
                 
                 <Separator className="my-6" />

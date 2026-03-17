@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { users, businesses, news, type User, type InsertUser, type Business, type News } from "../shared/schema";
-import { eq, and, desc, asc, or, ilike } from "drizzle-orm";
+import { eq, and, desc, asc, or, ilike, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -75,7 +75,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFeaturedBusinesses(): Promise<Business[]> {
-    return db.select().from(businesses).where(eq(businesses.featured, true)).limit(10);
+    // 시간 기반 랜덤 로테이션 (1시간마다 변경) — 60개 반환 (배너1/배너2/추천그리드 각 20개)
+    const hourSeed = String(Math.floor(Date.now() / (1000 * 60 * 60)));
+    const result = await db.execute(sql`
+      SELECT *, md5(id || ${hourSeed}) as sort_key
+      FROM businesses
+      WHERE featured = true AND cover_url IS NOT NULL AND cover_url != ''
+      ORDER BY md5(id || ${hourSeed})
+      LIMIT 60
+    `);
+    return (result.rows as any[]).map(({ sort_key, ...rest }) => rest);
   }
 
   async getNews(category?: string, limit: number = 200): Promise<News[]> {

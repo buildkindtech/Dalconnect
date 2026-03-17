@@ -74,39 +74,65 @@ import Charts from "./pages/Charts";
 import Deals from "./pages/Deals";
 import Shopping from "./pages/Shopping";
 
-// 양쪽 광고 한 줄 배너 (히어로 아래 콘텐츠 구간에 표시)
-function SideAdStrip({ biz, side }: { biz: any; side: 'left' | 'right' }) {
-  if (!biz) return <div className="hidden xl:block w-[150px] flex-shrink-0" />;
-  const name = biz.name_ko || biz.name_en || '';
+// 양쪽 광고 — 데스크탑: 사이드 카드 3개, 모바일: 플로팅 뱃지 3개
+function SideAdStrip({ bizList, side, isHome }: { bizList: any[]; side: 'left' | 'right'; isHome?: boolean }) {
+  if (!bizList || bizList.length === 0) return <div className="hidden xl:block w-[150px] flex-shrink-0" />;
   return (
-    <a
-      href={`/business/${biz.id}`}
-      className="hidden xl:block w-[150px] flex-shrink-0 self-start mt-[620px] group"
-    >
-      <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-gray-100">
-        {biz.cover_url ? (
-          <div
-            className="relative h-[200px]"
-            style={{ backgroundImage: `url(${biz.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-            <div className="absolute top-2 left-2">
-              <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-bold">광고</span>
-            </div>
-            <div className="absolute bottom-0 p-2.5">
-              <p className="text-white text-xs font-bold leading-tight line-clamp-2">{name}</p>
-              <p className="text-white/70 text-[10px] mt-0.5">⭐ {Number(biz.rating || 0).toFixed(1)} · {biz.category}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="h-[200px] bg-gradient-to-br from-blue-600 to-indigo-700 flex flex-col items-center justify-center p-3 gap-2">
-            <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-bold">광고</span>
-            <p className="text-white text-xs font-bold text-center leading-tight">{name}</p>
-            <p className="text-white/70 text-[10px]">⭐ {Number(biz.rating || 0).toFixed(1)}</p>
-          </div>
-        )}
+    <>
+      {/* 데스크탑: 카드 3개 세로 배치 */}
+      {/* 홈: 히어로(600px) 아래서 시작 / 다른 페이지: 네비 바 아래 sticky */}
+      <div className={`hidden xl:flex flex-col gap-4 w-[150px] flex-shrink-0 sticky top-16 self-start pt-4 ${isHome ? 'mt-[600px]' : ''}`}>
+        {bizList.slice(0, 3).map((biz: any) => {
+          const name = biz.name_ko || biz.name_en || '';
+          const rating = Number(biz.rating || 0).toFixed(1);
+          return (
+            <a key={biz.id} href={`/business/${biz.id}`} className="group block">
+              <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-gray-100">
+                {biz.cover_url ? (
+                  <div className="relative h-[200px]"
+                    style={{ backgroundImage: `url(${biz.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                    <div className="absolute top-2 left-2">
+                      <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-bold">광고</span>
+                    </div>
+                    <div className="absolute bottom-0 p-2.5">
+                      <p className="text-white text-xs font-bold leading-tight line-clamp-2">{name}</p>
+                      <p className="text-white/70 text-[10px] mt-0.5">⭐ {rating} · {biz.category}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-[200px] bg-gradient-to-br from-blue-600 to-indigo-700 flex flex-col items-center justify-center p-3 gap-2">
+                    <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-bold">광고</span>
+                    <p className="text-white text-xs font-bold text-center leading-tight">{name}</p>
+                    <p className="text-white/70 text-[10px]">⭐ {rating}</p>
+                  </div>
+                )}
+              </div>
+            </a>
+          );
+        })}
       </div>
-    </a>
+      {/* 모바일: 화면 옆 플로팅 뱃지 3개 세로 */}
+      <div className={`xl:hidden fixed ${side === 'left' ? 'left-1' : 'right-1'} top-16 z-40 flex flex-col gap-1.5`}>
+        {bizList.slice(0, 3).map((biz: any) => {
+          const name = biz.name_ko || biz.name_en || '';
+          const rating = Number(biz.rating || 0).toFixed(1);
+          return (
+            <a key={biz.id} href={`/business/${biz.id}`}
+              className="bg-white shadow-xl rounded-xl border border-gray-200 overflow-hidden w-[68px]">
+              {biz.cover_url && (
+                <div className="h-[48px] w-full" style={{ backgroundImage: `url(${biz.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              )}
+              <div className="px-1 py-1 text-center">
+                <span className="text-[7px] bg-amber-400 text-black px-1 py-0.5 rounded font-bold">광고</span>
+                <p className="text-[9px] font-bold text-gray-800 leading-tight mt-0.5 line-clamp-2">{name}</p>
+                <p className="text-[8px] text-gray-500">⭐{rating}</p>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
@@ -122,8 +148,10 @@ function Router() {
       .catch(() => {});
   }, []);
 
-  const leftAd = adBusinesses.find((b: any) => b.cover_url);
-  const rightAd = adBusinesses.filter((b: any) => b.cover_url)[1] || adBusinesses[1];
+  // 사이드 광고: 뒤에서 6개 → 좌 3개 / 우 3개 (앞은 배너에서 쓰니 겹침 방지)
+  const withCover = adBusinesses.filter((b: any) => b.cover_url);
+  const leftAdList = withCover.length >= 6 ? withCover.slice(-6, -3) : withCover.slice(0, 3);
+  const rightAdList = withCover.length >= 3 ? withCover.slice(-3) : [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -131,7 +159,7 @@ function Router() {
       <Header />
       <main className="flex-1">
         <div className="flex gap-4 max-w-[1440px] mx-auto">
-          <SideAdStrip biz={leftAd} side="left" />
+          <SideAdStrip bizList={leftAdList} side="left" isHome={location === '/'} />
           <div className="flex-1 min-w-0">
         <ErrorBoundary resetKey={currentPath}>
         <Switch>
@@ -161,7 +189,7 @@ function Router() {
         </Switch>
         </ErrorBoundary>
           </div>
-          <SideAdStrip biz={rightAd} side="right" />
+          <SideAdStrip bizList={rightAdList} side="right" isHome={location === '/'} />
         </div>
       </main>
       <Footer />
