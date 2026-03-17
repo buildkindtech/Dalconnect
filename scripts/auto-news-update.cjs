@@ -109,11 +109,7 @@ const RSS_FEEDS = [
   { url: 'https://rss.donga.com/international.xml', category: '월드뉴스', source: '동아 국제', city: null },
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: '월드뉴스', source: 'BBC World', city: null, translate: true },
 
-  // 육아
-  { url: 'https://www.ibabynews.com/rss/S1N4.xml', category: '육아', source: '베이비뉴스 육아교육', city: null },
-  { url: 'https://www.ibabynews.com/rss/S1N3.xml', category: '육아', source: '베이비뉴스 생활건강', city: null },
-  { url: 'https://www.ibabynews.com/rss/S1N2.xml', category: '육아', source: '베이비뉴스 임신출산', city: null },
-  { url: 'https://www.mother.ly/feed/', category: '육아', source: 'Motherly', city: null, translate: true },
+  // 육아 소스 제거 (달라스 한인 헤드라인 뉴스 위주로 전환)
 
   // 취업/사업
   { url: 'https://www.entrepreneur.com/latest/feed', category: '취업/사업', source: 'Entrepreneur', city: null, translate: true },
@@ -405,11 +401,7 @@ async function insertIfNew(article) {
 // ─── Reddit 엄마/육아/생활정보 수집 ─────────────────────────────
 // 전략: ① 엄마/육아 전문 서브레딧 (hot) ② DFW 로컬 키워드 검색
 const REDDIT_SOURCES = [
-  // 엄마/육아 전문
-  { type: 'hot',    subreddit: 'Mommit',       category: '육아',    label: 'r/Mommit',         minScore: 20 },
-  { type: 'hot',    subreddit: 'beyondthebump', category: '육아',    label: 'r/beyondthebump',  minScore: 15 },
-  { type: 'hot',    subreddit: 'Parenting',     category: '육아',    label: 'r/Parenting',      minScore: 20 },
-  { type: 'hot',    subreddit: 'toddlers',      category: '육아',    label: 'r/toddlers',       minScore: 15 },
+  // 육아 전문 서브레딧 제거 → 헤드라인 뉴스 위주
   // DFW 로컬 — 가족/아이 관련 키워드 검색
   { type: 'search', subreddit: 'Dallas',        category: '달라스',  label: 'r/Dallas 이벤트',   q: 'kids events activities toddler playground school', minScore: 10 },
   { type: 'search', subreddit: 'DFW',           category: '달라스',  label: 'r/DFW 가족',        q: 'family kids baby daycare school activities',       minScore: 5  },
@@ -498,8 +490,8 @@ async function run() {
     await new Promise(r => setTimeout(r, 500));
   }
 
-  // ─── Reddit 달라스 생활정보 ───────────────────────────────────
-  console.log('\n\n━━━ Reddit 달라스 생활정보 수집 ━━━');
+  // ─── Reddit 달라스 생활정보 → community_posts ───────────────
+  console.log('\n\n━━━ Reddit 달라스 커뮤니티 수집 ━━━');
   const redditPosts = await fetchRedditPosts();
   let redditCount = 0;
   for (const item of redditPosts) {
@@ -510,14 +502,22 @@ async function run() {
       item.content = t.content || item.content;
       await new Promise(r => setTimeout(r, 300));
     }
-    const inserted = await insertIfNew(item);
-    if (inserted) {
-      console.log(`  ✅ ${item.source}: ${item.title.substring(0, 55)}`);
+    // news 테이블 아닌 community_posts로 저장
+    try {
+      const ex = await pool.query('SELECT id FROM community_posts WHERE title=$1 LIMIT 1', [item.title]);
+      if (ex.rows.length > 0) continue;
+      await pool.query(
+        `INSERT INTO community_posts (id, nickname, title, content, category, views, likes, comment_count, is_pinned, password_hash, ip_hash, city, created_at, updated_at)
+         VALUES (gen_random_uuid(), $1, $2, $3, $4, 0, 0, 0, false, '', 'reddit-bot', $5, NOW(), NOW())`,
+        [item.source, item.title, item.content, '달라스', item.city || 'dallas']
+      );
+      console.log(`  ✅ 커뮤니티: ${item.title.substring(0, 55)}`);
       redditCount++;
-      total++;
+    } catch(e) {
+      console.log(`  ⚠️ 커뮤니티 삽입 실패: ${e.message}`);
     }
   }
-  console.log(`  Reddit: ${redditCount}개 신규 추가`);
+  console.log(`  Reddit → 커뮤니티: ${redditCount}개 신규 추가`);
 
   console.log(`\n[수집 완료] ${total}개 새 기사 추가 (${errors}개 소스 실패)`);
   
