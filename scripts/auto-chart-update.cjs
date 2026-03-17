@@ -330,45 +330,67 @@ function extractXmlTag(xml, tag) {
   return match ? match[1].trim() : null;
 }
 
-// ─── DB Upsert ───────────────────────────────────────────────────
+// ─── DB Smart Upsert (변경된 것만 업데이트, 썸네일 보존) ──────────
 async function upsertCharts(items) {
   if (items.length === 0) return 0;
-  
-  let count = 0;
+
+  let updated = 0, preserved = 0;
   for (const item of items) {
     try {
-      // Delete existing entry for this chart_type + rank + today's date
-      await pool.query(
-        'DELETE FROM charts WHERE chart_type = $1 AND rank = $2 AND chart_date = $3',
-        [item.chart_type, item.rank, TODAY]
-      );
-      
-      // score column is numeric(3,1), max 99.9
       const score = item.score ? Math.min(parseFloat(item.score), 99.9).toFixed(1) : null;
-      
-      await pool.query(
-        `INSERT INTO charts (chart_type, rank, title_ko, title_en, artist, platform, thumbnail_url, description, score, chart_date, youtube_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-        [
-          item.chart_type,
-          item.rank,
-          item.title_ko,
-          item.title_en || item.title_ko,
-          item.artist || '',
-          item.platform || '',
-          item.thumbnail_url || null,
-          item.description || null,
-          score,
-          TODAY,
-          item.youtube_url || null,
-        ]
+      const newThumb = item.thumbnail_url && item.thumbnail_url.trim() !== '' ? item.thumbnail_url : null;
+
+      // 기존 레코드 확인
+      const existing = await pool.query(
+        'SELECT title_ko, thumbnail_url FROM charts WHERE chart_type = $1 AND rank = $2 ORDER BY chart_date DESC LIMIT 1',
+        [item.chart_type, item.rank]
       );
-      count++;
+
+      if (existing.rows.length > 0) {
+        const ex = existing.rows[0];
+        const existingThumb = ex.thumbnail_url && ex.thumbnail_url.trim() !== '' ? ex.thumbnail_url : null;
+        // API 실패로 썸네일 없으면 기존 것 유지
+        const finalThumb = newThumb || existingThumb;
+        const titleChanged = ex.title_ko !== item.title_ko;
+
+        if (!titleChanged && existingThumb && !newThumb) {
+          // 변경 없음 — 날짜만 갱신, 썸네일 보존
+          await pool.query(
+            'UPDATE charts SET chart_date = $1, score = $2 WHERE chart_type = $3 AND rank = $4',
+            [TODAY, score, item.chart_type, item.rank]
+          );
+          preserved++;
+        } else {
+          // 제목 바뀌었거나 썸네일 새로 생김 → 업데이트
+          await pool.query(
+            `UPDATE charts SET title_ko=$1, title_en=$2, artist=$3, platform=$4,
+             thumbnail_url=$5, description=$6, score=$7, chart_date=$8, youtube_url=$9
+             WHERE chart_type=$10 AND rank=$11`,
+            [item.title_ko, item.title_en || item.title_ko, item.artist || '',
+             item.platform || '', finalThumb, item.description || null,
+             score, TODAY, item.youtube_url || null, item.chart_type, item.rank]
+          );
+          updated++;
+          if (titleChanged) console.log(`  🔄 ${item.chart_type}#${item.rank}: ${ex.title_ko?.substring(0,20)} → ${item.title_ko?.substring(0,20)}`);
+        }
+      } else {
+        // 신규 항목 INSERT
+        await pool.query(
+          `INSERT INTO charts (chart_type, rank, title_ko, title_en, artist, platform, thumbnail_url, description, score, chart_date, youtube_url)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+          [item.chart_type, item.rank, item.title_ko, item.title_en || item.title_ko,
+           item.artist || '', item.platform || '', newThumb, item.description || null,
+           score, TODAY, item.youtube_url || null]
+        );
+        updated++;
+        console.log(`  ➕ 신규: ${item.chart_type}#${item.rank} ${item.title_ko?.substring(0,30)}`);
+      }
     } catch (e) {
-      console.error(`  ❌ Insert error (${item.chart_type} #${item.rank}): ${e.message}`);
+      console.error(`  ❌ Upsert error (${item.chart_type} #${item.rank}): ${e.message}`);
     }
   }
-  return count;
+  console.log(`  → ${updated}개 업데이트, ${preserved}개 변경없음(썸네일 보존)`);
+  return updated;
 }
 
 // ─── Fallback: update chart_date to today for stale data ─────────

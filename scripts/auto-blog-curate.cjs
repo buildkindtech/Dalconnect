@@ -266,7 +266,16 @@ function generateSlug(title) {
 
 async function insertBlog(blog) {
   try {
-    // Dedupe by similar title
+    // ① source_url 기반 중복 체크 (Gemini 재작성으로 제목이 달라져도 막음)
+    if (blog.source_url) {
+      const byUrl = await pool.query(
+        "SELECT id FROM blogs WHERE source_url = $1 LIMIT 1",
+        [blog.source_url]
+      );
+      if (byUrl.rows.length > 0) return 'skip';
+    }
+
+    // ② 제목 기반 중복 체크 (source_url 없는 기존 데이터 대비)
     const existing = await pool.query(
       "SELECT id FROM blogs WHERE title = $1 LIMIT 1",
       [blog.title]
@@ -281,13 +290,14 @@ async function insertBlog(blog) {
 
     await pool.query(
       `INSERT INTO blogs (id, title, slug, content, excerpt, category, author,
-       tags, cover_image, published_at, created_at, city)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW(),'dallas')`,
+       tags, cover_image, published_at, created_at, city, source_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW(),'dallas',$10)`,
       [
         id, blog.title, slug, blog.content, blog.excerpt, blog.category,
         'DalKonnect 에디터',
         JSON.stringify(blog.tags),
-        coverImage
+        coverImage,
+        blog.source_url || null
       ]
     );
     
@@ -313,6 +323,18 @@ async function main() {
     }
     
     for (const item of items) {
+      // Gemini 호출 전에 source_url 중복 체크 (API 비용 절약)
+      if (item.link) {
+        const preCheck = await pool.query(
+          "SELECT id FROM blogs WHERE source_url = $1 LIMIT 1",
+          [item.link]
+        );
+        if (preCheck.rows.length > 0) {
+          console.log(`  ⏭️ 이미 수집됨 (source_url): ${item.link.substring(0, 60)}`);
+          continue;
+        }
+      }
+
       // Rewrite as Korean blog post
       const blog = await rewriteAsKoreanBlog(
         { ...item, translate: source.translate },
@@ -321,6 +343,9 @@ async function main() {
       
       if (!blog) continue;
       
+      // source_url 전달
+      blog.source_url = item.link || null;
+
       const result = await insertBlog(blog);
       if (result === 'inserted') {
         totalAdded++;

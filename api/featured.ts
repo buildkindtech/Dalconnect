@@ -70,17 +70,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // featured=true 우선, 나머지는 전체 풀에서 랜덤
         const hourSeed = Math.floor(Date.now() / (1000 * 60 * 60)); // 1시간마다 변경
         const query = `
-          (SELECT *, 1 as priority FROM businesses 
-           WHERE featured = true AND cover_url IS NOT NULL
-           ORDER BY md5(id || $1::text)
-           LIMIT 6)
-          UNION ALL
-          (SELECT *, 2 as priority FROM businesses 
-           WHERE (featured IS NOT TRUE OR featured IS NULL) 
-             AND rating >= 4.0 
-             AND cover_url IS NOT NULL
-           ORDER BY md5(id || $1::text)
-           LIMIT 6)
+          SELECT * FROM (
+            (SELECT *, 1 as priority FROM businesses 
+             WHERE featured = true AND cover_url IS NOT NULL
+             ORDER BY md5(id || $1::text)
+             LIMIT 6)
+            UNION ALL
+            (SELECT *, 2 as priority FROM businesses 
+             WHERE (featured IS NOT TRUE OR featured IS NULL) 
+               AND rating >= 4.0 
+               AND cover_url IS NOT NULL
+             ORDER BY md5(id || $1::text)
+             LIMIT 6)
+          ) sub
           ORDER BY priority, md5(id || $1::text)
           LIMIT 12
         `;
