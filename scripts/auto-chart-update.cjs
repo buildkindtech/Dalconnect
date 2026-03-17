@@ -154,12 +154,13 @@ async function fetchNetflixChart() {
 
 // ─── Movie Chart: TMDB 한국 현재 상영작 ──────────────────────────
 async function fetchMovieChart() {
-  console.log('🎬 Movie chart (KOBIS 한국 박스오피스)...');
+  console.log('🎬 Movie chart (KOBIS 순위 + TMDB 포스터)...');
   const items = [];
   const KOBIS_KEY = process.env.KOBIS_API_KEY || 'cc02361f9de3b4490515a837ff0d49b9';
-  
+  const TMDB_KEY = process.env.TMDB_API_KEY;
+
   try {
-    // 어제 날짜 (YYYYMMDD)
+    // 1. KOBIS에서 박스오피스 순위
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10).replace(/-/g,'');
     const r = await fetchWithTimeout(
       `https://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=${KOBIS_KEY}&targetDt=${yesterday}`
@@ -167,21 +168,40 @@ async function fetchMovieChart() {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
     const list = d?.boxOfficeResult?.dailyBoxOfficeList || [];
-    list.slice(0, 10).forEach((m, i) => {
+
+    // 2. 각 영화마다 TMDB에서 포스터 검색
+    for (let i = 0; i < Math.min(list.length, 10); i++) {
+      const m = list[i];
+      let thumbnail_url = null;
+
+      if (TMDB_KEY) {
+        try {
+          const query = encodeURIComponent(m.movieNmEn || m.movieNm);
+          const tr = await fetchWithTimeout(
+            `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}&language=ko-KR`
+          );
+          if (tr.ok) {
+            const td = await tr.json();
+            const found = td.results?.find(r => r.poster_path);
+            if (found) thumbnail_url = `https://image.tmdb.org/t/p/w342${found.poster_path}`;
+          }
+        } catch(e) { /* 포스터 실패해도 순위는 저장 */ }
+      }
+
       items.push({
         chart_type: 'movie',
         rank: i + 1,
         title_ko: m.movieNm,
         title_en: m.movieNmEn || m.movieNm,
         platform: '영화관',
-        thumbnail_url: null,
-        score: m.audiCnt, // 당일 관객수
+        thumbnail_url,
+        score: m.audiCnt,
         description: `누적 ${Number(m.audiAcc).toLocaleString()}명 | 개봉 ${m.openDt}`,
       });
-    });
-    console.log(`  ✅ KOBIS 박스오피스 ${items.length}개 (${yesterday})`);
+    }
+    console.log(`  ✅ KOBIS 박스오피스 ${items.length}개 + TMDB 포스터 (${yesterday})`);
   } catch (e) {
-    console.log(`  ⚠️ KOBIS 실패: ${e.message}`);
+    console.log(`  ⚠️ 영화 차트 실패: ${e.message}`);
   }
 
   return items;
