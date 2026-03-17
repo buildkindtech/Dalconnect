@@ -114,7 +114,7 @@ async function handleGetPosts(pool: pg.Pool, req: VercelRequest, res: VercelResp
     params
   );
 
-  return res.json({ success: true, data: rows });
+  return res.json({ success: true, posts: rows, data: rows });
 }
 
 async function handleGetPost(pool: pg.Pool, req: VercelRequest, res: VercelResponse) {
