@@ -15,9 +15,19 @@ const DATABASE_URL = process.env.DATABASE_URL;
 // 채널 목록 (나중에 추가 가능)
 const CHANNELS = [
   {
-    id: 'UCzikZfE3N5Lx3t9xWlh8wUg',
-    name: '유리카트',
-    store: 'costco', // 주 카테고리
+    id: 'UCCdgPLwzekVePdHOZ4pd_Vw',
+    name: "Costco's Latest",
+    store: 'costco',
+  },
+  {
+    id: 'UCyMZWJy9zk07ZIQ62Gwdnpw',
+    name: "Natasha's List (TJ's)",
+    store: 'traderjoes',
+  },
+  {
+    id: 'UCVWLdHSHnjMvyOrWDTl4Vcg',
+    name: "Trader Joe's Talia",
+    store: 'traderjoes',
   },
 ];
 
