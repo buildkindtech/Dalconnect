@@ -230,6 +230,21 @@ function cleanHtml(text) {
   c = c.replace(/수정\s*\d{4}-\d{2}-\d{2}[^가-힣]{0,20}/g, '');
   c = c.replace(/등록\s*\d{4}-\d{2}-\d{2}[^가-힣]{0,20}/g, '');
   c = c.replace(/광고\s*(?=[가-힣])/g, '');
+  // 영문 뉴스 메타데이터 정제 (WFAA, NBC DFW 등)
+  c = c.replace(/Credit:\s*[^.]+\.\s*/gi, '');
+  c = c.replace(/Author:\s*[^\n.]+[\n.]?\s*/gi, '');
+  c = c.replace(/Published:\s*[A-Z]{2}\s+CDT\s+\w+\s+\d+,\s*\d{4}\s*/gi, '');
+  c = c.replace(/Updated:\s*[A-Z]{2}\s+CDT\s+\w+\s+\d+,\s*\d{4}\s*/gi, '');
+  c = c.replace(/PHOTOS?:\s*/gi, '');
+  // 사진 번호 패턴 제거 (예: 1/16 Creative Captures by Her)
+  c = c.replace(/\d+\/\d+\s+[A-Z][a-zA-Z\s]+by\s+[A-Z][a-zA-Z\s]+/g, '');
+  c = c.replace(/Creative Captures by Her\s*/gi, '');
+  // AP, Reuters 크레딧
+  c = c.replace(/\(AP\s*Photo\/[^)]+\)/gi, '');
+  c = c.replace(/\(Reuters\)/gi, '');
+  // 광고/구독 유도 텍스트
+  c = c.replace(/Sign up for[^.]+\./gi, '');
+  c = c.replace(/Subscribe to[^.]+\./gi, '');
   return c.replace(/\s{2,}/g, ' ').trim();
 }
 
@@ -555,6 +570,27 @@ async function run() {
   } catch (e) {
     console.error('⚠️ 헬스체크 실패 — 수동 확인 필요');
   }
+
+  // 텔레그램 알림 (DalKonnect 그룹)
+  try {
+    const pyTg = JSON.parse(require('fs').readFileSync('/Users/aaron/.openclaw/openclaw.json','utf8'));
+    const tgList = pyTg.channels?.telegram;
+    const tgConf = Array.isArray(tgList) ? tgList[0] : tgList;
+    const botToken = tgConf?.botToken || tgConf?.token;
+    const chatId = '-5280678324'; // DalKonnect 그룹
+    if (botToken) {
+      const now = new Date().toLocaleString('ko-KR', { timeZone:'America/Chicago', hour12:false });
+      const msg = errors > 0
+        ? `⚠️ DalKonnect 뉴스 업데이트\n📰 새 기사: ${total}개\n❌ 실패 소스: ${errors}개\n🕐 ${now}`
+        : `✅ DalKonnect 뉴스 업데이트 완료\n📰 새 기사: ${total}개\n🕐 ${now}`;
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: msg })
+      });
+      console.log('📱 텔레그램 알림 전송 완료');
+    }
+  } catch(e) { console.log('텔레그램 알림 실패:', e.message); }
 }
 
 run().catch(e => { console.error(e); process.exit(1); });
