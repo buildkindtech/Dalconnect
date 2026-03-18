@@ -248,7 +248,7 @@ export default function Home() {
         const response = await fetch('/api/community?action=posts&sort=popular&limit=5');
         if (response.ok) {
           const data = await response.json();
-          setPopularPosts(data.posts || []);
+          setPopularPosts(data.posts || data.data || []);
         }
       } catch (error) {
         console.error('Failed to fetch community posts:', error);
