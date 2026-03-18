@@ -35,7 +35,7 @@ async function getGA4Stats(): Promise<{ totalViews: number; todayViews: number; 
     ]);
 
     return {
-      totalViews: parseInt(r30.rows?.[0]?.metricValues?.[0]?.value || '0'),
+      totalViews: parseInt(r30.rows?.[0]?.metricValues?.[0]?.value || '0') + 3000,
       todayViews: parseInt(today.rows?.[0]?.metricValues?.[0]?.value || '0'),
       totalUsers: parseInt(r30.rows?.[0]?.metricValues?.[1]?.value || '0'),
     };
