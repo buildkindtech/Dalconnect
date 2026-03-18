@@ -775,7 +775,20 @@ export default function Home() {
               ))}
             </div>
           ) : (() => {
-            const carouselNews = (newsItems ?? []).filter((n: any) => !isReddit(n));
+            // 카테고리별 최신 4개씩 뽑아서 인터리브
+            const filtered = (newsItems ?? []).filter((n: any) => !isReddit(n));
+            const catGroups: Record<string, any[]> = {};
+            filtered.forEach((n: any) => {
+              if (!catGroups[n.category]) catGroups[n.category] = [];
+              if (catGroups[n.category].length < 4) catGroups[n.category].push(n);
+            });
+            // 인터리브: 카테고리별 1개씩 번갈아 배치
+            const interleaved: any[] = [];
+            const maxLen = Math.max(...Object.values(catGroups).map(g => g.length));
+            for (let i = 0; i < maxLen; i++) {
+              Object.values(catGroups).forEach(g => { if (g[i]) interleaved.push(g[i]); });
+            }
+            const carouselNews = interleaved;
             if (carouselNews.length === 0) return (
               <div className="text-center py-8 text-slate-400">
                 <div className="text-3xl mb-2">📰</div>
