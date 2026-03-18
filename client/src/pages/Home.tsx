@@ -207,7 +207,8 @@ export default function Home() {
     totalUnique: number;
   } | null>(null);
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
-  const { data: newsItems, isLoading: loadingNews } = useNews();
+  // 헤드라인 우선 카테고리 순서로 뉴스 8개 가져오기
+  const { data: newsItems, isLoading: loadingNews } = useNews({ limit: 30 });
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
   const { data: categories } = useCategories();
@@ -362,7 +363,19 @@ export default function Home() {
     return [...arr.slice(offset), ...arr.slice(0, offset)].slice(0, 6);
   }, [allFeatured, infeedPool, featuredSlot]);
   const featured = shuffledFeatured;
-  const recentNews = newsItems?.slice(0, 3) ?? [];
+  // 헤드라인/로컬/DFW 우선 → 스포츠/연예/생활 순으로 정렬해서 8개
+  const PRIORITY_CATS = ['로컬뉴스', '미국뉴스', '달라스', '스포츠', '이민/비자', '세금/재정', 'K-POP', '한국뉴스', '월드뉴스'];
+  const recentNews = (() => {
+    if (!newsItems) return [];
+    const sorted = [...newsItems].sort((a, b) => {
+      const ai = PRIORITY_CATS.indexOf(a.category);
+      const bi = PRIORITY_CATS.indexOf(b.category);
+      const ap = ai === -1 ? 99 : ai;
+      const bp = bi === -1 ? 99 : bi;
+      return ap - bp;
+    });
+    return sorted.slice(0, 8);
+  })();
   const recentBlogs = blogPosts?.slice(0, 3) ?? [];
   const recentListings = listingsData?.items ?? [];
   const trending: any[] = [];
@@ -764,9 +777,19 @@ export default function Home() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="text-xs font-semibold text-primary">{news.category || '뉴스'}</span>
+                          <span className="text-xs font-semibold text-primary">
+                            {news.category === '로컬뉴스' ? '🏙️ 로컬' :
+                             news.category === '미국뉴스' ? '🇺🇸 미국' :
+                             news.category === '달라스' ? '📍 DFW' :
+                             news.category === '스포츠' ? '⚽ 스포츠' :
+                             news.category === 'K-POP' ? '🎵 K-POP' :
+                             news.category === '이민/비자' ? '📋 이민' :
+                             news.category === '세금/재정' ? '💰 재정' :
+                             news.category === '한국뉴스' ? '🇰🇷 한국' :
+                             news.category === '월드뉴스' ? '🌍 월드' :
+                             news.category || '뉴스'}
+                          </span>
                           <h3 className="text-sm md:text-base font-bold text-slate-800 line-clamp-2 mt-0.5 font-ko leading-snug">{news.title}</h3>
-                          <p className="text-xs md:text-sm text-slate-500 line-clamp-1 mt-0.5 hidden md:block">{news.content}</p>
                           <p className="text-xs text-slate-400 mt-1">{news.source} · {new Date(news.published_date).toLocaleDateString('ko-KR')}</p>
                         </div>
                       </div>
