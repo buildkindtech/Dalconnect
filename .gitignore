@@ -9,3 +9,8 @@ vite.config.ts.*
 .env
 .env.*
 konnect-firebase-key.json
+sns-cards/
+backups/
+scripts/gen-*.cjs
+scripts/post-*.cjs
+scripts/migrate-*.cjs

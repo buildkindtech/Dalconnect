@@ -32,31 +32,6 @@ function sanitizeContent(content: string): string {
   return content.replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/javascript:/gi, '');
 }
 
-// ─── 봇 차단: DB 기반 rate limiting (Vercel 서버리스 호환) ───
-async function checkRateLimitDB(pool: pg.Pool, ipHash: string, action: string, maxReq: number, windowSec: number): Promise<boolean> {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS rate_limits (
-        ip_hash VARCHAR(64), action VARCHAR(64), window_start TIMESTAMPTZ, request_count INT DEFAULT 1,
-        PRIMARY KEY (ip_hash, action, window_start)
-      )
-    `);
-    const windowStart = new Date(Math.floor(Date.now() / (windowSec * 1000)) * (windowSec * 1000));
-    const r = await pool.query(`
-      INSERT INTO rate_limits (ip_hash, action, window_start, request_count) VALUES ($1,$2,$3,1)
-      ON CONFLICT (ip_hash, action, window_start) DO UPDATE SET request_count = rate_limits.request_count + 1
-      RETURNING request_count
-    `, [ipHash, action, windowStart]);
-    return (r.rows[0]?.request_count || 1) <= maxReq;
-  } catch { return true; }
-}
-
-// 스팸 키워드 필터 (강화)
-const SPAM_PATTERN = /(\b(viagra|cialis|casino|crypto|bitcoin|loan|forex|hack|porn|xxx|nude|OnlyFans|결찰술|낙태|불법|도박|베팅|토토|성인|야동)\b|https?:\/\/[^\s]{3,}\s+https?:\/\/)/i;
-function isSpam(text: string): boolean {
-  return SPAM_PATTERN.test(text);
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
 
@@ -94,7 +69,7 @@ async function handleGetPosts(pool: pg.Pool, req: VercelRequest, res: VercelResp
   const offset = (Math.max(Number(page) || 1, 1) - 1) * pg_limit;
   const targetCity = (Array.isArray(city) ? city[0] : city as string) || 'dallas';
 
-  let where = 'WHERE (city = $1 OR city IS NULL OR city ILIKE $1)';
+  let where = 'WHERE city = $1';
   const params: any[] = [targetCity];
 
   if (category && category !== 'all') {
@@ -114,7 +89,7 @@ async function handleGetPosts(pool: pg.Pool, req: VercelRequest, res: VercelResp
     params
   );
 
-  return res.json({ success: true, posts: rows, data: rows });
+  return res.json({ success: true, data: rows });
 }
 
 async function handleGetPost(pool: pg.Pool, req: VercelRequest, res: VercelResponse) {
@@ -142,19 +117,8 @@ async function handleGetPost(pool: pg.Pool, req: VercelRequest, res: VercelRespo
 }
 
 async function handleCreatePost(pool: pg.Pool, req: VercelRequest, res: VercelResponse, ipHash: string) {
-  const { nickname, password, title, content, category = '자유게시판', tags = [], city = 'dallas', honeypot } = req.body || {};
+  const { nickname, password, title, content, category = '자유게시판', tags = [], city = 'dallas' } = req.body || {};
   if (!nickname || !password || !title || !content) return res.status(400).json({ error: 'Required fields missing' });
-  // 봇 차단 1: honeypot
-  if (honeypot) return res.status(400).json({ error: 'Invalid request' });
-  // 봇 차단 2: 최소 내용 길이
-  if (title.trim().length < 5 || content.trim().length < 10) return res.status(400).json({ error: '내용을 더 자세히 작성해주세요' });
-  // 봇 차단 3: DB 기반 rate limit (IP당 1시간 5개)
-  if (!(await checkRateLimitDB(pool, ipHash, 'community_post', 5, 3600))) return res.status(429).json({ error: '잠시 후 다시 시도해주세요 (1시간 5개 제한)' });
-  // 봇 차단 4: 24시간 내 동일 제목 중복 차단
-  const dupCheck = await pool.query('SELECT id FROM community_posts WHERE title=$1 AND created_at > NOW() - INTERVAL \'24h\' LIMIT 1', [title.trim()]);
-  if (dupCheck.rows.length) return res.status(400).json({ error: '같은 제목의 글이 이미 있습니다' });
-  // 봇 차단 5: 스팸 키워드 필터
-  if (isSpam(title) || isSpam(content)) return res.status(400).json({ error: '허용되지 않는 내용입니다' });
 
   const pwHash = crypto.createHash('sha256').update(password).digest('hex');
   const { rows } = await pool.query(

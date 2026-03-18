@@ -29,7 +29,7 @@ export default function MarketplaceDetail() {
   const { data: listing, isLoading } = useQuery({
     queryKey: ['listing', id],
     queryFn: async () => {
-      const response = await fetch(`/api/listings/${id}`);
+      const response = await fetch(`/api/market/${id}?action=detail`);
       if (!response.ok) throw new Error('Failed to fetch listing');
       return response.json();
     },
@@ -39,7 +39,7 @@ export default function MarketplaceDetail() {
     queryKey: ['listings', 'related', listing?.category],
     queryFn: async () => {
       if (!listing?.category) return [];
-      const response = await fetch(`/api/listings?category=${encodeURIComponent(listing.category)}&limit=4`);
+      const response = await fetch(`/api/market?category=${encodeURIComponent(listing.category)}&limit=20`);
       if (!response.ok) return [];
       const data = await response.json();
       return data.items?.filter((item: any) => item.id !== id) || [];
@@ -331,47 +331,53 @@ export default function MarketplaceDetail() {
           </div>
         </div>
 
-        {/* Related Listings */}
-        {relatedListings && relatedListings.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">같은 카테고리의 다른 매물</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {relatedListings.slice(0, 4).map((related: any) => (
-                <Link key={related.id} href={`/marketplace/${related.id}`}>
-                  <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                    {related.image_urls?.[0] && (
-                      <div className="aspect-video bg-gray-100 overflow-hidden">
-                        <img
-                          src={related.image_urls[0]}
-                          alt={related.title}
-                          className="w-full h-full object-cover"
-                        />
+        {/* 다른 매물 리스트 — 모두마켓 스타일 */}
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-slate-800">
+              {listing?.category ? `${listing.category} 다른 매물` : '다른 매물'}
+            </h2>
+            <Link href="/marketplace" className="text-xs text-primary hover:underline">전체보기 →</Link>
+          </div>
+          <div className="bg-white rounded-xl border divide-y overflow-hidden">
+            {(Array.isArray(relatedListings) ? relatedListings : [])
+              .filter((r: any) => r.id !== id)
+              .slice(0, 15)
+              .map((r: any) => (
+              <Link key={r.id} href={`/marketplace/${r.id}`}>
+                <div className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer">
+                  {/* 썸네일 */}
+                  <div className="w-14 h-14 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden">
+                    {r.images?.length > 0 ? (
+                      <img src={r.images[0]} alt={r.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xl">
+                        {r.category === '전자기기' ? '📱' : r.category === '가전/가구' ? '🛋️' : r.category === '자동차' ? '🚗' : r.category === '아이용품' ? '🧸' : '📦'}
                       </div>
                     )}
-                    <div className="p-4">
-                      <Badge variant="secondary" className="mb-2 text-xs">
-                        {related.category}
-                      </Badge>
-                      <h3 className="font-semibold text-sm mb-2 line-clamp-2">
-                        {related.title}
-                      </h3>
-                      <p className="text-lg font-bold text-blue-600">
-                        {related.price_type === 'free' 
-                          ? '무료나눔' 
-                          : related.price 
-                            ? `$${parseFloat(related.price).toLocaleString()}` 
-                            : '가격협의'}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {formatRelativeTime(related.created_at)}
-                      </p>
+                  </div>
+                  {/* 정보 */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 truncate">{r.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                      {r.location && <span>{r.location}</span>}
+                      <span>{formatRelativeTime(r.created_at)}</span>
                     </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+                  </div>
+                  {/* 가격 */}
+                  <p className="text-sm font-bold text-slate-900 flex-shrink-0">
+                    {r.price_type === 'free' ? <span className="text-green-600 text-xs">무료</span>
+                     : r.price ? `$${Number(r.price).toLocaleString()}` 
+                     : <span className="text-slate-400 text-xs">협의</span>}
+                  </p>
+                </div>
+              </Link>
+            ))}
+            {(!relatedListings || (Array.isArray(relatedListings) && relatedListings.filter((r:any) => r.id !== id).length === 0)) && (
+              <div className="text-center py-8 text-sm text-slate-400">다른 매물이 없어요</div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

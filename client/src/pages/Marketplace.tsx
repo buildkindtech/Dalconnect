@@ -55,9 +55,10 @@ export default function Marketplace() {
       if (location && location !== 'all') params.append('location', location);
       if (search) params.append('search', search);
 
-      const response = await fetch(`/api/listings?${params}`);
+      const response = await fetch(`/api/market?${params}`);
       if (!response.ok) throw new Error('Failed to fetch listings');
-      return response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -154,60 +155,66 @@ export default function Marketplace() {
           <div className="text-center py-12">로딩중...</div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {data?.items?.map((listing: any) => (
+            {/* 모두마켓 스타일 리스트 */}
+            <div className="bg-white rounded-xl border divide-y overflow-hidden">
+              {(Array.isArray(data) ? data : data?.items || []).map((listing: any) => (
                 <Link key={listing.id} href={`/marketplace/${listing.id}`}>
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-                    <div className="p-4">
-                      {/* Category Badge */}
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  <div className="flex items-center gap-4 px-4 py-3.5 hover:bg-slate-50 transition-colors cursor-pointer">
+                    {/* 썸네일 */}
+                    <div className="w-16 h-16 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden">
+                      {listing.images?.length > 0 ? (
+                        <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-2xl">
+                          {listing.category === '전자기기' ? '📱' :
+                           listing.category === '가전/가구' ? '🛋️' :
+                           listing.category === '자동차' ? '🚗' :
+                           listing.category === '의류/패션' ? '👕' :
+                           listing.category === '아이용품' ? '🧸' :
+                           listing.category === '식품/식재료' ? '🍱' : '📦'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 내용 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs text-primary font-medium bg-primary/8 px-1.5 py-0.5 rounded">
                           {listing.category}
                         </span>
-                        {listing.price_type === 'free' && (
-                          <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">
-                            무료
+                        {listing.condition && (
+                          <span className="text-xs text-slate-500">{listing.condition}</span>
+                        )}
+                      </div>
+                      <p className="font-medium text-slate-900 truncate text-sm">{listing.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
+                        {listing.location && (
+                          <span className="flex items-center gap-0.5">
+                            <MapPin className="w-3 h-3" />{listing.location}
                           </span>
                         )}
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="font-semibold text-lg mb-2 line-clamp-2 min-h-[3.5rem]">
-                        {listing.title}
-                      </h3>
-
-                      {/* Price */}
-                      <div className="flex items-center gap-1 text-xl font-bold text-gray-900 mb-3">
-                        {listing.price_type !== 'free' && listing.price && (
-                          <DollarSign className="w-5 h-5" />
-                        )}
-                        {formatPrice(listing)}
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[2.5rem]">
-                        {listing.description || '설명 없음'}
-                      </p>
-
-                      {/* Meta Info */}
-                      <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {listing.location || '위치 미정'}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
-                            {listing.views || 0}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(listing.created_at)}
-                          </div>
-                        </div>
+                        <span>{formatDate(listing.created_at)}</span>
+                        <span className="flex items-center gap-0.5">
+                          <Eye className="w-3 h-3" />{listing.views || 0}
+                        </span>
                       </div>
                     </div>
-                  </Card>
+
+                    {/* 가격 */}
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-slate-900 text-sm">
+                        {listing.price_type === 'free' ? (
+                          <span className="text-green-600">무료나눔</span>
+                        ) : listing.price_type === 'contact' ? (
+                          <span className="text-slate-500 text-xs">가격문의</span>
+                        ) : listing.price ? (
+                          `$${Number(listing.price).toLocaleString()}`
+                        ) : (
+                          <span className="text-slate-400 text-xs">협의</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
                 </Link>
               ))}
             </div>

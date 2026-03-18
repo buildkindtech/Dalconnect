@@ -50,16 +50,15 @@ export default function NewsDetail() {
     enabled: !!params.id
   });
 
-  // Fetch related news from same category
+  // Fetch same category news list (modu.market 스타일 — 전체 목록)
   const { data: relatedNews } = useQuery<NewsItem[]>({
     queryKey: ['related-news', newsItem?.category, params.id],
     queryFn: async () => {
       if (!newsItem?.category) return [];
-      const res = await fetch(`/api/news?category=${encodeURIComponent(newsItem.category)}&limit=4`);
+      const res = await fetch(`/api/news?category=${encodeURIComponent(newsItem.category)}&limit=30`);
       if (!res.ok) return [];
       const allNews = await res.json();
-      // Filter out current article and return only 3
-      return allNews.filter((item: NewsItem) => item.id !== params.id).slice(0, 3);
+      return allNews.filter((item: NewsItem) => item.id !== params.id);
     },
     enabled: !!newsItem?.category
   });
@@ -252,62 +251,52 @@ export default function NewsDetail() {
           </div>
         </article>
 
-        {/* Related News */}
+        {/* 같은 카테고리 뉴스 목록 — modu.market 스타일 */}
         {relatedNews && relatedNews.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6 font-ko">관련 뉴스</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-              {relatedNews.map((relatedItem) => (
-                <Link key={relatedItem.id} href={`/news/${relatedItem.id}`}>
-                  <article className="bg-white rounded-xl border border-border hover:shadow-md transition-shadow cursor-pointer">
-                    {/* Thumbnail placeholder */}
-                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/20 rounded-t-xl flex items-center justify-center">
-                      {relatedItem.thumbnail_url ? (
-                        <img 
-                          src={relatedItem.thumbnail_url} 
-                          alt={relatedItem.title}
-                          className="w-full h-full object-cover rounded-t-xl"
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            target.style.display = 'none';
-                            const fallback = target.nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div className="text-primary/60 font-semibold text-sm" style={{display: relatedItem.thumbnail_url ? 'none' : 'flex'}}>
-                        {relatedItem.source}
-                      </div>
-                    </div>
-                    
-                    <div className="p-4">
-                      <Badge className="text-xs mb-2 bg-primary/10 text-primary border-0">
-                        {relatedItem.category}
-                      </Badge>
-                      <h3 className="font-semibold text-sm md:text-base leading-tight mb-2 line-clamp-2">
-                        {relatedItem.title}
-                      </h3>
-                      <div className="flex items-center text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        <span>
-                          {relatedItem.published_date 
-                            ? new Date(relatedItem.published_date).toLocaleDateString('ko-KR', {
-                                month: 'short',
-                                day: 'numeric'
-                              })
-                            : ''}
-                        </span>
-                      </div>
-                    </div>
-                  </article>
+          <div className="mt-10 border-t pt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold font-ko text-slate-800">
+                {newsItem?.category} 전체 목록
+                <span className="ml-2 text-sm font-normal text-muted-foreground">({relatedNews.length})</span>
+              </h2>
+              <Link href="/news">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                  전체 뉴스 보기 →
+                </Button>
+              </Link>
+            </div>
+            <div className="border border-border rounded-lg overflow-hidden">
+              {/* 헤더 */}
+              <div className="grid grid-cols-[2rem_1fr_5rem] md:grid-cols-[2.5rem_1fr_6rem_5rem] bg-slate-50 px-4 py-2 text-xs font-semibold text-muted-foreground border-b">
+                <span className="text-center">번호</span>
+                <span>제목</span>
+                <span className="hidden md:block text-right">출처</span>
+                <span className="text-right">날짜</span>
+              </div>
+              {/* 목록 */}
+              {relatedNews.map((item, idx) => (
+                <Link key={item.id} href={`/news/${item.id}`}>
+                  <div className={`grid grid-cols-[2rem_1fr_5rem] md:grid-cols-[2.5rem_1fr_6rem_5rem] px-4 py-3 text-sm border-b last:border-0 hover:bg-slate-50 cursor-pointer transition-colors ${item.id === params.id ? 'bg-primary/5 font-semibold' : ''}`}>
+                    <span className="text-center text-muted-foreground text-xs">{relatedNews.length - idx}</span>
+                    <span className="truncate pr-3 leading-snug font-ko">
+                      {item.id === params.id && <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary mr-1.5 mb-0.5" />}
+                      {item.title}
+                    </span>
+                    <span className="hidden md:block text-right text-xs text-muted-foreground truncate">{item.source}</span>
+                    <span className="text-right text-xs text-muted-foreground whitespace-nowrap">
+                      {item.published_date
+                        ? new Date(item.published_date).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })
+                        : ''}
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>
           </div>
         )}
-        
-        {/* Fixed Back to News Button for Mobile */}
-        <div className="mt-12 text-center">
+
+        {/* 뒤로가기 */}
+        <div className="mt-8 text-center">
           <Link href="/news">
             <Button variant="outline" size="lg" className="font-ko">
               <ArrowLeft className="mr-2 h-4 w-4" />

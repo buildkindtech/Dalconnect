@@ -6,6 +6,8 @@ import { db } from "./db";
 import { blogs, newsletterSubscribers, newsSubmissions, listings } from "../shared/schema";
 import { desc, sql, eq } from "drizzle-orm";
 import crypto from "crypto";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 // HTML entity decoder for news content
 function decodeHtmlEntities(text: string): string {
@@ -1060,6 +1062,143 @@ Sitemap: https://dalkonnect.com/sitemap.xml`);
     } catch (err: any) {
       // 테이블 없으면 빈 배열 반환 (첫 배포 시)
       res.json([]);
+    }
+  });
+
+  // Firebase Signed URL for image upload
+  // ── 사고팔기 마켓 API ──────────────────────────────────────────
+  app.get('/api/market', async (req: any, res: any) => {
+    try {
+      const { category, status: qs = '판매중', limit = '20', offset = '0', city = 'dallas' } = req.query;
+      const lim = parseInt(limit); const off = parseInt(offset);
+      let result;
+      if (category && category !== 'all') {
+        result = await db.execute(sql`SELECT id,title,price,price_type,category,condition,images,contact_method,nickname,status,city,location,views,created_at FROM market_posts WHERE status=${qs} AND (city=${city} OR city IS NULL) AND expires_at>NOW() AND category=${category} ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`);
+      } else {
+        result = await db.execute(sql`SELECT id,title,price,price_type,category,condition,images,contact_method,nickname,status,city,location,views,created_at FROM market_posts WHERE status=${qs} AND (city=${city} OR city IS NULL) AND expires_at>NOW() ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`);
+      }
+      return res.json(result.rows || []);
+    } catch (e: any) { return res.status(500).json({ error: e.message }); }
+  });
+
+  app.get('/api/market/:id', async (req: any, res: any) => {
+    try {
+      const { id } = req.params;
+      await db.execute(sql`UPDATE market_posts SET views=views+1 WHERE id=${id}`);
+      const result = await db.execute(sql`SELECT * FROM market_posts WHERE id=${id}`);
+      if (!result.rows?.[0]) return res.status(404).json({ error: '게시물 없음' });
+      const post: any = { ...result.rows[0] }; delete post.password_hash;
+      return res.json(post);
+    } catch (e: any) { return res.status(500).json({ error: e.message }); }
+  });
+
+  app.post('/api/market', async (req: any, res: any) => {
+    try {
+      const { title, price, price_type, category, condition, description, images, contact_method, contact_value, nickname, password, city } = req.body;
+      if (!title || !category || !nickname || !password) return res.status(400).json({ error: '필수 항목 누락' });
+      const pw_hash = crypto.createHash('sha256').update(String(password)).digest('hex');
+      const id = `mkt_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+      const imgs = Array.isArray(images) ? images : [];
+      const pool = new (await import('pg')).default.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+      await pool.query(
+        `INSERT INTO market_posts (id,title,price,price_type,category,condition,description,images,contact_method,contact_value,nickname,password_hash,city,location)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        [id, title, price||null, price_type||'fixed', category, condition||null, description||null, imgs, contact_method||null, contact_value||null, nickname, pw_hash, city||'dallas', req.body.location||null]
+      );
+      await pool.end();
+      return res.status(201).json({ id });
+    } catch (e: any) { return res.status(500).json({ error: e.message }); }
+  });
+
+  app.post('/api/market/:id/delete', async (req: any, res: any) => {
+    try {
+      const { id } = req.params;
+      const pw_hash = crypto.createHash('sha256').update(String(req.body.password)).digest('hex');
+      const result = await db.execute(sql`SELECT password_hash FROM market_posts WHERE id=${id}`);
+      if (!result.rows?.[0]) return res.status(404).json({ error: '없음' });
+      if (result.rows[0].password_hash !== pw_hash) return res.status(403).json({ error: '비밀번호 오류' });
+      await db.execute(sql`UPDATE market_posts SET status='삭제' WHERE id=${id}`);
+      return res.json({ success: true });
+    } catch (e: any) { return res.status(500).json({ error: e.message }); }
+  });
+
+  // ── 룸메이트 API ──────────────────────────────────────────────
+  app.get('/api/roommate', async (req: any, res: any) => {
+    try {
+      const { room_type, gender_pref, max_price, limit = '20', offset = '0' } = req.query;
+      const lim = parseInt(limit as string); const off = parseInt(offset as string);
+      let result;
+      if (room_type && room_type !== 'all' && gender_pref && gender_pref !== '무관' && max_price) {
+        result = await db.execute(sql`SELECT id,title,room_type,price,location,gender_pref,move_in_date,nickname,status,views,created_at FROM roommate_posts WHERE status='모집중' AND expires_at>NOW() AND room_type=${room_type} AND (gender_pref=${gender_pref} OR gender_pref='무관') AND price<=${parseInt(max_price as string)} ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`);
+      } else if (room_type && room_type !== 'all') {
+        result = await db.execute(sql`SELECT id,title,room_type,price,location,gender_pref,move_in_date,nickname,status,views,created_at FROM roommate_posts WHERE status='모집중' AND expires_at>NOW() AND room_type=${room_type} ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`);
+      } else {
+        result = await db.execute(sql`SELECT id,title,room_type,price,location,gender_pref,move_in_date,nickname,status,views,created_at FROM roommate_posts WHERE status='모집중' AND expires_at>NOW() ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`);
+      }
+      return res.json(result.rows || []);
+    } catch (e: any) { return res.status(500).json({ error: e.message }); }
+  });
+
+  app.post('/api/roommate', async (req: any, res: any) => {
+    try {
+      const { title, room_type, price, location, gender_pref, move_in_date, description, contact_method, contact_value, nickname, password, city } = req.body;
+      if (!title || !price || !nickname || !password) return res.status(400).json({ error: '필수 항목 누락' });
+      const pw_hash = crypto.createHash('sha256').update(String(password)).digest('hex');
+      const id = `rm_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+      const rmPool = new (await import('pg')).default.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+      await rmPool.query(
+        `INSERT INTO roommate_posts (id,title,room_type,price,location,gender_pref,move_in_date,description,contact_method,contact_value,nickname,password_hash,city)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+        [id, title, room_type||'원룸', parseInt(price), location||null, gender_pref||'무관', move_in_date||null, description||null, contact_method||null, contact_value||null, nickname, pw_hash, city||'dallas']
+      );
+      await rmPool.end();
+      return res.status(201).json({ id });
+    } catch (e: any) { return res.status(500).json({ error: e.message }); }
+  });
+
+  app.post('/api/upload-url', async (req: any, res: any) => {
+    const { contentType, size } = req.body || {};
+    const ALLOWED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!contentType || !ALLOWED.includes(contentType)) {
+      return res.status(400).json({ error: '이미지 파일만 업로드 가능합니다' });
+    }
+    if (size && size > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: '5MB 이하 파일만 가능합니다' });
+    }
+    try {
+      // firebase-admin lazy init — named app 'market' 사용 (기존 앱과 충돌 방지)
+      const admin = await import('firebase-admin');
+      let marketApp = admin.default.apps.find((a: any) => a && a.name === 'market');
+      if (!marketApp) {
+        // Vercel: env var 우선, 로컬: 파일 fallback
+        let serviceAccount: any;
+        if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+          serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        } else {
+          const keyPath = path.resolve(process.cwd(), 'konnect-firebase-key.json');
+          const { readFileSync } = await import('fs');
+          serviceAccount = JSON.parse(readFileSync(keyPath, 'utf-8'));
+        }
+        marketApp = admin.default.initializeApp({
+          credential: admin.default.credential.cert(serviceAccount),
+          storageBucket: 'konnect-ceedb.firebasestorage.app',
+        }, 'market');
+      }
+      const ext = (contentType as string).split('/')[1].replace('jpeg', 'jpg');
+      const filename = `market/${uuidv4()}.${ext}`;
+      const bucket = marketApp.storage().bucket();
+      const file = bucket.file(filename);
+      const [uploadUrl] = await file.getSignedUrl({
+        version: 'v4',
+        action: 'write',
+        expires: Date.now() + 15 * 60 * 1000,
+        contentType,
+      });
+      const publicUrl = `https://storage.googleapis.com/konnect-ceedb.firebasestorage.app/${filename}`;
+      return res.json({ uploadUrl, publicUrl, filename });
+    } catch (err: any) {
+      console.error('Upload URL error:', err);
+      return res.status(500).json({ error: '업로드 URL 생성 실패' });
     }
   });
 

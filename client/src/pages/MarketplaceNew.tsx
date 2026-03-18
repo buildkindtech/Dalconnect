@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLocation } from 'wouter';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,14 +51,21 @@ const contactMethods = [
 ];
 
 const locations = [
-  'Plano', 'Frisco', 'Allen', 'McKinney', 'Dallas', 
-  'Carrollton', 'Irving', 'Richardson', 'Garland', 'Mesquite'
+  'Dallas', 'Plano', 'Frisco', 'Allen', 'McKinney',
+  'Carrollton', 'Irving', 'Richardson', 'Garland', 'Mesquite',
+  'Lewisville', 'Flower Mound', 'The Colony', 'Coppell',
+  'Grapevine', 'Southlake', 'Keller', 'Fort Worth',
+  'Arlington', 'Grand Prairie', 'Denton', 'Little Elm',
+  'Prosper', 'Celina', 'Rowlett', 'Rockwall',
+  '직접 입력',
 ];
 
 export default function MarketplaceNew() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [images, setImages] = useState<{ file: File; preview: string; url?: string; uploading?: boolean }[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -71,18 +78,62 @@ export default function MarketplaceNew() {
     contact_info: '',
     author_name: '',
     location: '',
-    image_urls: ['', '', ''],
   });
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleImageUrlChange = (index: number, value: string) => {
-    setFormData((prev) => {
-      const newImageUrls = [...prev.image_urls];
-      newImageUrls[index] = value;
-      return { ...prev, image_urls: newImageUrls };
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (images.length + files.length > 5) {
+      toast({ title: '사진은 최대 5장까지 업로드 가능합니다.', variant: 'destructive' });
+      return;
+    }
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+      if (file.size > 5 * 1024 * 1024) {
+        toast({ title: `${file.name}: 5MB 이하 파일만 가능합니다.`, variant: 'destructive' });
+        continue;
+      }
+      const preview = URL.createObjectURL(file);
+      const idx = images.length;
+      setImages(prev => [...prev, { file, preview, uploading: true }]);
+
+      // Firebase Signed URL 요청
+      try {
+        const res = await fetch('/api/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contentType: file.type, size: file.size }),
+        });
+        const { uploadUrl, publicUrl } = await res.json();
+
+        // Firebase Storage에 직접 PUT
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        });
+
+        setImages(prev => prev.map((img, i) =>
+          img.preview === preview ? { ...img, url: publicUrl, uploading: false } : img
+        ));
+      } catch {
+        toast({ title: '사진 업로드 실패. 다시 시도해주세요.', variant: 'destructive' });
+        setImages(prev => prev.filter(img => img.preview !== preview));
+        URL.revokeObjectURL(preview);
+      }
+    }
+    // 파일 input 초기화 (같은 파일 재선택 허용)
+    e.target.value = '';
+  };
+
+  const removeImage = (preview: string) => {
+    setImages(prev => {
+      const img = prev.find(i => i.preview === preview);
+      if (img) URL.revokeObjectURL(img.preview);
+      return prev.filter(i => i.preview !== preview);
     });
   };
 
@@ -101,30 +152,45 @@ export default function MarketplaceNew() {
 
     setIsSubmitting(true);
 
-    try {
-      const submitData = {
-        ...formData,
-        price: formData.price_type === 'free' ? null : formData.price || null,
-      };
+    // 업로드 중인 사진 있으면 대기
+    if (images.some(img => img.uploading)) {
+      toast({ title: '사진 업로드 중입니다. 잠시 후 다시 시도해주세요.', variant: 'destructive' });
+      setIsSubmitting(false);
+      return;
+    }
 
-      const response = await fetch('/api/listings', {
+    try {
+      const imageUrls = images.filter(img => img.url).map(img => img.url!);
+
+      const response = await fetch('/api/market', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
+        body: JSON.stringify({
+          title: formData.title,
+          price: formData.price_type === 'free' ? null : (formData.price || null),
+          price_type: formData.price_type,
+          category: formData.category,
+          condition: formData.condition,
+          description: formData.description,
+          images: imageUrls,
+          contact_method: formData.contact_method,
+          contact_value: formData.contact_info,
+          nickname: formData.nickname,
+          password: formData.password,
+          location: formData.location,
+          city: 'dallas',
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create listing');
-      }
-
-      const newListing = await response.json();
+      if (!response.ok) throw new Error('Failed');
+      const newPost = await response.json();
 
       toast({
-        title: '매물이 등록되었습니다! 🎉',
-        description: '성공적으로 등록되었습니다.',
+        title: '등록 완료! 🎉',
+        description: '사고팔기에 게시물이 올라갔어요.',
       });
 
-      navigate(`/marketplace/${newListing.id}`);
+      navigate(`/marketplace`);
     } catch (error) {
       console.error('Error creating listing:', error);
       toast({
@@ -259,41 +325,99 @@ export default function MarketplaceNew() {
               />
             </div>
 
-            {/* Image URLs (Optional) */}
+            {/* 사진 업로드 */}
             <div>
-              <Label>사진 (선택, 최대 3장)</Label>
-              <p className="text-sm text-gray-500 mb-2">이미지 URL을 입력하세요. 나중에 업로드 기능이 추가될 예정입니다.</p>
-              <div className="space-y-2">
-                {formData.image_urls.map((url, index) => (
-                  <Input
-                    key={index}
-                    type="url"
-                    placeholder={`이미지 URL ${index + 1}`}
-                    value={url}
-                    onChange={(e) => handleImageUrlChange(index, e.target.value)}
-                  />
+              <Label>사진 (선택, 최대 5장 · 각 5MB 이하)</Label>
+              <p className="text-sm text-gray-500 mb-3">사진을 올리면 거래 성사율이 높아집니다!</p>
+
+              {/* 미리보기 그리드 */}
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-3">
+                {images.map((img) => (
+                  <div key={img.preview} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                    <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                    {img.uploading && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                    {!img.uploading && (
+                      <button
+                        type="button"
+                        onClick={() => removeImage(img.preview)}
+                        className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full w-5 h-5 flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 ))}
+
+                {/* 추가 버튼 */}
+                {images.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 flex flex-col items-center justify-center gap-1 transition-colors text-gray-400 hover:text-blue-500"
+                  >
+                    <Upload className="w-5 h-5" />
+                    <span className="text-xs">사진 추가</span>
+                  </button>
+                )}
               </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+
+              {images.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-xl p-6 flex flex-col items-center gap-2 text-gray-400 hover:text-blue-500 transition-colors"
+                >
+                  <ImageIcon className="w-8 h-8" />
+                  <span className="text-sm font-medium">사진을 드래그하거나 클릭해서 추가</span>
+                  <span className="text-xs">JPEG, PNG, WebP · 최대 5장 · 각 5MB</span>
+                </button>
+              )}
             </div>
 
             {/* Location */}
             <div>
               <Label htmlFor="location">지역</Label>
               <Select
-                value={formData.location}
-                onValueChange={(value) => handleChange('location', value)}
+                value={formData.location === '' || !locations.includes(formData.location) ? (formData.location ? '직접 입력' : '') : formData.location}
+                onValueChange={(value) => {
+                  if (value === '직접 입력') {
+                    handleChange('location', '');
+                  } else {
+                    handleChange('location', value);
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="지역을 선택하세요" />
                 </SelectTrigger>
                 <SelectContent>
                   {locations.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
+                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {/* 직접 입력 필드 */}
+              {(formData.location !== '' && !locations.slice(0,-1).includes(formData.location)) && (
+                <Input
+                  className="mt-2"
+                  placeholder="도시명 직접 입력 (예: Lewisville)"
+                  value={formData.location}
+                  onChange={(e) => handleChange('location', e.target.value)}
+                />
+              )}
             </div>
 
             {/* Contact Method & Contact Info */}

@@ -109,6 +109,9 @@ export default function Header() {
               <Link href="/marketplace" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location.startsWith('/marketplace') ? 'text-primary' : 'text-muted-foreground'}`}>
                 사고팔기
               </Link>
+              <Link href="/roommate" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location.startsWith('/roommate') ? 'text-primary' : 'text-muted-foreground'}`}>
+                룸메이트
+              </Link>
               <Link href="/community" className={`text-sm font-medium whitespace-nowrap transition-colors hover:text-primary ${location.startsWith('/community') ? 'text-primary' : 'text-muted-foreground'}`}>
                 커뮤니티
               </Link>
@@ -196,6 +199,13 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 사고팔기
+              </Link>
+              <Link 
+                href="/roommate" 
+                className={`text-base font-medium transition-colors hover:text-primary ${location.startsWith('/roommate') ? 'text-primary' : 'text-muted-foreground'}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                룸메이트
               </Link>
               <Link 
                 href="/community" 

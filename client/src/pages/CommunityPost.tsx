@@ -79,6 +79,18 @@ export default function CommunityPost() {
     enabled: !!postId,
   });
 
+  // 최근 커뮤니티 글 목록 (20개)
+  const { data: recentPosts } = useQuery<any[]>({
+    queryKey: ['recent-community-posts'],
+    queryFn: async () => {
+      const res = await fetch('/api/community?limit=21');
+      if (!res.ok) return [];
+      const json = await res.json();
+      const posts = json.posts || json.data || json || [];
+      return (Array.isArray(posts) ? posts : []).filter((p: any) => p.id !== postId).slice(0, 20);
+    },
+  });
+
   const { data: recommendedContent } = useQuery<RecommendedContent>({
     queryKey: ['recommended-content', postId],
     queryFn: async () => {
@@ -542,6 +554,39 @@ export default function CommunityPost() {
             </Card>
           </div>
         </div>
+
+        {/* 커뮤니티 최근 글 목록 — modu.market 스타일 */}
+        {recentPosts && recentPosts.length > 0 && (
+          <div className="mt-8 border-t pt-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-slate-800">
+                커뮤니티 최근 글
+                <span className="ml-2 text-sm font-normal text-muted-foreground">({recentPosts.length})</span>
+              </h2>
+              <Link href="/community">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">전체 보기 →</Button>
+              </Link>
+            </div>
+            <div className="border border-border rounded-lg overflow-hidden">
+              <div className="grid grid-cols-[2rem_1fr_5rem] bg-slate-50 px-4 py-2 text-xs font-semibold text-muted-foreground border-b">
+                <span className="text-center">번호</span>
+                <span>제목</span>
+                <span className="text-right">날짜</span>
+              </div>
+              {recentPosts.map((p: any, idx: number) => (
+                <Link key={p.id} href={`/community/${p.id}`}>
+                  <div className="grid grid-cols-[2rem_1fr_5rem] px-4 py-3 text-sm border-b last:border-0 hover:bg-slate-50 cursor-pointer transition-colors">
+                    <span className="text-center text-xs text-muted-foreground">{recentPosts.length - idx}</span>
+                    <span className="truncate pr-3 leading-snug font-ko">{p.title}</span>
+                    <span className="text-right text-xs text-muted-foreground whitespace-nowrap">
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }) : ''}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Delete Dialog */}
         {showDeleteDialog && (

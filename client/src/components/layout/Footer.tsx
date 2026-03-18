@@ -33,25 +33,22 @@ export default function Footer() {
             {/* Social Media Links */}
             <div className="mt-6 flex gap-3">
               <a 
-                href="#" 
+                href="https://www.facebook.com/profile.php?id=61574341578003"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-primary flex items-center justify-center transition-all hover:scale-110"
                 aria-label="Facebook"
               >
                 <Facebook className="h-4 w-4" />
               </a>
               <a 
-                href="#" 
+                href="https://www.instagram.com/dalkonnect"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-primary flex items-center justify-center transition-all hover:scale-110"
                 aria-label="Instagram"
               >
                 <Instagram className="h-4 w-4" />
-              </a>
-              <a 
-                href="#" 
-                className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-primary flex items-center justify-center transition-all hover:scale-110"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-4 w-4" />
               </a>
             </div>
           </div>
@@ -61,8 +58,9 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/" className="hover:text-primary transition-colors">홈</Link></li>
               <li><Link href="/businesses" className="hover:text-primary transition-colors">업체 찾기</Link></li>
+              <li><Link href="/marketplace" className="hover:text-primary transition-colors">사고팔기</Link></li>
+              <li><Link href="/roommate" className="hover:text-primary transition-colors">룸메이트/하숙</Link></li>
               <li><Link href="/news" className="hover:text-primary transition-colors">커뮤니티 뉴스</Link></li>
-              <li><Link href="/about" className="hover:text-primary transition-colors">소개</Link></li>
             </ul>
           </div>
           
@@ -71,8 +69,8 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/pricing" className="hover:text-primary transition-colors">업체 등록</Link></li>
               <li><Link href="/pricing" className="hover:text-primary transition-colors">가격 플랜</Link></li>
-              <li><Link href="/contact" className="hover:text-primary transition-colors">광고 문의</Link></li>
-              <li><Link href="/contact" className="hover:text-primary transition-colors">파트너십</Link></li>
+              <li><Link href="/partnership" className="hover:text-primary transition-colors">광고 문의</Link></li>
+              <li><Link href="/partnership" className="hover:text-primary transition-colors">파트너십</Link></li>
             </ul>
           </div>
           
@@ -80,9 +78,9 @@ export default function Footer() {
             <h4 className="font-semibold text-white mb-4">지원</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/contact" className="hover:text-primary transition-colors">문의하기</Link></li>
-              <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">이용약관</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">개인정보처리방침</a></li>
+              <li><Link href="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
+              <li><Link href="/terms" className="hover:text-primary transition-colors">이용약관</Link></li>
+              <li><Link href="/privacy" className="hover:text-primary transition-colors">개인정보처리방침</Link></li>
             </ul>
           </div>
         </div>

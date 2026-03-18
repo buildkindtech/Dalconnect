@@ -47,6 +47,9 @@ function ScrollToTop() {
 
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
+import CookieConsent from "./components/CookieConsent";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import MobileNav from "./components/layout/MobileNav";
 
 // Pages
@@ -73,6 +76,10 @@ import CommunityNew from "./pages/CommunityNew";
 import Charts from "./pages/Charts";
 import Deals from "./pages/Deals";
 import Shopping from "./pages/Shopping";
+import FAQ from "./pages/FAQ";
+import Roommate from "./pages/Roommate";
+import ClaimBusiness from "./pages/ClaimBusiness";
+import Partnership from "./pages/Partnership";
 
 // 양쪽 광고 — 데스크탑: 사이드 카드 3개, 모바일: 플로팅 뱃지 3개
 function SideAdStrip({ bizList, side, isHome }: { bizList: any[]; side: 'left' | 'right'; isHome?: boolean }) {
@@ -166,6 +173,12 @@ function Router() {
           <Route path="/pricing" component={Pricing} />
           <Route path="/payment-success" component={PaymentSuccess} />
           <Route path="/admin" component={AdminDashboard} />
+          <Route path="/privacy" component={PrivacyPolicy} />
+          <Route path="/terms" component={TermsOfService} />
+          <Route path="/faq" component={FAQ} />
+          <Route path="/roommate" component={Roommate} />
+          <Route path="/claim" component={ClaimBusiness} />
+          <Route path="/partnership" component={Partnership} />
           <Route component={NotFound} />
         </Switch>
         </ErrorBoundary>
@@ -174,6 +187,7 @@ function Router() {
         </div>
       </main>
       <Footer />
+      <CookieConsent />
       <MobileNav />
     </div>
   );
