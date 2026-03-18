@@ -89,7 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // 오늘 날짜의 site_stats 업데이트 (page_views 증가)
           await pool.query(
             `INSERT INTO site_stats (date, page_views, unique_visitors)
-             VALUES (CURRENT_DATE, 1, 0)
+             VALUES ((NOW() AT TIME ZONE 'America/Chicago')::date, 1, 0)
              ON CONFLICT (date) 
              DO UPDATE SET page_views = site_stats.page_views + 1`
           );
@@ -99,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             `SELECT COUNT(*) as count
              FROM visitor_logs
              WHERE visitor_hash = $1
-             AND DATE(created_at) = CURRENT_DATE`,
+             AND DATE(created_at AT TIME ZONE 'America/Chicago') = (NOW() AT TIME ZONE 'America/Chicago')::date`,
             [visitorHash]
           );
 
@@ -108,7 +108,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             await pool.query(
               `UPDATE site_stats 
                SET unique_visitors = unique_visitors + 1
-               WHERE date = CURRENT_DATE`
+               WHERE date = (NOW() AT TIME ZONE 'America/Chicago')::date`
             );
           }
 
@@ -116,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const todayStats = await pool.query(
             `SELECT page_views, unique_visitors 
              FROM site_stats 
-             WHERE date = CURRENT_DATE`
+             WHERE date = (NOW() AT TIME ZONE 'America/Chicago')::date`
           );
 
           // 전체 통계
