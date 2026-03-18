@@ -58,7 +58,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         params.push(category);
       }
 
-      query += ' ORDER BY published_date DESC NULLS LAST, created_at DESC';
+      // 헤드라인 우선 정렬: 로컬뉴스/미국뉴스/월드뉴스를 상단에
+      const headlinePriority = `CASE category
+        WHEN '로컬뉴스' THEN 1
+        WHEN '미국뉴스' THEN 2
+        WHEN '월드뉴스' THEN 3
+        WHEN '이민/비자' THEN 4
+        WHEN '세금/재정' THEN 5
+        WHEN 'K-POP' THEN 6
+        WHEN '스포츠' THEN 7
+        ELSE 8
+      END`;
+      query += ` ORDER BY ${category ? 'published_date DESC NULLS LAST, created_at DESC' : `${headlinePriority}, published_date DESC NULLS LAST, created_at DESC`}`;
 
       if (limit) {
         paramCount++;

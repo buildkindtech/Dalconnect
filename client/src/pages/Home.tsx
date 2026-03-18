@@ -207,7 +207,13 @@ export default function Home() {
     totalUnique: number;
   } | null>(null);
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
-  const { data: newsItems, isLoading: loadingNews } = useNews();
+  const { data: newsItemsRaw, isLoading: loadingNews } = useNews({ limit: 50 });
+  // 헤드라인 우선 정렬: 로컬뉴스 > 미국뉴스 > 월드뉴스 > 나머지
+  const HEADLINE_PRIORITY = ['로컬뉴스', '미국뉴스', '월드뉴스', '이민/비자', '세금/재정'];
+  const newsItems = newsItemsRaw ? [
+    ...newsItemsRaw.filter(n => HEADLINE_PRIORITY.includes(n.category)),
+    ...newsItemsRaw.filter(n => !HEADLINE_PRIORITY.includes(n.category)),
+  ] : undefined;
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
   const { data: categories } = useCategories();
@@ -248,7 +254,7 @@ export default function Home() {
         const response = await fetch('/api/community?action=posts&sort=popular&limit=5');
         if (response.ok) {
           const data = await response.json();
-          setPopularPosts(data.posts || []);
+          setPopularPosts(data.posts || data.data || []);
         }
       } catch (error) {
         console.error('Failed to fetch community posts:', error);
