@@ -65,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         query += ` LIMIT $${paramCount}`;
         params.push(parseInt(limit as string));
       } else {
-        query += ' LIMIT 50';
+        query += ' LIMIT 200';
       }
 
       if (offset) {

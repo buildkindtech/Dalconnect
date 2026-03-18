@@ -737,8 +737,23 @@ export default function Home() {
         </section>
       )}
 
-      {/* Latest News */}
-      <section className="py-12 bg-slate-50">
+      {/* Latest News — Auto-rotating carousel */}
+      <section className="py-12 bg-slate-50 overflow-hidden">
+        <style>{`
+          @keyframes newsScroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .news-carousel-track {
+            display: flex;
+            gap: 12px;
+            width: max-content;
+            animation: newsScroll 80s linear infinite;
+          }
+          .news-carousel-track:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl md:text-4xl font-bold">최신 뉴스</h2>
@@ -750,63 +765,72 @@ export default function Home() {
           </div>
 
           {loadingNews ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-3">
-                  <Skeleton className="w-20 h-20 rounded-lg flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-3 w-3/4" />
-                    <Skeleton className="h-3 w-1/4" />
-                  </div>
+            <div className="flex gap-3">
+              {[1,2,3,4,5,6].map((i) => (
+                <div key={i} className="flex-shrink-0 w-32">
+                  <Skeleton className="w-32 h-24 rounded-lg mb-2" />
+                  <Skeleton className="h-3 w-full mb-1" />
+                  <Skeleton className="h-3 w-2/3" />
                 </div>
               ))}
             </div>
-          ) : recentNews.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <div className="text-4xl mb-3">📰</div>
-              <p>뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {newsByCat.map((cat) => (
-                <div key={cat.key}>
-                  {/* 카테고리 헤더 */}
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-primary">{cat.label}</span>
-                    <Link href={`/news?category=${encodeURIComponent(cat.key)}`}>
-                      <span className="text-xs text-slate-400 hover:text-primary">더보기 →</span>
-                    </Link>
-                  </div>
-                  {/* 2열 그리드 */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {cat.items.map((news: any) => {
-                      const categoryStyle = getNewsCategoryStyle(news.category);
-                      return (
-                        <Link key={news.id} href={`/news/${news.id}`}>
-                          <div className="flex gap-2 items-start hover:bg-slate-100 rounded-lg p-1.5 transition-colors">
-                            <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
-                              {hasValidImage(news.thumbnail_url) ? (
-                                <img src={news.thumbnail_url} alt={news.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className={`w-full h-full bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center`}>
-                                  <span className="text-xl">{categoryStyle.emoji}</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-xs md:text-sm font-bold text-slate-800 line-clamp-3 leading-snug font-ko">{news.title}</h3>
-                              <p className="text-xs text-slate-400 mt-1 truncate">{news.source}</p>
-                            </div>
+          ) : (() => {
+            const carouselNews = (newsItems ?? []).filter((n: any) => !isReddit(n));
+            if (carouselNews.length === 0) return (
+              <div className="text-center py-8 text-slate-400">
+                <div className="text-3xl mb-2">📰</div>
+                <p className="text-sm">뉴스를 불러오지 못했습니다.</p>
+              </div>
+            );
+            const doubled = [...carouselNews, ...carouselNews];
+            return (
+              <div className="overflow-hidden -mx-4 px-4">
+                <div className="news-carousel-track">
+                  {doubled.map((news: any, idx: number) => {
+                    const style = getNewsCategoryStyle(news.category);
+                    const catLabel =
+                      news.category === '로컬뉴스' ? '🏙️ 로컬' :
+                      news.category === '미국뉴스' ? '🇺🇸 미국' :
+                      news.category === '스포츠'   ? '⚽ 스포츠' :
+                      news.category === 'K-POP'   ? '🎵 K-POP' :
+                      news.category === '이민/비자' ? '📋 이민' :
+                      news.category === '세금/재정' ? '💰 재정' :
+                      news.category === '한국뉴스' ? '🇰🇷 한국' :
+                      news.category === '월드뉴스' ? '🌍 월드' :
+                      news.category ?? '뉴스';
+                    return (
+                      <Link key={`${news.id}-${idx}`} href={`/news/${news.id}`}>
+                        <div className="flex-shrink-0 w-32 md:w-40 group cursor-pointer">
+                          {/* 썸네일 — 차트카드 절반 크기 */}
+                          <div className="w-32 h-20 md:w-40 md:h-24 rounded-xl overflow-hidden bg-slate-200 relative mb-2">
+                            {hasValidImage(news.thumbnail_url) ? (
+                              <img
+                                src={news.thumbnail_url}
+                                alt={news.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className={`w-full h-full bg-gradient-to-br ${style.gradient} flex items-center justify-center`}>
+                                <span className="text-2xl">{style.emoji}</span>
+                              </div>
+                            )}
+                            {/* 카테고리 배지 */}
+                            <span className="absolute bottom-1 left-1 text-[9px] font-bold bg-black/60 text-white px-1.5 py-0.5 rounded-full">
+                              {catLabel}
+                            </span>
                           </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
+                          <p className="text-xs font-semibold text-slate-800 line-clamp-2 leading-snug font-ko">
+                            {news.title}
+                          </p>
+                          <p className="text-[10px] text-slate-400 mt-0.5 truncate">{news.source}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            );
+          })()}
         </div>
       </section>
 
