@@ -642,73 +642,74 @@ export default function Home() {
       )}
 
       {/* Popular Searches */}
-      <section className="py-16 bg-white border-y">
+      <section className="py-10 bg-white border-y">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <span className="font-bold text-primary">인기 검색어</span>
-            </div>
-            <h2 className="text-3xl font-bold mb-3">많이 찾는 검색어</h2>
-            <p className="text-slate-600 mb-8">다른 사용자들이 자주 검색하는 키워드입니다</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {POPULAR_SEARCH_TAGS.map((tag, index) => (
-                <button
-                  key={tag.category}
-                  onClick={() => setLocation(`/businesses?category=${encodeURIComponent(tag.category)}`)}
-                  className="group relative inline-flex items-center gap-2 px-6 py-3 bg-slate-50 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition-all hover:shadow-lg hover:-translate-y-0.5"
-                >
-                  <span className="text-lg font-bold text-slate-400 group-hover:text-white/70">
-                    {index + 1}
-                  </span>
-                  <span>{tag.label}</span>
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <span className="text-sm font-bold text-primary">많이 찾는 검색어</span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {POPULAR_SEARCH_TAGS.map((tag, index) => (
+              <button
+                key={tag.category}
+                onClick={() => setLocation(`/businesses?category=${encodeURIComponent(tag.category)}`)}
+                className="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-slate-50 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
+              >
+                <span className="text-xs font-bold text-slate-400 group-hover:text-white/70">
+                  {index + 1}
+                </span>
+                <span>{tag.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Trending Businesses - NEW */}
       {trending.length > 0 && (
-        <section className="py-20 bg-gradient-to-b from-primary/5 to-white">
+        <section className="py-12 bg-gradient-to-b from-primary/5 to-white">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-12">
-              <div className="flex items-center gap-3">
-                <Sparkles className="h-8 w-8 text-primary" />
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
                 <div>
                   <h2 className="text-xl md:text-4xl font-bold">이번 주 인기 업체</h2>
-                  <p className="text-slate-600 mt-1">높은 평점과 많은 리뷰를 받은 업체들</p>
+                  <p className="text-xs text-slate-500 mt-0.5 md:mt-1">높은 평점과 많은 리뷰를 받은 업체들</p>
                 </div>
               </div>
               <Link href="/businesses?sort=rating">
-                <Button variant="ghost" className="gap-2">
-                  전체 보기 <ArrowRight className="h-4 w-4" />
-                </Button>
+                <Button variant="ghost" className="gap-1 text-sm">전체 보기 <ArrowRight className="h-4 w-4" /></Button>
               </Link>
             </div>
-
-            {false ? (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i}>
-                    <CardContent className="p-0">
-                      <Skeleton className="w-full h-48" />
-                      <div className="p-6 space-y-3">
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-                {trending.slice(0, 6).map((business) => (
-                  <BusinessCard key={business.id} business={business} />
-                ))}
-              </div>
-            )}
+            {/* 모바일: 리스트뷰 */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {trending.slice(0, 6).map((biz) => (
+                <Link key={biz.id} href={`/businesses/${biz.id}`}>
+                  <div className="flex gap-3 py-3 items-center">
+                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                      {biz.photos?.[0] ? (
+                        <img src={biz.photos[0]} alt={biz.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-primary/10 flex items-center justify-center text-lg">🏢</div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 truncate">{biz.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{biz.category} · {biz.city || biz.address}</p>
+                      {biz.rating > 0 && (
+                        <p className="text-xs text-amber-500 font-semibold">★ {biz.rating.toFixed(1)}</p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {/* 데스크탑: 카드 그리드 */}
+            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {trending.slice(0, 6).map((business) => (
+                <BusinessCard key={business.id} business={business} />
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -723,29 +724,28 @@ export default function Home() {
       )}
 
       {/* Latest News */}
-      <section className="py-20 bg-slate-50">
+      <section className="py-12 bg-slate-50">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-4xl font-bold">최신 뉴스</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl md:text-4xl font-bold">최신 뉴스</h2>
             <Link href="/news">
-              <Button variant="ghost" className="gap-2">
+              <Button variant="ghost" className="gap-1 text-sm">
                 전체 보기 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
 
           {loadingNews ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
+            <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-0">
-                    <Skeleton className="w-full h-48" />
-                    <div className="p-6 space-y-3">
-                      <Skeleton className="h-6 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                  </CardContent>
-                </Card>
+                <div key={i} className="flex gap-3">
+                  <Skeleton className="w-20 h-20 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : recentNews.length === 0 ? (
@@ -754,41 +754,61 @@ export default function Home() {
               <p>뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
-              {recentNews.map((news) => {
-                const categoryStyle = getNewsCategoryStyle(news.category);
-                return (
-                  <Link key={news.id} href={`/news/${news.id}`}>
-                    <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
-                      <CardContent className="p-0">
-                        {hasValidImage(news.thumbnail_url) ? (
-                          <div 
-                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                            style={{ backgroundImage: `url(${news.thumbnail_url})` }}
-                          />
-                        ) : (
-                          <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-                            <span className="text-7xl">{categoryStyle.emoji}</span>
-                          </div>
-                        )}
-                        <div className="p-6">
-                          <Badge variant="secondary" className="mb-3">
-                            {news.category || '뉴스'}
-                          </Badge>
-                          <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
-                            {news.title}
-                          </h3>
-                          <p className="text-sm text-slate-600 line-clamp-2">{news.content}</p>
-                          <p className="text-xs text-slate-400 mt-3">
-                            {news.source} • {new Date(news.published_date).toLocaleDateString('ko-KR')}
-                          </p>
+            <>
+              {/* 모바일: 리스트뷰 */}
+              <div className="md:hidden divide-y divide-slate-200">
+                {recentNews.map((news) => {
+                  const categoryStyle = getNewsCategoryStyle(news.category);
+                  return (
+                    <Link key={news.id} href={`/news/${news.id}`}>
+                      <div className="flex gap-3 py-3 items-start">
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                          {hasValidImage(news.thumbnail_url) ? (
+                            <img src={news.thumbnail_url} alt={news.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className={`w-full h-full bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center`}>
+                              <span className="text-2xl">{categoryStyle.emoji}</span>
+                            </div>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })}
-            </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-semibold text-primary">{news.category || '뉴스'}</span>
+                          <h3 className="text-sm font-bold text-slate-800 line-clamp-2 mt-0.5 font-ko leading-snug">{news.title}</h3>
+                          <p className="text-xs text-slate-400 mt-1">{news.source} · {new Date(news.published_date).toLocaleDateString('ko-KR')}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              {/* 데스크탑: 카드 그리드 */}
+              <div className="hidden md:grid md:grid-cols-3 gap-8">
+                {recentNews.map((news) => {
+                  const categoryStyle = getNewsCategoryStyle(news.category);
+                  return (
+                    <Link key={news.id} href={`/news/${news.id}`}>
+                      <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
+                        <CardContent className="p-0">
+                          {hasValidImage(news.thumbnail_url) ? (
+                            <div className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300" style={{ backgroundImage: `url(${news.thumbnail_url})` }} />
+                          ) : (
+                            <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center`}>
+                              <span className="text-7xl">{categoryStyle.emoji}</span>
+                            </div>
+                          )}
+                          <div className="p-6">
+                            <Badge variant="secondary" className="mb-3">{news.category || '뉴스'}</Badge>
+                            <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">{news.title}</h3>
+                            <p className="text-sm text-slate-600 line-clamp-2">{news.content}</p>
+                            <p className="text-xs text-slate-400 mt-3">{news.source} • {new Date(news.published_date).toLocaleDateString('ko-KR')}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </section>
@@ -854,44 +874,47 @@ export default function Home() {
 
       {/* Recent Businesses - NEW */}
       {recent.length > 0 && (
-        <section className="py-20 bg-slate-50">
+        <section className="py-12 bg-slate-50">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-12">
-              <div className="flex items-center gap-3">
-                <Clock className="h-8 w-8 text-primary" />
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
                 <div>
                   <h2 className="text-xl md:text-4xl font-bold">신규 등록 업체</h2>
-                  <p className="text-slate-600 mt-1">최근 DalKonnect에 추가된 업체들</p>
+                  <p className="text-xs text-slate-500 mt-0.5">최근 DalKonnect에 추가된 업체들</p>
                 </div>
               </div>
               <Link href="/businesses?sort=recent">
-                <Button variant="ghost" className="gap-2">
-                  전체 보기 <ArrowRight className="h-4 w-4" />
-                </Button>
+                <Button variant="ghost" className="gap-1 text-sm">전체 보기 <ArrowRight className="h-4 w-4" /></Button>
               </Link>
             </div>
-
-            {false ? (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i}>
-                    <CardContent className="p-0">
-                      <Skeleton className="w-full h-48" />
-                      <div className="p-6 space-y-3">
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-                {recent.slice(0, 6).map((business) => (
-                  <BusinessCard key={business.id} business={business} />
-                ))}
-              </div>
-            )}
+            {/* 모바일: 리스트뷰 */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {recent.slice(0, 6).map((biz) => (
+                <Link key={biz.id} href={`/businesses/${biz.id}`}>
+                  <div className="flex gap-3 py-3 items-center">
+                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                      {biz.photos?.[0] ? (
+                        <img src={biz.photos[0]} alt={biz.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-primary/10 flex items-center justify-center text-lg">🏢</div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 truncate">{biz.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{biz.category} · {biz.city || biz.address}</p>
+                      <p className="text-xs text-green-600 font-semibold">🆕 신규</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {/* 데스크탑: 카드 그리드 */}
+            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {recent.slice(0, 6).map((business) => (
+                <BusinessCard key={business.id} business={business} />
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -916,20 +939,45 @@ export default function Home() {
           </div>
 
           {loadingDeals ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+            <div className="space-y-3 md:hidden">
               {[1, 2, 3].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-6">
-                    <Skeleton className="h-6 w-3/4 mb-3" />
-                    <Skeleton className="h-8 w-1/2 mb-2" />
-                    <Skeleton className="h-4 w-full mb-2" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </CardContent>
-                </Card>
+                <div key={i} className="flex gap-3">
+                  <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : hotDeals.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+            <>
+              {/* 모바일: 리스트뷰 */}
+              <div className="md:hidden divide-y divide-red-100">
+                {hotDeals.slice(0, 3).map((deal) => {
+                  const isFree = (deal.discount ?? '').includes('FREE') || deal.deal_price === 'FREE';
+                  return (
+                    <div key={deal.id} className="flex gap-3 py-3 items-center cursor-pointer" onClick={() => window.open(deal.deal_url, '_blank')}>
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-red-100 to-orange-100"
+                           style={{ backgroundImage: deal.image_url ? `url(${deal.image_url})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className="text-xs font-bold text-red-500">{deal.discount}</span>
+                          {isFree && <span className="text-xs text-green-600 font-bold">FREE</span>}
+                        </div>
+                        <p className="text-sm font-bold text-slate-800 line-clamp-1">{deal.title}</p>
+                        <p className="text-xs text-slate-500">{deal.store}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {deal.original_price && <span className="text-xs text-slate-400 line-through">{deal.original_price}</span>}
+                          <span className="text-xs font-bold text-red-600">{deal.deal_price}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* 데스크탑: 카드 그리드 */}
+              <div className="hidden md:grid md:grid-cols-3 gap-6">
               {hotDeals.slice(0, 3).map((deal) => {
                 const isHot = deal.likes > 200;
                 const isFree = (deal.discount ?? '').includes('FREE') || deal.deal_price === 'FREE';
@@ -1033,6 +1081,7 @@ export default function Home() {
                 );
               })}
             </div>
+            </>
           )}
 
           {!loadingDeals && hotDeals.length === 0 && (
@@ -1046,74 +1095,116 @@ export default function Home() {
       </section>
 
       {/* Blog Section */}
-      <section className="py-20 bg-white">
+      <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-4xl font-bold mb-2">블로그</h2>
-              <p className="text-slate-600">DFW 한인 생활 가이드와 유용한 팁</p>
+              <h2 className="text-xl md:text-4xl font-bold mb-1">블로그</h2>
+              <p className="text-sm text-slate-500">DFW 한인 생활 가이드와 유용한 팁</p>
             </div>
             <Link href="/blog">
-              <Button variant="ghost" className="gap-2">
+              <Button variant="ghost" className="gap-1 text-sm">
                 전체 보기 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
 
           {loadingBlogs ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
+            <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-0">
-                    <Skeleton className="w-full h-48" />
-                    <div className="p-6 space-y-3">
-                      <Skeleton className="h-6 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                  </CardContent>
-                </Card>
+                <div key={i} className="flex gap-3 items-center">
+                  <Skeleton className="w-20 h-20 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : recentBlogs.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
-              {recentBlogs.map((blog) => {
-                const categoryStyle = getBlogCategoryStyle(blog.category);
-                return (
-                  <Link key={blog.id} href={`/blog/${blog.slug}`}>
-                    <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
-                      <CardContent className="p-0">
-                        {blog.cover_image || blog.cover_url ? (
-                          <div 
-                            className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                            style={{ backgroundImage: `url(${blog.cover_image || blog.cover_url})` }}
-                          />
-                        ) : (
-                          <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
-                            <span className="text-7xl">{categoryStyle.emoji}</span>
-                          </div>
-                        )}
-                        <div className="p-6">
-                          {blog.category && (
-                            <Badge variant="secondary" className="mb-3">
-                              {blog.category}
-                            </Badge>
+            <>
+              {/* 모바일: 리스트뷰 / 데스크탑: 카드 그리드 */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {recentBlogs.map((blog) => {
+                  const categoryStyle = getBlogCategoryStyle(blog.category);
+                  return (
+                    <Link key={blog.id} href={`/blog/${blog.slug}`}>
+                      <div className="flex gap-3 py-3 items-start">
+                        {/* 썸네일 */}
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                          {blog.cover_image || blog.cover_url ? (
+                            <img
+                              src={blog.cover_image || blog.cover_url}
+                              alt={blog.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className={`w-full h-full bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center`}>
+                              <span className="text-2xl">{categoryStyle.emoji}</span>
+                            </div>
                           )}
-                          <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
+                        </div>
+                        {/* 텍스트 */}
+                        <div className="flex-1 min-w-0">
+                          {blog.category && (
+                            <span className="text-xs font-semibold text-primary">{blog.category}</span>
+                          )}
+                          <h3 className="text-sm font-bold text-slate-800 line-clamp-2 mt-0.5 font-ko leading-snug">
                             {blog.title}
                           </h3>
                           {blog.excerpt && (
-                            <p className="text-sm text-slate-600 line-clamp-2">{blog.excerpt}</p>
+                            <p className="text-xs text-slate-500 line-clamp-1 mt-1">{blog.excerpt}</p>
                           )}
-                          <p className="text-xs text-slate-400 mt-3">
-                            {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR')}
+                          <p className="text-xs text-slate-400 mt-1">
+                            {blog.author} · {new Date(blog.published_at).toLocaleDateString('ko-KR')}
                           </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })}
-            </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* 데스크탑: 카드 그리드 (기존 유지) */}
+              <div className="hidden md:grid md:grid-cols-3 gap-8">
+                {recentBlogs.map((blog) => {
+                  const categoryStyle = getBlogCategoryStyle(blog.category);
+                  return (
+                    <Link key={blog.id} href={`/blog/${blog.slug}`}>
+                      <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group rounded-xl">
+                        <CardContent className="p-0">
+                          {blog.cover_image || blog.cover_url ? (
+                            <div
+                              className="w-full h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                              style={{ backgroundImage: `url(${blog.cover_image || blog.cover_url})` }}
+                            />
+                          ) : (
+                            <div className={`w-full h-48 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center`}>
+                              <span className="text-7xl">{categoryStyle.emoji}</span>
+                            </div>
+                          )}
+                          <div className="p-6">
+                            {blog.category && (
+                              <Badge variant="secondary" className="mb-3">{blog.category}</Badge>
+                            )}
+                            <h3 className="text-lg font-bold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-2 font-ko">
+                              {blog.title}
+                            </h3>
+                            {blog.excerpt && (
+                              <p className="text-sm text-slate-600 line-clamp-2">{blog.excerpt}</p>
+                            )}
+                            <p className="text-xs text-slate-400 mt-3">
+                              {blog.author} • {new Date(blog.published_at).toLocaleDateString('ko-KR')}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </section>
@@ -1125,7 +1216,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <ShoppingBag className="h-8 w-8 text-green-600" />
               <div>
-                <h2 className="text-4xl font-bold">최근 올라온 매물</h2>
+                <h2 className="text-xl md:text-4xl font-bold">최근 올라온 매물</h2>
                 <p className="text-slate-600 mt-1">DFW 한인 커뮤니티 사고팔기</p>
               </div>
             </div>
@@ -1137,19 +1228,46 @@ export default function Home() {
           </div>
 
           {loadingListings ? (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-6">
-                    <Skeleton className="h-6 w-full mb-3" />
-                    <Skeleton className="h-8 w-1/2 mb-2" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </CardContent>
-                </Card>
+            <div className="space-y-3 md:hidden">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-3">
+                  <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : recentListings.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <>
+              {/* 모바일: 리스트뷰 */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {recentListings.map((listing) => {
+                  const isFree = listing.price_type === 'free';
+                  const price = isFree ? '무료' : listing.price_type === 'contact' ? '가격문의' : listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의';
+                  return (
+                    <Link key={listing.id} href={`/marketplace/${listing.id}`}>
+                      <div className="flex gap-3 py-3 items-center">
+                        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                          {listing.photos?.[0] ? (
+                            <img src={listing.photos[0]} alt={listing.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl">🛍️</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-800 line-clamp-1">{listing.title}</p>
+                          <p className="text-xs text-slate-500">{listing.category} · {listing.location || 'DFW'}</p>
+                          <p className={`text-sm font-bold mt-0.5 ${isFree ? 'text-green-600' : 'text-blue-600'}`}>{price}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              {/* 데스크탑: 카드 그리드 */}
+              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recentListings.map((listing) => {
                 const date = new Date(listing.created_at);
                 const now = new Date();
@@ -1236,6 +1354,7 @@ export default function Home() {
                 );
               })}
             </div>
+            </>
           )}
 
           <div className="text-center mt-8">
@@ -1254,7 +1373,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
             <div>
-              <h2 className="text-4xl font-bold flex items-center gap-3">
+              <h2 className="text-xl md:text-4xl font-bold flex items-center gap-3">
                 <span className="text-2xl">🔥</span> 커뮤니티 인기글
               </h2>
               <p className="text-slate-600 mt-2">달라스 한인들이 함께 나누는 이야기</p>
@@ -1287,10 +1406,30 @@ export default function Home() {
               ))}
             </div>
           ) : popularPosts.length > 0 ? (
-            <div className="space-y-3">
+            <div className="divide-y divide-slate-100 md:space-y-3 md:divide-y-0">
               {popularPosts.map((post, index) => (
                 <Link key={post.id} href={`/community/${post.id}`}>
-                  <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group">
+                  {/* 모바일: 컴팩트 리스트 */}
+                  <div className="md:hidden flex gap-3 py-3 items-start">
+                    <div className="flex items-center justify-center w-7 h-7 bg-primary text-white text-xs font-bold rounded-full flex-shrink-0 mt-0.5">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <span className="text-xs text-slate-500">{post.category}</span>
+                        {post.is_pinned && <span className="text-xs text-red-500 font-bold">공지</span>}
+                      </div>
+                      <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug">{post.title}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                        <span>{post.nickname}</span>
+                        <span>💬 {post.comment_count}</span>
+                        <span>❤️ {post.likes}</span>
+                        <span>👁 {post.views}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* 데스크탑: 카드 */}
+                  <Card className="hidden md:block hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
@@ -1298,41 +1437,20 @@ export default function Home() {
                             <div className="flex items-center justify-center w-8 h-8 bg-primary text-white text-sm font-bold rounded-full flex-shrink-0">
                               {index + 1}
                             </div>
-                            <Badge variant="outline" className="text-xs">
-                              {post.category}
-                            </Badge>
+                            <Badge variant="outline" className="text-xs">{post.category}</Badge>
                             {post.is_pinned && (
                               <Badge variant="secondary" className="text-xs">
-                                <Flame className="w-3 h-3 mr-1" />
-                                공지
+                                <Flame className="w-3 h-3 mr-1" />공지
                               </Badge>
                             )}
                           </div>
-                          
-                          <h3 className="font-bold text-lg text-slate-900 mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                            {post.title}
-                          </h3>
-                          
+                          <h3 className="font-bold text-lg text-slate-900 mb-2 group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
                           <div className="flex items-center text-sm text-slate-600 space-x-4">
-                            <span className="flex items-center gap-1">
-                              <Users className="w-4 h-4" />
-                              {post.nickname}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MessageCircle className="w-4 h-4" />
-                              {post.comment_count}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Heart className="w-4 h-4" />
-                              {post.likes}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Eye className="w-4 h-4" />
-                              {post.views}
-                            </span>
-                            <span className="text-xs text-slate-500">
-                              {new Date(post.created_at).toLocaleDateString('ko-KR')}
-                            </span>
+                            <span className="flex items-center gap-1"><Users className="w-4 h-4" />{post.nickname}</span>
+                            <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{post.comment_count}</span>
+                            <span className="flex items-center gap-1"><Heart className="w-4 h-4" />{post.likes}</span>
+                            <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{post.views}</span>
+                            <span className="text-xs text-slate-500">{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
                           </div>
                         </div>
                       </div>
@@ -1476,7 +1594,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-primary/80 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">업체를 운영하시나요?</h2>
+          <h2 className="text-xl md:text-4xl font-bold mb-6">업체를 운영하시나요?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
             DalKonnect에 등록하고 더 많은 고객을 만나세요
           </p>
