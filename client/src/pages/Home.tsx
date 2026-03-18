@@ -105,7 +105,7 @@ function ChartsPreview() {
           <p className="text-slate-600 text-lg">지금 가장 핫한 드라마, 음악, 영화를 확인하세요!</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           {chartTypes.map((chart) => {
             const chartItem = chartsData[chart.id];
             const IconComponent = chart.icon;
@@ -117,7 +117,7 @@ function ChartsPreview() {
                 <CardContent className="p-0">
                   {/* YouTube Thumbnail */}
                   {chartItem.thumbnail_url && (
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-36 md:h-48 overflow-hidden">
                       <img 
                         src={chartItem.thumbnail_url} 
                         alt={chartItem.title_ko}
