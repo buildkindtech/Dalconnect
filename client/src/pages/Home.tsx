@@ -207,8 +207,8 @@ export default function Home() {
     totalUnique: number;
   } | null>(null);
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
-  // 헤드라인 우선 카테고리 순서로 뉴스 8개 가져오기
-  const { data: newsItems, isLoading: loadingNews } = useNews({ limit: 30 });
+  // 헤드라인 우선 카테고리 순서로 뉴스 가져오기
+  const { data: newsItems, isLoading: loadingNews } = useNews({ limit: 60 });
   const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
   const { data: categories } = useCategories();
@@ -363,19 +363,27 @@ export default function Home() {
     return [...arr.slice(offset), ...arr.slice(0, offset)].slice(0, 6);
   }, [allFeatured, infeedPool, featuredSlot]);
   const featured = shuffledFeatured;
-  // 헤드라인/로컬/DFW 우선 → 스포츠/연예/생활 순으로 정렬해서 8개
-  const PRIORITY_CATS = ['로컬뉴스', '미국뉴스', '달라스', '스포츠', '이민/비자', '세금/재정', 'K-POP', '한국뉴스', '월드뉴스'];
-  const recentNews = (() => {
+  // Reddit 제외 + 카테고리별 2개씩 그룹핑
+  const NEWS_CATS = [
+    { key: '로컬뉴스', label: '🏙️ 로컬뉴스' },
+    { key: '미국뉴스', label: '🇺🇸 미국뉴스' },
+    { key: '스포츠',   label: '⚽ 스포츠' },
+    { key: 'K-POP',   label: '🎵 K-POP' },
+    { key: '이민/비자', label: '📋 이민·비자' },
+    { key: '세금/재정', label: '💰 세금·재정' },
+    { key: '한국뉴스', label: '🇰🇷 한국뉴스' },
+    { key: '월드뉴스', label: '🌍 월드뉴스' },
+  ];
+  const isReddit = (n: any) => n.source?.startsWith('r/') || n.category === '달라스';
+  const newsByCat = (() => {
     if (!newsItems) return [];
-    const sorted = [...newsItems].sort((a, b) => {
-      const ai = PRIORITY_CATS.indexOf(a.category);
-      const bi = PRIORITY_CATS.indexOf(b.category);
-      const ap = ai === -1 ? 99 : ai;
-      const bp = bi === -1 ? 99 : bi;
-      return ap - bp;
-    });
-    return sorted.slice(0, 8);
+    const filtered = newsItems.filter((n: any) => !isReddit(n));
+    return NEWS_CATS.map(cat => ({
+      ...cat,
+      items: filtered.filter((n: any) => n.category === cat.key).slice(0, 2),
+    })).filter(cat => cat.items.length > 0);
   })();
+  const recentNews = newsByCat.flatMap(c => c.items).slice(0, 8);
   const recentBlogs = blogPosts?.slice(0, 3) ?? [];
   const recentListings = listingsData?.items ?? [];
   const trending: any[] = [];
@@ -760,44 +768,44 @@ export default function Home() {
               <p>뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
             </div>
           ) : (
-            <>
-              <div className="divide-y divide-slate-200">
-                {recentNews.map((news) => {
-                  const categoryStyle = getNewsCategoryStyle(news.category);
-                  return (
-                    <Link key={news.id} href={`/news/${news.id}`}>
-                      <div className="flex gap-3 py-3 items-start hover:bg-slate-100 rounded-lg px-1 transition-colors">
-                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
-                          {hasValidImage(news.thumbnail_url) ? (
-                            <img src={news.thumbnail_url} alt={news.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className={`w-full h-full bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center`}>
-                              <span className="text-2xl">{categoryStyle.emoji}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-xs font-semibold text-primary">
-                            {news.category === '로컬뉴스' ? '🏙️ 로컬' :
-                             news.category === '미국뉴스' ? '🇺🇸 미국' :
-                             news.category === '달라스' ? '📍 DFW' :
-                             news.category === '스포츠' ? '⚽ 스포츠' :
-                             news.category === 'K-POP' ? '🎵 K-POP' :
-                             news.category === '이민/비자' ? '📋 이민' :
-                             news.category === '세금/재정' ? '💰 재정' :
-                             news.category === '한국뉴스' ? '🇰🇷 한국' :
-                             news.category === '월드뉴스' ? '🌍 월드' :
-                             news.category || '뉴스'}
-                          </span>
-                          <h3 className="text-sm md:text-base font-bold text-slate-800 line-clamp-2 mt-0.5 font-ko leading-snug">{news.title}</h3>
-                          <p className="text-xs text-slate-400 mt-1">{news.source} · {new Date(news.published_date).toLocaleDateString('ko-KR')}</p>
-                        </div>
-                      </div>
+            <div className="space-y-6">
+              {newsByCat.map((cat) => (
+                <div key={cat.key}>
+                  {/* 카테고리 헤더 */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-primary">{cat.label}</span>
+                    <Link href={`/news?category=${encodeURIComponent(cat.key)}`}>
+                      <span className="text-xs text-slate-400 hover:text-primary">더보기 →</span>
                     </Link>
-                  );
-                })}
-              </div>
-            </>
+                  </div>
+                  {/* 2열 그리드 */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {cat.items.map((news: any) => {
+                      const categoryStyle = getNewsCategoryStyle(news.category);
+                      return (
+                        <Link key={news.id} href={`/news/${news.id}`}>
+                          <div className="flex gap-2 items-start hover:bg-slate-100 rounded-lg p-1.5 transition-colors">
+                            <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                              {hasValidImage(news.thumbnail_url) ? (
+                                <img src={news.thumbnail_url} alt={news.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className={`w-full h-full bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center`}>
+                                  <span className="text-xl">{categoryStyle.emoji}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-xs md:text-sm font-bold text-slate-800 line-clamp-3 leading-snug font-ko">{news.title}</h3>
+                              <p className="text-xs text-slate-400 mt-1 truncate">{news.source}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </section>
