@@ -1246,8 +1246,15 @@ export default function Home() {
                 {recentListings.map((listing) => {
                   const isFree = listing.price_type === 'free';
                   const price = isFree ? '무료' : listing.price_type === 'contact' ? '가격문의' : listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의';
+                  const isTest = listing.nickname?.includes('테스터') || listing.nickname?.includes('달커넥트테스터');
+                  const handleClick = (e: React.MouseEvent) => {
+                    if (isTest) {
+                      e.preventDefault();
+                      alert('📦 아직 매물이 없어요!\n첫 번째 매물을 무료로 올려보세요.\n물건을 팔거나 나누고 싶다면 지금 바로 등록해보세요 😊');
+                    }
+                  };
                   return (
-                    <Link key={listing.id} href={`/marketplace/${listing.id}`}>
+                    <Link key={listing.id} href={isTest ? '/marketplace/new' : `/marketplace/${listing.id}`} onClick={handleClick}>
                       <div className="flex gap-3 py-3 items-center">
                         <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
                           {listing.photos?.[0] ? (
@@ -1257,6 +1264,9 @@ export default function Home() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            {isTest && <span className="text-xs bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-medium">테스트 글</span>}
+                          </div>
                           <p className="text-sm font-bold text-slate-800 line-clamp-1">{listing.title}</p>
                           <p className="text-xs text-slate-500">{listing.category} · {listing.location || 'DFW'}</p>
                           <p className={`text-sm font-bold mt-0.5 ${isFree ? 'text-green-600' : 'text-blue-600'}`}>{price}</p>
@@ -1283,9 +1293,17 @@ export default function Home() {
                 else if (diffDays < 7) timeAgo = `${diffDays}일 전`;
                 else timeAgo = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
                 
+                const isTest2 = listing.nickname?.includes('테스터') || listing.nickname?.includes('달커넥트테스터');
+                const handleClick2 = (e: React.MouseEvent) => {
+                  if (isTest2) {
+                    e.preventDefault();
+                    alert('📦 아직 매물이 없어요!\n첫 번째 매물을 무료로 올려보세요.\n물건을 팔거나 나누고 싶다면 지금 바로 등록해보세요 😊');
+                  }
+                };
                 return (
-                  <Link key={listing.id} href={`/marketplace/${listing.id}`}>
-                    <Card className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl overflow-hidden">
+                  <Link key={listing.id} href={isTest2 ? '/marketplace/new' : `/marketplace/${listing.id}`} onClick={handleClick2}>
+                    <Card className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl overflow-hidden relative">
+                      {isTest2 && <div className="absolute top-2 left-2 z-10 bg-slate-600/80 text-white text-xs px-2 py-0.5 rounded font-medium">테스트 글</div>}
                       {/* 매물 사진 */}
                       {listing.photos && listing.photos.length > 0 ? (
                         <div className="w-full h-44 overflow-hidden bg-slate-100">
