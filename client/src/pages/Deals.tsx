@@ -28,13 +28,14 @@ interface Deal {
 const categories = [
   { value: 'all', label: '전체', icon: '🏷️' },
   { value: '한인마트', label: '한인마트', icon: '🛒' },
+  { value: '뷰티', label: '뷰티/스파', icon: '💆' },
+  { value: '엔터테인먼트', label: '엔터', icon: '🎉' },
+  { value: '생활', label: '생활', icon: '🚗' },
   { value: '식료품', label: '식료품', icon: '🥬' },
   { value: '항공권', label: '항공권', icon: '✈️' },
   { value: '맛집', label: '맛집', icon: '🍜' },
-  { value: '뷰티', label: '뷰티', icon: '💄' },
   { value: '테크', label: '테크', icon: '💻' },
   { value: '쇼핑', label: '쇼핑', icon: '🛍️' },
-  { value: '쿠폰', label: '쿠폰', icon: '🎟️' }
 ];
 
 const fetchDeals = async (category?: string, hot?: boolean): Promise<Deal[]> => {
