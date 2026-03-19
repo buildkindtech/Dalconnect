@@ -27,7 +27,8 @@ interface Deal {
 
 const categories = [
   { value: 'all', label: '전체', icon: '🏷️' },
-  { value: '식료품', label: '식료품', icon: '🛒' },
+  { value: '한인마트', label: '한인마트', icon: '🛒' },
+  { value: '식료품', label: '식료품', icon: '🥬' },
   { value: '항공권', label: '항공권', icon: '✈️' },
   { value: '맛집', label: '맛집', icon: '🍜' },
   { value: '뷰티', label: '뷰티', icon: '💄' },
