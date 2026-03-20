@@ -64,15 +64,11 @@ export default function NewsDetail() {
     enabled: !!newsItem?.category
   });
 
-  // 현재 기사 목록 ref (자동 스크롤용)
+  // 페이지 상단으로 스크롤 (기사 이동 시)
   const currentItemRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (currentItemRef.current && relatedNews && relatedNews.length > 0) {
-      setTimeout(() => {
-        currentItemRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }, 300);
-    }
-  }, [relatedNews]);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [params.id]);
 
   if (isLoading || (!newsItem && !error)) {
     return (
