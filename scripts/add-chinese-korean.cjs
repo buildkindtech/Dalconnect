@@ -5,7 +5,7 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config({ path: '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/.env' });
 
-const GMAPS_KEY = 'AIzaSyCAEESPAdfXjlgR-7bD2lKGjTLnbAaNlsQ';
+const GMAPS_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.GMAPS_KEY;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 if (!admin.apps.length) {
