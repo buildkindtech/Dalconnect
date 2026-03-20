@@ -99,14 +99,55 @@ export default function NewsDetail() {
       <meta property="og:type" content="article" />
       <link rel="canonical" href={`https://dalkonnect.com/news/${newsItem?.id}`} />
     </Helmet>
-    <div className="bg-slate-50 min-h-screen py-12">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <Link href="/news">
-          <Button variant="ghost" className="mb-6 md:mb-6">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            뉴스 목록으로
-          </Button>
-        </Link>
+    <div className="bg-slate-50 min-h-screen">
+      {/* 뉴스 헤더 + 카테고리 필터 (고정) */}
+      <div className="sticky top-0 z-30 bg-white border-b border-border shadow-sm">
+        <div className="container mx-auto px-4 py-4 max-w-6xl">
+          <div className="flex items-center gap-3 mb-3">
+            <Link href="/news">
+              <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="h-4 w-4" />
+                <span className="font-medium">뉴스</span>
+              </button>
+            </Link>
+            <span className="text-muted-foreground/40">/</span>
+            <span className="text-sm font-semibold text-foreground truncate max-w-xs">{newsItem.category}</span>
+          </div>
+          <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+            <div className="flex gap-2 pb-1 min-w-max">
+              {[
+                { id: 'all', label: '전체', emoji: '📰' },
+                { id: '로컬뉴스', label: '로컬', emoji: '📍' },
+                { id: '미국뉴스', label: '미국', emoji: '🇺🇸' },
+                { id: '한국뉴스', label: '한국', emoji: '🇰🇷' },
+                { id: '월드뉴스', label: '세계', emoji: '🌍' },
+                { id: 'K-POP', label: 'K-POP', emoji: '🎤' },
+                { id: '스포츠', label: '스포츠', emoji: '⚽' },
+                { id: '이민/비자', label: '이민/비자', emoji: '🛂' },
+                { id: '세금/재정', label: '세금/재정', emoji: '💰' },
+                { id: '부동산/숙소', label: '부동산', emoji: '🏠' },
+                { id: '패션/뷰티', label: '패션/뷰티', emoji: '👗' },
+                { id: '취업/사업', label: '취업/사업', emoji: '💼' },
+                { id: '건강', label: '건강', emoji: '🏥' },
+                { id: '육아', label: '육아', emoji: '👶' },
+                { id: '테크', label: '테크', emoji: '💻' },
+              ].map(cat => (
+                <Link key={cat.id} href={cat.id === 'all' ? '/news' : `/news?category=${cat.id}`}>
+                  <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors
+                    ${newsItem.category === cat.id || (cat.id === 'all' && !newsItem.category)
+                      ? 'bg-primary text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                    <span>{cat.emoji}</span>
+                    <span>{cat.label}</span>
+                  </button>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 max-w-4xl py-8">
 
         <article className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
           {/* 썸네일 이미지 */}
