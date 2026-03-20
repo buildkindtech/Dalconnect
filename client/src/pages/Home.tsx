@@ -1270,7 +1270,8 @@ export default function Home() {
                 const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                 
                 let timeAgo = '';
-                if (diffMins < 60) timeAgo = `${diffMins}분 전`;
+                if (diffMins <= 0) timeAgo = '방금';
+                else if (diffMins < 60) timeAgo = `${diffMins}분 전`;
                 else if (diffHours < 24) timeAgo = `${diffHours}시간 전`;
                 else if (diffDays === 1) timeAgo = '어제';
                 else if (diffDays < 7) timeAgo = `${diffDays}일 전`;

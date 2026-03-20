@@ -447,7 +447,7 @@ async function insertIfNew(article) {
         article.source,
         article.url,
         thumbnail,
-        article.pubDate || new Date(),
+        article.pubDate && article.pubDate <= new Date() ? article.pubDate : new Date(), // 미래 날짜 방지
         article.city || 'dallas',
       ]
     );
