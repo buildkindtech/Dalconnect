@@ -108,6 +108,8 @@ const RSS_FEEDS = [
   { url: 'https://www.murthy.com/feed/', category: '이민/비자', source: 'Murthy Law', city: null, translate: true },
   { url: 'https://feeds.feedburner.com/immigrationimpact', category: '이민/비자', source: 'American Immigration Council', city: null, translate: true },
   { url: 'https://www.visajourney.com/forums/forum/86-immigration-news/index.xml', category: '이민/비자', source: 'VisaJourney', city: null, translate: true },
+  { url: 'https://immigrationforum.org/feed/', category: '이민/비자', source: 'National Immigration Forum', city: null, translate: true },
+  { url: 'https://lawprofessors.typepad.com/immigration/rss.xml', category: '이민/비자', source: 'ImmigrationProf Blog', city: null, translate: true },
 
   // K-POP / 연예
   { url: 'https://www.soompi.com/feed', category: 'K-POP', source: 'Soompi', city: null, translate: true },
@@ -122,6 +124,11 @@ const RSS_FEEDS = [
 
   // 부동산
   { url: 'https://www.realtor.com/news/feed/', category: '부동산/숙소', source: 'Realtor.com', city: null, translate: true },
+  { url: 'https://www.housingwire.com/feed/', category: '부동산/숙소', source: 'HousingWire', city: null, translate: true },
+  { url: 'https://www.redfin.com/blog/feed/', category: '부동산/숙소', source: 'Redfin Blog', city: null, translate: true },
+  { url: 'https://feeds.feedburner.com/TheMortgageReports', category: '부동산/숙소', source: 'The Mortgage Reports', city: null, translate: true },
+  { url: 'https://feeds.feedburner.com/fortunebuilders', category: '부동산/숙소', source: 'Fortune Builders', city: null, translate: true },
+  { url: 'https://rss.donga.com/economy.xml', category: '부동산/숙소', source: '동아 경제/부동산', city: null },
 
   // 월드뉴스
   { url: 'https://www.yna.co.kr/rss/international.xml', category: '월드뉴스', source: '연합뉴스 국제', city: null },
@@ -144,6 +151,10 @@ const RSS_FEEDS = [
 
   // 세금/재정
   { url: 'https://www.nerdwallet.com/blog/feed/', category: '세금/재정', source: 'NerdWallet', city: null, translate: true },
+  { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html', category: '세금/재정', source: 'CNBC 개인재정', city: null, translate: true },
+  { url: 'https://www.yna.co.kr/rss/economy.xml', category: '세금/재정', source: '연합뉴스 경제', city: null },
+  { url: 'https://rss.donga.com/money.xml', category: '세금/재정', source: '동아 경제', city: null },
+  { url: 'https://www.chosun.com/arc/outboundfeeds/rss/category/economy/?outputType=xml', category: '세금/재정', source: '조선일보 경제', city: null },
 
   // 테크
   { url: 'https://www.etnews.com/rss', category: '테크', source: '전자신문', city: null },
