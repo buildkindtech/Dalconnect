@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useNews, type NewsItem } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -194,10 +194,19 @@ function SectionHeader({ emoji, title, count, onViewAll }: { emoji: string; titl
 }
 
 export default function News() {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [location] = useLocation();
+  const urlCategory = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('category') || 'all'
+    : 'all';
+  const [selectedCategory, setSelectedCategory] = useState(urlCategory);
   const [displayedItems, setDisplayedItems] = useState(20);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const categoryTabsRef = useRef<HTMLDivElement>(null);
+
+  // URL 변경 시 카테고리 동기화
+  useState(() => {
+    if (urlCategory !== selectedCategory) setSelectedCategory(urlCategory);
+  });
   
   const { data: allNewsItems, isLoading, error: newsError } = useNews(
     selectedCategory === 'all' ? undefined : { category: selectedCategory }

@@ -132,15 +132,16 @@ export default function NewsDetail() {
                 { id: '육아', label: '육아', emoji: '👶' },
                 { id: '테크', label: '테크', emoji: '💻' },
               ].map(cat => (
-                <Link key={cat.id} href={cat.id === 'all' ? '/news' : `/news?category=${cat.id}`}>
-                  <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors
+                <button
+                  key={cat.id}
+                  onClick={() => { window.location.href = cat.id === 'all' ? '/news' : `/news?category=${encodeURIComponent(cat.id)}`; }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors
                     ${newsItem.category === cat.id || (cat.id === 'all' && !newsItem.category)
                       ? 'bg-primary text-white'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                    <span>{cat.emoji}</span>
-                    <span>{cat.label}</span>
-                  </button>
-                </Link>
+                  <span>{cat.emoji}</span>
+                  <span>{cat.label}</span>
+                </button>
               ))}
             </div>
           </div>
