@@ -14,3 +14,4 @@ backups/
 scripts/gen-*.cjs
 scripts/post-*.cjs
 scripts/migrate-*.cjs
+memory/

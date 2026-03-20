@@ -382,7 +382,15 @@ async function main() {
     const { rows } = await pool.query(`SELECT id, title_ko, artist, chart_type FROM charts WHERE youtube_url = '' OR youtube_url IS NULL`);
     let matched = 0;
     for (const row of rows.slice(0, 30)) { // 최대 30개 (시간 제한)
-      const q = `${row.title_ko} ${row.artist || ''} official`.trim();
+      // 차트 타입별 검색어 최적화
+      let q;
+      if (row.chart_type === 'movie') {
+        q = `${row.title_ko} 영화 예고편`.trim();
+      } else if (row.chart_type === 'netflix' || row.chart_type === 'drama') {
+        q = `${row.title_ko} ${row.artist || ''} 예고편`.trim();
+      } else {
+        q = `${row.title_ko} ${row.artist || ''} official`.trim();
+      }
       const vid = findYouTubeId(q);
       if (vid) {
         await pool.query(`UPDATE charts SET youtube_url = $1, thumbnail_url = $2 WHERE id = $3`, [

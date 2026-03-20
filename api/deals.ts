@@ -35,7 +35,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         likes, views, source, created_at
       FROM deals
       WHERE expires_at > NOW()
-      ORDER BY created_at DESC
+      ORDER BY
+        CASE category
+          WHEN '한인마트' THEN 0
+          WHEN '식료품' THEN 1
+          WHEN '뷰티' THEN 2
+          WHEN '엔터테인먼트' THEN 3
+          WHEN '생활' THEN 4
+          ELSE 5
+        END,
+        created_at DESC
     `;
 
     const params: any[] = [];

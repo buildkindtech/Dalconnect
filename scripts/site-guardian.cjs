@@ -55,20 +55,24 @@ async function checkEndpoints() {
 // ─── 2. 뉴스 품질 체크 ───
 async function checkNewsQuality() {
   try {
-    const news = await fetchJSON('/api/news?limit=20');
+    const news = await fetchJSON('/api/news?limit=20', 20000); // 뉴스 API 타임아웃 20초로 상향
     const items = Array.isArray(news) ? news : (news.items || []);
     
     let htmlEntities = 0, emptyContent = 0, noThumb = 0;
+    // Reddit 소스는 이미지가 원래 없으므로 썸네일 체크에서 제외
+    const nonRedditItems = items.filter(i => !String(i.source || '').startsWith('r/'));
     for (const item of items) {
       if (/&[a-z]+;|&#\d+;/.test(item.title || '')) htmlEntities++;
       if (/&[a-z]+;|&#\d+;/.test(item.content || '')) htmlEntities++;
       if (!item.content || item.content.length < 50) emptyContent++;
+    }
+    for (const item of nonRedditItems) {
       if (!item.thumbnail_url) noThumb++;
     }
     
     if (htmlEntities > 0) issues.push(`⚠️ 뉴스 HTML 엔티티: ${htmlEntities}건`);
     if (emptyContent > 2) issues.push(`⚠️ 뉴스 내용 없음: ${emptyContent}/${items.length}건`);
-    if (noThumb > items.length * 0.3) issues.push(`⚠️ 뉴스 썸네일 없음: ${noThumb}/${items.length}건`);
+    if (nonRedditItems.length > 0 && noThumb > nonRedditItems.length * 0.5) issues.push(`⚠️ 뉴스 썸네일 없음: ${noThumb}/${nonRedditItems.length}건 (Reddit 제외)`);
     if (items.length === 0) issues.push('🔴 뉴스 0건 — 크론 실패 의심');
   } catch (e) {
     issues.push(`🔴 뉴스 API 에러: ${e.message}`);

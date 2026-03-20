@@ -37,7 +37,7 @@ if (!GOOGLE_AI_KEY) {
 }
 console.log('Gemini API:', GOOGLE_AI_KEY ? 'loaded' : 'MISSING');
 
-async function translateToKorean(title, content) {
+async function translateToKorean(title, content, retry = 0) {
   if (!GOOGLE_AI_KEY) return { title, content };
   const titleIsKorean = /[\uAC00-\uD7AF]{3,}/.test(title);
   const contentIsKorean = /[\uAC00-\uD7AF]{3,}/.test(content || '');
@@ -56,16 +56,35 @@ async function translateToKorean(title, content) {
         }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 0 } },
       }),
+      signal: AbortSignal.timeout(15000),
     });
-    if (!res.ok) return { title, content };
+    if (!res.ok) {
+      if (retry < 2) { await new Promise(r => setTimeout(r, 1500)); return translateToKorean(title, content, retry + 1); }
+      return { title, content: null };
+    }
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { title, content };
+    if (!jsonMatch) {
+      if (retry < 2) { await new Promise(r => setTimeout(r, 1500)); return translateToKorean(title, content, retry + 1); }
+      return { title, content: null };
+    }
     const parsed = JSON.parse(jsonMatch[0]);
-    return { title: parsed.title || title, content: parsed.content || parsed.summary || content };
+    const translatedTitle = parsed.title || title;
+    const translatedContent = parsed.content || parsed.summary || null;
+    // 번역 결과가 여전히 영어인 경우 재시도
+    if (translatedContent && !/[\uAC00-\uD7AF]{5,}/.test(translatedContent)) {
+      if (retry < 2) { await new Promise(r => setTimeout(r, 1500)); return translateToKorean(title, content, retry + 1); }
+      return { title, content: null };
+    }
+    // 제목도 한국어 검증
+    if (translatedTitle && !/[\uAC00-\uD7AF]{2,}/.test(translatedTitle) && /[a-zA-Z]{5,}/.test(translatedTitle)) {
+      if (retry < 2) { await new Promise(r => setTimeout(r, 1500)); return translateToKorean(title, content, retry + 1); }
+    }
+    return { title: translatedTitle, content: translatedContent };
   } catch (e) {
-    return { title, content };
+    if (retry < 2) { await new Promise(r => setTimeout(r, 2000)); return translateToKorean(title, content, retry + 1); }
+    return { title, content: null };
   }
 }
 
@@ -302,6 +321,10 @@ async function insertIfNew(article) {
       content = translated.content;
     }
     
+    // 번역 후 남아있는 HTML 엔티티 재디코딩 (번역 API가 엔티티를 유지하는 경우 대비)
+    title = decodeHtmlEntities(title);
+    if (content) content = decodeHtmlEntities(content);
+
     // Smart category for local sources
     article.category = smartCategory(article.category, title);
 
@@ -364,6 +387,22 @@ async function insertIfNew(article) {
         const m = text.match(/\{[\s\S]*\}/);
         if (m) { const parsed = JSON.parse(m[0]); if (parsed.summary) content = parsed.summary; }
       } catch(e) { /* AI 실패해도 계속 */ }
+    }
+
+    // ⚠️ 번역 필수 소스인데 제목이 완전히 영어만 → 재시도 1회 후 스킵 (빈 내용 방지)
+    if (article.translate) {
+      const titleHasKorean = /[\uAC00-\uD7AF]{3,}/.test(title);
+      if (!titleHasKorean) {
+        // 한번 더 번역 시도
+        const retry = await translateToKorean(title, content);
+        if (/[\uAC00-\uD7AF]{3,}/.test(retry.title)) {
+          title = retry.title;
+          content = retry.content || content;
+        } else {
+          console.warn(`⛔ 번역 최종 실패 — 저장 거부: "${title.substring(0,60)}"`);
+          return false;
+        }
+      }
     }
 
     const result = await pool.query(

@@ -122,24 +122,29 @@ async function generateAiSummary(title, existingContent, source) {
 출처: ${source}
 기존 내용: ${(existingContent || '').substring(0, 400)}`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 512 },
-      }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    const parsed = JSON.parse(jsonMatch[0]);
-    return parsed.summary || null;
-  } catch(e) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 512, thinkingConfig: { thinkingBudget: 0 } },
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (!res.ok) { await new Promise(r => setTimeout(r, 1000)); continue; }
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) { await new Promise(r => setTimeout(r, 1000)); continue; }
+        const parsed = JSON.parse(jsonMatch[0]);
+        const summary = parsed.summary || null;
+        if (summary && summary.length > 50) return summary;
+      } catch(e) { await new Promise(r => setTimeout(r, 1500)); }
+    }
     return null;
-  }
+  } catch(e) { return null; }
 }
 
 async function processArticle(row) {
