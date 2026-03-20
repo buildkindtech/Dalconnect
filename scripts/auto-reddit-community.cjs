@@ -151,12 +151,19 @@ async function insertPost({ title, content, category, nickname, city, tags, redd
   return id;
 }
 
-// ─── Reddit 수집 ─────────────────────────────────────────────────
+// ─── Reddit 수집 (카테고리별 2-3개 제한) ─────────────────────────
+const PER_CATEGORY_LIMIT = 3; // 카테고리당 최대 수집
+
 async function fetchRedditPosts() {
   const allPosts = [];
+  const categoryCount = {}; // 카테고리별 수집 카운트
+
   for (const src of REDDIT_SOURCES) {
+    // 이미 해당 카테고리가 한도 도달하면 스킵
+    if ((categoryCount[src.category] || 0) >= PER_CATEGORY_LIMIT) continue;
+
     try {
-      console.log(`\n🤖 r/${src.sub} (${src.type})...`);
+      console.log(`\n🤖 r/${src.sub} [${src.category}] (${src.type})...`);
       const url = src.type === 'search'
         ? `https://www.reddit.com/r/${src.sub}/search.json?q=${encodeURIComponent(src.q)}&sort=new&restrict_sr=1&limit=20&t=week`
         : `https://www.reddit.com/r/${src.sub}/hot.json?limit=25`;
@@ -171,6 +178,7 @@ async function fetchRedditPosts() {
 
       let count = 0;
       for (const p of posts) {
+        if ((categoryCount[src.category] || 0) >= PER_CATEGORY_LIMIT) break;
         if (p.score < src.minScore) continue;
         if (SKIP_REGEX.test(p.title) || SKIP_REGEX.test(p.selftext || '')) continue;
         if (p.over_18) continue;
@@ -190,14 +198,20 @@ async function fetchRedditPosts() {
           score: p.score,
           needsTranslation: !/[\uAC00-\uD7AF]{3,}/.test(rawTitle),
         });
-        if (++count >= 6) break;
+        categoryCount[src.category] = (categoryCount[src.category] || 0) + 1;
+        count++;
       }
-      console.log(`  ${count}개 후보`);
+      console.log(`  ${count}개 후보 (${src.category} 누적: ${categoryCount[src.category] || 0}/${PER_CATEGORY_LIMIT})`);
       await new Promise(r => setTimeout(r, 800));
     } catch (e) {
       console.log(`  ⚠️ r/${src.sub} 실패: ${e.message}`);
     }
   }
+  
+  // 카테고리별 수집 요약
+  console.log('\n📊 카테고리별 수집:');
+  Object.entries(categoryCount).forEach(([cat, n]) => console.log(`  ${cat}: ${n}개`));
+  
   return allPosts;
 }
 
