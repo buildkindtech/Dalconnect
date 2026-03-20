@@ -36,13 +36,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       FROM deals
       WHERE expires_at > NOW()
       ORDER BY
-        CASE category
-          WHEN '한인마트' THEN 0
-          WHEN '식료품' THEN 1
-          WHEN '뷰티' THEN 2
-          WHEN '엔터테인먼트' THEN 3
-          WHEN '생활' THEN 4
-          ELSE 5
+        CASE
+          WHEN category = '한인마트' THEN 0
+          WHEN store IN ('Costco', 'Sam''s Club') THEN 1
+          WHEN source = 'groupon.com' THEN 2
+          ELSE 3
         END,
         created_at DESC
     `;
