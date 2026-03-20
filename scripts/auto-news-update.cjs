@@ -253,6 +253,19 @@ function cleanHtml(text) {
   c = c.replace(/수정\s*\d{4}-\d{2}-\d{2}[^가-힣]{0,20}/g, '');
   c = c.replace(/등록\s*\d{4}-\d{2}-\d{2}[^가-힣]{0,20}/g, '');
   c = c.replace(/광고\s*(?=[가-힣])/g, '');
+  // ─── 광고/JS 코드 완전 제거 ────────────────────────────────────
+  c = c.replace(/if\s*\(typeof\s+is_mobile[\s\S]*?(?=[\uAC00-\uD7AF]|$)/g, ''); // is_mobile JS 블록
+  c = c.replace(/createIframe\([^)]*\);?/g, '');                                  // createIframe 호출
+  c = c.replace(/\$\(document\)\.ready[\s\S]*?\}\s*\)/g, '');                    // jQuery ready
+  c = c.replace(/setTimeout\(function\(\)[\s\S]*?},\s*\d+\)/g, '');             // setTimeout 블록
+  c = c.replace(/\/\/\s*애드블록[^\n]*/g, '');                                    // 광고 주석
+  c = c.replace(/adv\.[a-z.]+[^\n]*/g, '');                                       // 광고 URL
+  c = c.replace(/var\s+\w+\s*=\s*[^;]+;/g, '');                                  // var 선언
+  c = c.replace(/function\s*\([^)]*\)\s*\{[^}]*\}/g, '');                        // 함수 리터럴
+  c = c.replace(/\{\s*\}\s*,\s*\d+\s*\}\s*\}/g, '');                             // 잔여 괄호
+  c = c.replace(/else\s*\{\s*\}/g, '');                                           // empty else
+  c = c.replace(/\}\s*\}\s*\)\s*if\s*\(/g, '');                                  // 연결 괄호
+  // ────────────────────────────────────────────────────────────────
   return c.replace(/\s{2,}/g, ' ').trim();
 }
 

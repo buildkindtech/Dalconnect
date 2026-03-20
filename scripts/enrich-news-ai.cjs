@@ -32,13 +32,21 @@ const AI_ONLY = args.includes('--ai-only'); // AI 요약만 사용 (스크래이
 
 function cleanHtml(text) {
   if (!text) return '';
-  return text
+  let c = text
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&nbsp;/g, ' ')
     .replace(/\s{2,}/g, ' ').trim();
+  // JS 광고 코드 제거
+  c = c.replace(/if\s*\(typeof\s+is_mobile[\s\S]*?(?=[\uAC00-\uD7AF]|$)/g, '');
+  c = c.replace(/createIframe\([^)]*\);?/g, '');
+  c = c.replace(/\$\(document\)\.ready[\s\S]*?\}\s*\)/g, '');
+  c = c.replace(/setTimeout\(function\(\)[\s\S]*?},\s*\d+\)/g, '');
+  c = c.replace(/adv\.[a-z.]+[^\n]*/g, '');
+  c = c.replace(/var\s+\w+\s*=\s*[^;]+;/g, '');
+  return c.replace(/\s{2,}/g, ' ').trim();
 }
 
 // 기사 본문 추출 — 한국/영어 뉴스 사이트 공통 셀렉터
