@@ -121,6 +121,9 @@ const RSS_FEEDS = [
   // 건강
   { url: 'https://www.kormedi.com/rss/', category: '건강', source: '코메디닷컴', city: null },
   { url: 'https://rss.donga.com/health.xml', category: '건강', source: '동아일보 건강', city: null },
+  { url: 'https://www.healthline.com/rss/health-news', category: '건강', source: 'Healthline', city: null, translate: true },
+  { url: 'https://rss.donga.com/wellness.xml', category: '건강', source: '동아 웰니스', city: null },
+  { url: 'https://www.yna.co.kr/rss/health.xml', category: '건강', source: '연합뉴스 건강', city: null },
 
   // 부동산
   { url: 'https://www.realtor.com/news/feed/', category: '부동산/숙소', source: 'Realtor.com', city: null, translate: true },
@@ -143,6 +146,12 @@ const RSS_FEEDS = [
 
   // 취업/사업
   { url: 'https://www.entrepreneur.com/latest/feed', category: '취업/사업', source: 'Entrepreneur', city: null, translate: true },
+  { url: 'https://www.inc.com/rss', category: '취업/사업', source: 'Inc.com', city: null, translate: true },
+  { url: 'https://feeds.feedburner.com/SmallBusinessTrends', category: '취업/사업', source: 'Small Business Trends', city: null, translate: true },
+  { url: 'https://www.fastcompany.com/latest/rss', category: '취업/사업', source: 'Fast Company', city: null, translate: true },
+  { url: 'https://fortune.com/feed', category: '취업/사업', source: 'Fortune', city: null, translate: true },
+  { url: 'https://rss.donga.com/economy.xml', category: '취업/사업', source: '동아 경제', city: null },
+  { url: 'https://www.yna.co.kr/rss/economy.xml', category: '취업/사업', source: '연합뉴스 취업', city: null },
 
   // 패션/뷰티
   { url: 'https://www.wkorea.com/feed/', category: '패션/뷰티', source: 'W Korea', city: null },
