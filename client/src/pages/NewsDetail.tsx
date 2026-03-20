@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useBusiness, type NewsItem } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { useRef, useEffect } from "react";
 
 // Helper function to split content into paragraphs
 function splitIntoParagraphs(content: string): string[] {
@@ -58,10 +59,20 @@ export default function NewsDetail() {
       const res = await fetch(`/api/news?category=${encodeURIComponent(newsItem.category)}&limit=30`);
       if (!res.ok) return [];
       const allNews = await res.json();
-      return allNews.filter((item: NewsItem) => item.id !== params.id);
+      return allNews; // 현재 기사도 포함 (위치 표시용)
     },
     enabled: !!newsItem?.category
   });
+
+  // 현재 기사 목록 ref (자동 스크롤용)
+  const currentItemRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (currentItemRef.current && relatedNews && relatedNews.length > 0) {
+      setTimeout(() => {
+        currentItemRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 300);
+    }
+  }, [relatedNews]);
 
   if (isLoading || (!newsItem && !error)) {
     return (
@@ -327,23 +338,37 @@ export default function NewsDetail() {
                 <span className="text-right">날짜</span>
               </div>
               {/* 목록 */}
-              {relatedNews.map((item, idx) => (
-                <Link key={item.id} href={`/news/${item.id}`}>
-                  <div className={`grid grid-cols-[2rem_1fr_5rem] md:grid-cols-[2.5rem_1fr_6rem_5rem] px-4 py-3 text-sm border-b last:border-0 hover:bg-slate-50 cursor-pointer transition-colors ${item.id === params.id ? 'bg-primary/5 font-semibold' : ''}`}>
-                    <span className="text-center text-muted-foreground text-xs">{relatedNews.length - idx}</span>
-                    <span className="truncate pr-3 leading-snug font-ko">
-                      {item.id === params.id && <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary mr-1.5 mb-0.5" />}
-                      {item.title}
-                    </span>
-                    <span className="hidden md:block text-right text-xs text-muted-foreground truncate">{item.source}</span>
-                    <span className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                      {item.published_date
-                        ? new Date(item.published_date).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })
-                        : ''}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+              {relatedNews.map((item, idx) => {
+                const isCurrent = item.id === params.id;
+                return (
+                  <Link key={item.id} href={`/news/${item.id}`}>
+                    <div
+                      ref={isCurrent ? currentItemRef : undefined}
+                      className={`grid grid-cols-[2rem_1fr_5rem] md:grid-cols-[2.5rem_1fr_6rem_5rem] px-4 py-3 text-sm border-b last:border-0 cursor-pointer transition-colors
+                        ${isCurrent
+                          ? 'bg-blue-50 border-l-4 border-l-blue-500 font-semibold text-blue-900'
+                          : 'hover:bg-slate-50'
+                        }`}
+                    >
+                      <span className={`text-center text-xs ${isCurrent ? 'text-blue-500 font-bold' : 'text-muted-foreground'}`}>
+                        {relatedNews.length - idx}
+                      </span>
+                      <span className="truncate pr-3 leading-snug font-ko flex items-center gap-1.5">
+                        {isCurrent && (
+                          <span className="shrink-0 text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-bold">읽는 중</span>
+                        )}
+                        <span className={isCurrent ? 'text-blue-800' : ''}>{item.title}</span>
+                      </span>
+                      <span className="hidden md:block text-right text-xs text-muted-foreground truncate">{item.source}</span>
+                      <span className="text-right text-xs text-muted-foreground whitespace-nowrap">
+                        {item.published_date
+                          ? new Date(item.published_date).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })
+                          : ''}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}
