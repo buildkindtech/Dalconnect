@@ -109,6 +109,17 @@ export default function NewsDetail() {
         </Link>
 
         <article className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+          {/* 썸네일 이미지 */}
+          {newsItem.thumbnail_url && (
+            <div className="w-full aspect-video overflow-hidden bg-slate-100">
+              <img
+                src={newsItem.thumbnail_url}
+                alt={newsItem.title}
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            </div>
+          )}
           {/* Header */}
           <div className="p-8 md:p-12 border-b">
             <Badge className="mb-4 bg-primary text-white">{newsItem.category}</Badge>
