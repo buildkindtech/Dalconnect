@@ -111,12 +111,44 @@ function extractThumbnail(item: any): string | null {
 function cleanHTML(html: string): string {
   if (!html) return '';
   return html
+    // HTML 태그 제거
     .replace(/<[^>]*>/g, '')
+    // HTML 엔티티 디코딩
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
+    .replace(/&#\d+;/g, '')
+    // Handlebars/템플릿 코드 제거 (연합뉴스 등)
+    .replace(/\{\{[^}]*\}\}/g, '')
+    // JavaScript 코드 블록 제거 (window[...], var ..., etc.)
+    .replace(/window\[['"][^\]]+['"]\][^;]*;?/g, '')
+    .replace(/\bvar\s+\w+\s*=\s*[^;]+;/g, '')
+    // 저작권/크레딧 줄 제거 (연합뉴스 패턴)
+    .replace(/<저작권자[^>]*>[^<]*/g, '')
+    .replace(/저작권자\([^)]*\)[^\n]*/g, '')
+    .replace(/무단\s*(전재|배포|복사)[^\n]*/g, '')
+    .replace(/재판매\s*및\s*DB\s*금지/g, '')
+    .replace(/AI\s*학습\s*및\s*활용\s*금지/g, '')
+    // 카카오톡 제보 안내 제거
+    .replace(/제보는\s*카카오톡[^\n]*/g, '')
+    // 기자 이름 패턴 제거 (XX기자 구독 구독중)
+    .replace(/[가-힣]+기자\s*(구독\s*구독중)?/g, '')
+    .replace(/구독\s*구독중\s*(이전\s*다음\s*이미지\s*확대)?/g, '')
+    // 이미지 확대 텍스트 제거
+    .replace(/이미지\s*확대/g, '')
+    // 빈 브래킷 제거 [  ] 또는 [ . ] 등
+    .replace(/\[\s*\.?\s*\]/g, '')
+    // (서울=연합뉴스), (로스앤젤레스=연합뉴스) 등 출처 괄호 제거
+    .replace(/\([가-힣a-zA-Z\s]+=연합뉴스\)/g, '')
+    // 이전 다음 탐색 텍스트 제거
+    .replace(/\b이전\s*다음\b/g, '')
+    // 송고 날짜 패턴 제거
+    .replace(/\d{4}\/\d{2}\/\d{2}\s*송고/g, '')
+    .replace(/\d{4}년\d{2}월\d{2}일\s*\d{2}시\d{2}분\s*송고/g, '')
+    // 연속 공백/줄바꿈 정리
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
