@@ -1,4 +1,18 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dalconnect.buildkind.tech/sitemap.xml
+# Explicitly allow important pages
+Allow: /businesses
+Allow: /business/*
+Allow: /blog
+Allow: /blog/*
+Allow: /news
+Allow: /marketplace
+Allow: /community
+Allow: /deals
+Allow: /charts
+
+Disallow: /api/
+Disallow: /admin
+
+Sitemap: https://dalkonnect.com/api/sitemap

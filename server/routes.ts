@@ -967,7 +967,7 @@ ${urls.join("\n")}
 Allow: /
 Disallow: /api/
 
-Sitemap: https://dalkonnect.com/sitemap.xml`);
+Sitemap: https://dalkonnect.com/api/sitemap`);
   });
 
   // ─── SEO: 뉴스 상세 메타태그 SSR ──────────────────────────────────
