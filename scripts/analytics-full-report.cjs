@@ -38,7 +38,8 @@ async function getGA4Stats(range = '7daysAgo') {
     ],
   });
 
-  const t = overview.totals?.[0]?.metricValues || [];
+  // totals가 빈 배열일 수 있으므로 rows[0] fallback
+  const t = overview.totals?.[0]?.metricValues || overview.rows?.[0]?.metricValues || [];
   const sessions = Math.round(parseFloat(t[0]?.value || 0));
   const users = Math.round(parseFloat(t[1]?.value || 0));
   const pageviews = Math.round(parseFloat(t[2]?.value || 0));
@@ -88,7 +89,7 @@ async function getGA4Stats(range = '7daysAgo') {
     dateRanges: [{ startDate: 'yesterday', endDate: 'yesterday' }],
     metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }],
   });
-  const yt = yesterday.totals?.[0]?.metricValues || [];
+  const yt = yesterday.totals?.[0]?.metricValues || yesterday.rows?.[0]?.metricValues || [];
 
   return {
     sessions, users, pageviews, bounce,
