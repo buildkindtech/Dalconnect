@@ -1,11 +1,11 @@
 {
-  "lastRun": "2026-03-20T11:13:24.890Z",
-  "lastRunKST": "2026. 3. 20. 6시 13분 24초",
+  "lastRun": "2026-03-23T23:04:46.664Z",
+  "lastRunKST": "2026. 3. 23. 18시 4분 46초",
   "status": "ok",
   "checklist": [
     {
       "label": "신규 기사 수집",
-      "value": "758개",
+      "value": "708개",
       "ok": true
     },
     {
@@ -15,19 +15,19 @@
     },
     {
       "label": "썸네일 없는 기사",
-      "value": "59개",
+      "value": "45개",
       "ok": false
     },
     {
       "label": "자동 픽스",
-      "value": "내용+0 번역+5 정리+109",
+      "value": "내용+0 번역+4 정리+60",
       "ok": true
     }
   ],
   "fixes": {
     "content": 0,
-    "translation": 5,
-    "junk": 109
+    "translation": 4,
+    "junk": 60
   },
-  "totalNews": 4004
+  "totalNews": 6266
 }

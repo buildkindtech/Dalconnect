@@ -209,7 +209,7 @@ export default function Home() {
   const { data: featuredBusinesses, isLoading: loadingFeatured } = useFeaturedBusinesses();
   // 헤드라인 우선 카테고리 순서로 뉴스 가져오기
   const { data: newsItems, isLoading: loadingNews } = useNews({ limit: 60 });
-  const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 3 });
+  const { data: blogPosts, isLoading: loadingBlogs } = useBlogs({ limit: 4 });
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
   const { data: categories } = useCategories();
   
@@ -246,7 +246,7 @@ export default function Home() {
   useEffect(() => {
     const fetchPopularPosts = async () => {
       try {
-        const response = await fetch('/api/community?action=posts&sort=popular&limit=5');
+        const response = await fetch('/api/community?action=posts&sort=popular&limit=8');
         if (response.ok) {
           const data = await response.json();
           setPopularPosts(data.posts || data.data || []);
@@ -266,7 +266,7 @@ export default function Home() {
   useEffect(() => {
     const fetchHotDeals = async () => {
       try {
-        const response = await fetch('/api/deals?limit=6');
+        const response = await fetch('/api/deals?limit=6&sort=hot');
         if (response.ok) {
           const deals = await response.json();
           setHotDeals(deals || []);
@@ -384,7 +384,7 @@ export default function Home() {
     })).filter(cat => cat.items.length > 0);
   })();
   const recentNews = newsByCat.flatMap(c => c.items).slice(0, 8);
-  const recentBlogs = blogPosts?.slice(0, 3) ?? [];
+  const recentBlogs = blogPosts?.slice(0, 4) ?? [];
   const recentListings = listingsData?.items ?? [];
   const trending: any[] = [];
   const recent: any[] = [];
@@ -958,9 +958,9 @@ export default function Home() {
               </div>
             </div>
             <Link href="/deals">
-              <Button className="bg-red-600 hover:bg-red-700 gap-2">
+              <Button className="bg-red-600 hover:bg-red-700 gap-2 font-bold shadow-md hover:shadow-lg transition-all">
                 <Flame className="h-4 w-4" />
-                모든 딜 보기
+                모든 딜 보기 →
               </Button>
             </Link>
           </div>
@@ -979,11 +979,11 @@ export default function Home() {
             </div>
           ) : hotDeals.length > 0 && (
             <>
-              <div className="divide-y divide-red-100">
-                {hotDeals.slice(0, 3).map((deal) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {hotDeals.slice(0, 6).map((deal) => {
                   const isFree = (deal.discount ?? '').includes('FREE') || deal.deal_price === 'FREE';
                   return (
-                    <div key={deal.id} className="flex gap-3 py-3 items-center cursor-pointer" onClick={() => window.open(deal.deal_url, '_blank')}>
+                    <div key={deal.id} className="flex gap-3 py-3 items-center cursor-pointer border-b border-red-100 last:border-0 md:border-0 md:bg-white md:rounded-xl md:p-3 md:shadow-sm md:hover:shadow-md md:transition-shadow" onClick={() => window.open(deal.deal_url, '_blank')}>
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-red-100 to-orange-100"
                            style={{ backgroundImage: deal.image_url ? `url(${deal.image_url})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                       <div className="flex-1 min-w-0">
@@ -996,6 +996,7 @@ export default function Home() {
                         <div className="flex items-center gap-2 mt-0.5">
                           {deal.original_price && <span className="text-xs text-slate-400 line-through">{deal.original_price}</span>}
                           <span className="text-xs font-bold text-red-600">{deal.deal_price}</span>
+                          {deal.likes > 0 && <span className="text-xs text-slate-400 ml-auto">❤️ {deal.likes}</span>}
                         </div>
                       </div>
                     </div>
@@ -1128,7 +1129,7 @@ export default function Home() {
               <p className="text-sm text-slate-500">DFW 한인 생활 가이드와 유용한 팁</p>
             </div>
             <Link href="/blog">
-              <Button variant="ghost" className="gap-1 text-sm">
+              <Button variant="outline" className="gap-1 text-sm border-slate-300 hover:bg-slate-50 font-semibold">
                 전체 보기 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -1206,7 +1207,7 @@ export default function Home() {
               </div>
             </div>
             <Link href="/marketplace">
-              <Button variant="ghost" className="gap-2">
+              <Button variant="outline" className="gap-2 border-green-600 text-green-700 hover:bg-green-50 font-semibold">
                 전체 보기 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -1226,142 +1227,68 @@ export default function Home() {
             </div>
           ) : recentListings.length > 0 && (
             <>
-              <div className="divide-y divide-slate-100">
-                {recentListings.map((listing) => {
-                  const isFree = listing.price_type === 'free';
-                  const price = isFree ? '무료' : listing.price_type === 'contact' ? '가격문의' : listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의';
-                  const isTest = listing.nickname?.includes('테스터') || listing.nickname?.includes('달커넥트테스터');
-                  const handleClick = (e: React.MouseEvent) => {
-                    if (isTest) {
-                      e.preventDefault();
-                      alert('📦 아직 매물이 없어요!\n첫 번째 매물을 무료로 올려보세요.\n물건을 팔거나 나누고 싶다면 지금 바로 등록해보세요 😊');
-                    }
-                  };
-                  return (
-                    <Link key={listing.id} href={isTest ? '/marketplace/new' : `/marketplace/${listing.id}`} onClick={handleClick}>
-                      <div className="flex gap-3 py-3 items-center">
-                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
-                          {listing.photos?.[0] ? (
-                            <img src={listing.photos[0]} alt={listing.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xl">🛍️</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            {isTest && <span className="text-xs bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-medium">테스트 글</span>}
-                          </div>
-                          <p className="text-sm font-bold text-slate-800 line-clamp-1">{listing.title}</p>
-                          <p className="text-xs text-slate-500">{listing.category} · {listing.location || 'DFW'}</p>
-                          <p className={`text-sm font-bold mt-0.5 ${isFree ? 'text-green-600' : 'text-blue-600'}`}>{price}</p>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="hidden">
-              {recentListings.map((listing) => {
-                const date = new Date(listing.created_at);
-                const now = new Date();
-                const diffMs = now.getTime() - date.getTime();
-                const diffMins = Math.floor(diffMs / (1000 * 60));
-                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                
-                let timeAgo = '';
-                if (diffMins <= 0) timeAgo = '방금';
-                else if (diffMins < 60) timeAgo = `${diffMins}분 전`;
-                else if (diffHours < 24) timeAgo = `${diffHours}시간 전`;
-                else if (diffDays === 1) timeAgo = '어제';
-                else if (diffDays < 7) timeAgo = `${diffDays}일 전`;
-                else timeAgo = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
-                
-                const isTest2 = listing.nickname?.includes('테스터') || listing.nickname?.includes('달커넥트테스터');
-                const handleClick2 = (e: React.MouseEvent) => {
-                  if (isTest2) {
-                    e.preventDefault();
-                    alert('📦 아직 매물이 없어요!\n첫 번째 매물을 무료로 올려보세요.\n물건을 팔거나 나누고 싶다면 지금 바로 등록해보세요 😊');
-                  }
+              {/* 카테고리별 이모지 맵 */}
+              {(() => {
+                const categoryEmoji: Record<string, string> = {
+                  '자동차': '🚗', '가전제품': '📺', '가전': '📺', '전자기기': '💻', '전자제품': '💻',
+                  '가구': '🛋️', '의류': '👕', '유아용품': '🍼', '육아용품': '🍼',
+                  '스포츠': '⚽', '스포츠/레저': '🏃', '도서': '📚', '도서/교재': '📚',
+                  '악기': '🎸', '주방용품': '🍳', '식품': '🍱', '기타': '📦',
                 };
                 return (
-                  <Link key={listing.id} href={isTest2 ? '/marketplace/new' : `/marketplace/${listing.id}`} onClick={handleClick2}>
-                    <Card className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group h-full rounded-xl overflow-hidden relative">
-                      {isTest2 && <div className="absolute top-2 left-2 z-10 bg-slate-600/80 text-white text-xs px-2 py-0.5 rounded font-medium">테스트 글</div>}
-                      {/* 매물 사진 */}
-                      {listing.photos && listing.photos.length > 0 ? (
-                        <div className="w-full h-44 overflow-hidden bg-slate-100">
-                          <img
-                            src={listing.photos[0]}
-                            alt={listing.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                          <ShoppingBag className="w-10 h-10 text-slate-300" />
-                        </div>
-                      )}
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-2 mb-4 flex-wrap">
-                          <Badge variant="outline" className="text-xs font-medium">
-                            {listing.category}
-                          </Badge>
-                          {listing.price_type === 'free' && (
-                            <Badge className="bg-green-600 hover:bg-green-700 text-xs">
-                              🎁 무료나눔
-                            </Badge>
-                          )}
-                          {listing.price && listing.price !== '0' && (
-                            <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">
-                              협상가능
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <h3 className="font-bold text-xl mb-3 line-clamp-2 group-hover:text-primary transition-colors min-h-[3.5rem] font-ko">
-                          {listing.title}
-                        </h3>
-                        
-                        <div className="text-3xl font-bold mb-4" style={{ color: listing.price_type === 'free' ? '#16a34a' : '#2563EB' }}>
-                          {listing.price_type === 'free' ? '무료' : 
-                           listing.price_type === 'contact' ? '가격문의' :
-                           listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의'}
-                        </div>
-                        
-                        <p className="text-sm text-slate-600 line-clamp-2 mb-4 min-h-[2.5rem]">
-                          {listing.description || '설명 없음'}
-                        </p>
-                        
-                        <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t">
-                          <div className="flex items-center gap-1 font-medium">
-                            <MapPin className="w-3.5 h-3.5" />
-                            {listing.location || '위치 미정'}
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1">
-                              <Eye className="w-3.5 h-3.5" />
-                              {listing.views || 0}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                    {recentListings.slice(0, 6).map((listing) => {
+                      const isFree = listing.price_type === 'free';
+                      const price = isFree ? '무료나눔' : listing.price_type === 'contact' ? '가격문의' : listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의';
+                      const isTest = (listing as any).nickname?.includes('테스터') || (listing as any).nickname?.includes('달커넥트테스터');
+                      const emoji = categoryEmoji[listing.category] || '🛍️';
+                      const handleClick = (e: React.MouseEvent) => {
+                        if (isTest) {
+                          e.preventDefault();
+                          alert('📦 아직 매물이 없어요!\n첫 번째 매물을 무료로 올려보세요.\n물건을 팔거나 나누고 싶다면 지금 바로 등록해보세요 😊');
+                        }
+                      };
+                      return (
+                        <Link key={listing.id} href={isTest ? '/marketplace/new' : `/marketplace/${listing.id}`} onClick={handleClick}>
+                          <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-slate-100 group">
+                            {/* 이미지 or 이모지 placeholder */}
+                            <div className="h-32 relative overflow-hidden">
+                              {listing.photos?.[0] ? (
+                                <img src={listing.photos[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center gap-1">
+                                  <span className="text-4xl">{emoji}</span>
+                                  <span className="text-xs text-slate-400 font-medium">{listing.category}</span>
+                                </div>
+                              )}
+                              {/* 가격 뱃지 */}
+                              <div className={`absolute bottom-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full ${isFree ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'}`}>
+                                {price}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1 font-medium text-primary">
-                              <Clock className="w-3.5 h-3.5" />
-                              {timeAgo}
+                            <div className="p-3">
+                              <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug">{listing.title}</p>
+                              <p className="text-xs text-slate-400 mt-1">{listing.location || 'DFW'}</p>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 );
-              })}
-            </div>
+              })()}
+            
             </>
           )}
 
-          <div className="text-center mt-8">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+            <Link href="/marketplace">
+              <Button size="lg" variant="outline" className="gap-2 border-green-600 text-green-700 hover:bg-green-50 font-bold px-8 shadow-sm">
+                전체 매물 보기 →
+              </Button>
+            </Link>
             <Link href="/marketplace/new">
-              <Button size="lg" className="gap-2">
+              <Button size="lg" className="gap-2 font-bold shadow-md">
                 <ShoppingBag className="h-5 w-5" />
                 무료로 올리기
               </Button>
@@ -1408,54 +1335,36 @@ export default function Home() {
               ))}
             </div>
           ) : popularPosts.length > 0 ? (
-            <div className="divide-y divide-slate-100 md:space-y-3 md:divide-y-0">
-              {popularPosts.map((post, index) => (
+            <div className="divide-y divide-slate-100">
+              {popularPosts.slice(0, 8).map((post, index) => (
                 <Link key={post.id} href={`/community/${post.id}`}>
-                  <div className="flex gap-3 py-3 items-start">
+                  <div className="flex gap-3 py-3 items-start hover:bg-slate-50 rounded-lg px-1 transition-colors">
                     <div className="flex items-center justify-center w-7 h-7 md:w-9 md:h-9 bg-primary text-white text-xs md:text-sm font-bold rounded-full flex-shrink-0 mt-0.5">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1 mb-0.5">
-                        <span className="text-xs text-slate-500">{post.category}</span>
-                        {post.is_pinned && <span className="text-xs text-red-500 font-bold">공지</span>}
+                        <span className="text-xs font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{post.category}</span>
+                        {post.is_pinned && <span className="text-xs text-red-500 font-bold">📌 공지</span>}
                       </div>
-                      <p className="text-sm md:text-base font-bold text-slate-800 line-clamp-2 leading-snug">{post.title}</p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                        <span>{post.nickname}</span>
-                        <span>💬 {post.comment_count}</span>
-                        <span>❤️ {post.likes}</span>
-                        <span>👁 {post.views}</span>
+                      <p className="text-sm md:text-base font-bold text-slate-800 line-clamp-2 leading-snug mt-1">{post.title}</p>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
+                        <span className="font-medium text-slate-500">{post.nickname}</span>
+                        <span className="flex items-center gap-0.5">
+                          <MessageCircle className="w-3 h-3 text-blue-400" />
+                          <span className="font-semibold text-blue-500">{post.comment_count}</span>
+                        </span>
+                        <span className="flex items-center gap-0.5">
+                          <Heart className="w-3 h-3 text-red-400" />
+                          <span className="font-semibold text-red-500">{post.likes}</span>
+                        </span>
+                        <span className="flex items-center gap-0.5">
+                          <Eye className="w-3 h-3" />
+                          {post.views}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <Card className="hidden">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="flex items-center justify-center w-8 h-8 bg-primary text-white text-sm font-bold rounded-full flex-shrink-0">
-                              {index + 1}
-                            </div>
-                            <Badge variant="outline" className="text-xs">{post.category}</Badge>
-                            {post.is_pinned && (
-                              <Badge variant="secondary" className="text-xs">
-                                <Flame className="w-3 h-3 mr-1" />공지
-                              </Badge>
-                            )}
-                          </div>
-                          <h3 className="font-bold text-lg text-slate-900 mb-2 group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
-                          <div className="flex items-center text-sm text-slate-600 space-x-4">
-                            <span className="flex items-center gap-1"><Users className="w-4 h-4" />{post.nickname}</span>
-                            <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{post.comment_count}</span>
-                            <span className="flex items-center gap-1"><Heart className="w-4 h-4" />{post.likes}</span>
-                            <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{post.views}</span>
-                            <span className="text-xs text-slate-500">{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
                 </Link>
               ))}
             </div>
@@ -1474,9 +1383,9 @@ export default function Home() {
           {popularPosts.length > 0 && (
             <div className="text-center mt-8">
               <Link href="/community">
-                <Button size="lg" variant="outline" className="gap-2">
+                <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all font-bold px-8">
                   <MessageCircle className="h-5 w-5" />
-                  커뮤니티 둘러보기
+                  커뮤니티 더보기 →
                 </Button>
               </Link>
             </div>
