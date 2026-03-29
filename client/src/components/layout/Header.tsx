@@ -20,6 +20,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useCityContext, City, CITIES } from "@/contexts/CityContext";
 
+const koreanDate = new Date().toLocaleDateString('ko-KR', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
 export default function Header() {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -93,6 +100,13 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        {/* Date bar */}
+        <div className="border-b border-slate-100 bg-slate-50 px-4 py-0.5">
+          <div className="container mx-auto flex items-center justify-between">
+            <span className="text-[11px] text-muted-foreground">📅 {koreanDate}</span>
+            <span className="hidden md:block text-[11px] text-muted-foreground">DFW 달라스 한인 커뮤니티</span>
+          </div>
+        </div>
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-6 md:gap-10">
             <Link href="/" className="flex items-center space-x-2">

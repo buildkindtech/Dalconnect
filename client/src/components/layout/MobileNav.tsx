@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { Home, Building2, ShoppingBag, Newspaper, Menu } from 'lucide-react';
+import { Home, Building2, Flame, MessageCircle, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,9 +12,9 @@ import {
 
 const navItems = [
   { path: '/', icon: Home, label: '홈' },
-  { path: '/businesses', icon: Building2, label: '업소록' },
-  { path: '/marketplace', icon: ShoppingBag, label: '사고팔기' },
-  { path: '/news', icon: Newspaper, label: '뉴스' },
+  { path: '/businesses', icon: Building2, label: '업체' },
+  { path: '/deals', icon: Flame, label: '딜' },
+  { path: '/community', icon: MessageCircle, label: '커뮤니티' },
 ];
 
 export default function MobileNav() {
@@ -65,38 +65,43 @@ export default function MobileNav() {
                 <SheetTitle>메뉴</SheetTitle>
               </SheetHeader>
               <div className="py-4 space-y-2">
+                <Link href="/news">
+                  <Button variant="ghost" className="w-full justify-start text-base" onClick={() => setIsMenuOpen(false)}>
+                    📰 뉴스
+                  </Button>
+                </Link>
+                <Link href="/marketplace">
+                  <Button variant="ghost" className="w-full justify-start text-base" onClick={() => setIsMenuOpen(false)}>
+                    🛍️ 사고팔기
+                  </Button>
+                </Link>
+                <Link href="/charts">
+                  <Button variant="ghost" className="w-full justify-start text-base" onClick={() => setIsMenuOpen(false)}>
+                    🏆 차트
+                  </Button>
+                </Link>
+                <Link href="/roommate">
+                  <Button variant="ghost" className="w-full justify-start text-base" onClick={() => setIsMenuOpen(false)}>
+                    🏠 룸메이트
+                  </Button>
+                </Link>
                 <Link href="/blog">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-base"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    블로그
+                  <Button variant="ghost" className="w-full justify-start text-base" onClick={() => setIsMenuOpen(false)}>
+                    📝 블로그
                   </Button>
                 </Link>
                 <Link href="/about">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-base"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Button variant="ghost" className="w-full justify-start text-base" onClick={() => setIsMenuOpen(false)}>
                     소개
                   </Button>
                 </Link>
                 <Link href="/contact">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-base"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Button variant="ghost" className="w-full justify-start text-base" onClick={() => setIsMenuOpen(false)}>
                     문의
                   </Button>
                 </Link>
-                <Link href="/pricing">
-                  <Button
-                    className="w-full bg-primary hover:bg-primary/90 text-base mt-4"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                <Link href="/register-business">
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-base mt-4" onClick={() => setIsMenuOpen(false)}>
                     업체 등록
                   </Button>
                 </Link>

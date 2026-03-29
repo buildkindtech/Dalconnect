@@ -437,30 +437,30 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section — 100vw 탈출 (사이드 광고 컬럼 무시) */}
-      <section 
-        className="relative h-[600px] flex items-center justify-center bg-cover bg-center"
-        style={{ 
+      <section
+        className="relative h-[240px] md:h-[600px] flex items-center justify-center bg-cover bg-center"
+        style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url(https://images.unsplash.com/photo-1545194445-dddb8f4487c6?w=1600&q=80)`,
           width: '100vw',
           marginLeft: 'calc(50% - 50vw)',
         }}
       >
         <div className="container mx-auto px-4 text-center text-white">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+          <h1 className="text-2xl md:text-7xl font-bold mb-2 md:mb-6">
             DFW 한인 커뮤니티의 모든 것
           </h1>
-          <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-slate-200">
+          <p className="hidden md:block text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-slate-200">
             달라스-포트워스 지역 {1210}개 한인 업체 정보와 최신 한인 뉴스
           </p>
-          
+
           {/* Big Search Bar with Autocomplete */}
-          <div ref={searchRef} className="max-w-4xl mx-auto relative">
+          <div ref={searchRef} className="max-w-4xl mx-auto relative mt-2 md:mt-0">
             <form onSubmit={handleSearch}>
-              <div className="bg-white rounded-2xl p-3 flex gap-3 shadow-2xl hover:shadow-3xl transition-shadow">
-                <div className="flex-1 flex items-center px-5">
-                  <Search className="h-7 w-7 text-slate-400 mr-4 flex-shrink-0" />
-                  <Input 
-                    className="border-0 shadow-none focus-visible:ring-0 text-xl text-slate-800 h-16 placeholder:text-slate-400" 
+              <div className="bg-white rounded-xl md:rounded-2xl p-1.5 md:p-3 flex gap-2 md:gap-3 shadow-2xl hover:shadow-3xl transition-shadow">
+                <div className="flex-1 flex items-center px-3 md:px-5">
+                  <Search className="h-5 w-5 md:h-7 md:w-7 text-slate-400 mr-2 md:mr-4 flex-shrink-0" />
+                  <Input
+                    className="border-0 shadow-none focus-visible:ring-0 text-base md:text-xl text-slate-800 h-10 md:h-16 placeholder:text-slate-400"
                     placeholder="달라스 한인 맛집 검색..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -468,7 +468,7 @@ export default function Home() {
                     onFocus={() => searchQuery.length >= 2 && searchResults.length > 0 && setShowAutocomplete(true)}
                   />
                 </div>
-                <Button type="submit" size="lg" className="h-16 px-12 text-xl font-semibold">
+                <Button type="submit" size="lg" className="h-10 md:h-16 px-5 md:px-12 text-sm md:text-xl font-semibold">
                   검색
                 </Button>
               </div>
@@ -519,12 +519,12 @@ export default function Home() {
           </div>
 
           {/* Popular Search Tags */}
-          <div className="mt-6 flex flex-wrap gap-3 justify-center">
+          <div className="mt-3 md:mt-6 flex flex-wrap gap-2 md:gap-3 justify-center">
             {POPULAR_SEARCH_TAGS.map((tag) => (
               <button
                 key={tag.category}
                 onClick={() => setLocation(`/businesses?category=${encodeURIComponent(tag.category)}`)}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-white transition-all hover:scale-105"
+                className="px-3 md:px-4 py-1 md:py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full text-xs md:text-sm font-medium text-white transition-all hover:scale-105"
               >
                 {tag.label}
               </button>
@@ -663,13 +663,32 @@ export default function Home() {
       )}
 
       {/* Popular Searches */}
-      <section className="py-10 bg-white border-y">
+      <section className="py-6 md:py-10 bg-white border-y">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-4 w-4 text-primary" />
             <span className="text-sm font-bold text-primary">많이 찾는 검색어</span>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          {/* Mobile: icon + label grid */}
+          <div className="grid grid-cols-4 gap-2 md:hidden">
+            {CATEGORIES.slice(0, 8).map((cat) => {
+              const IconComp = cat.icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.id)}
+                  className="flex flex-col items-center gap-1.5 py-3 px-1 bg-slate-50 hover:bg-primary/10 rounded-xl transition-all active:scale-95"
+                >
+                  <div className={`w-10 h-10 rounded-full ${cat.color} flex items-center justify-center`}>
+                    <IconComp className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xs font-medium text-slate-700">{cat.name}</span>
+                </button>
+              );
+            })}
+          </div>
+          {/* Desktop: horizontal pill list */}
+          <div className="hidden md:flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
             {POPULAR_SEARCH_TAGS.map((tag, index) => (
               <button
                 key={tag.category}
