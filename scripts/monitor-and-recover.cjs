@@ -15,7 +15,7 @@ const { execSync, exec } = require('child_process');
 const { Pool } = require('pg');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8183049940:AAFj2xDvOImb_RGaDml7gVyMti1PZU5Vbfk';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const CHAT_ID = '-5280678324';
 
 const now = new Date();
