@@ -391,6 +391,28 @@ export default function Businesses() {
 
           {/* Results */}
           <main className="flex-1 min-w-0">
+            {/* Mobile Search Bar */}
+            <div className="lg:hidden mb-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  className="pl-10 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 shadow-sm"
+                  placeholder="업체명, 주소, 키워드 검색..."
+                  defaultValue={searchQuery}
+                  onChange={(e) => { if (!composingRef.current) setSearchQuery(e.target.value); }}
+                  onCompositionStart={() => { composingRef.current = true; }}
+                  onCompositionEnd={(e) => { composingRef.current = false; setSearchQuery(e.currentTarget.value); }}
+                />
+                {debouncedSearch && (
+                  <button
+                    onClick={() => { setSearchQuery(''); setDebouncedSearch(''); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center hover:bg-slate-300"
+                  >
+                    <X className="h-3 w-3 text-slate-500" />
+                  </button>
+                )}
+              </div>
+            </div>
             {/* Mobile Sort */}
             <div className="md:hidden mb-4 flex items-center gap-2">
               <label className="text-sm text-slate-600 font-medium flex-shrink-0">정렬:</label>

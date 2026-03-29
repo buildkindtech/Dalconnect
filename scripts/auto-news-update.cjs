@@ -337,7 +337,7 @@ function smartCategory(defaultCategory, title) {
   // 나머지 로컬소스 전국 뉴스
   const national = ['미시간','michigan','애리조나','arizona','조지아','georgia','플로리다','florida','콜로라도','colorado','캘리포니아','california','오헤어','o\'hare','dulles','dolly','southwest airlines','gas price','포브스','forbes','oscar','emmy','senate','congress','federal'];
   if (national.some(k => t.includes(k))) return '미국뉴스';
-  return '미국뉴스'; // WFAA 기본값: 로컬 아닌 건 미국뉴스
+  return '로컬뉴스'; // WFAA/NBC DFW 기본값: 로컬뉴스로 유지
 }
 
 async function insertIfNew(article) {
