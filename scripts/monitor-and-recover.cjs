@@ -15,25 +15,10 @@ const { execSync, exec } = require('child_process');
 const { Pool } = require('pg');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-const CHAT_ID = '-5280678324';
-
 const now = new Date();
 const hourCST = parseInt(new Intl.DateTimeFormat('en-US', {
   hour: 'numeric', hour12: false, timeZone: 'America/Chicago'
 }).format(now));
-
-async function sendTelegram(msg) {
-  try {
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    const body = JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'Markdown' });
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
-    const data = await res.json();
-    if (!data.ok) console.error('텔레그램 에러:', data.description);
-  } catch (e) {
-    console.error('텔레그램 전송 실패:', e.message);
-  }
-}
 
 function runScript(cmd, label) {
   try {
@@ -140,27 +125,24 @@ async function main() {
       // 이상 없으면 8am 체크 때만 간단 보고 (1pm/8pm은 조용히)
       if (hourCST >= 8 && hourCST <= 9) {
         const totalNews = await pool.query('SELECT COUNT(*) as cnt FROM news WHERE created_at > NOW() - INTERVAL \'24 hours\'');
-        await sendTelegram(`✅ *달커넥트 상태 정상* (오전 ${hourCST}시)\n• 오늘 뉴스: +${totalNews.rows[0].cnt}건\n• 크론잡: 정상`);
+        console.log(`✅ 달커넥트 상태 정상 (오전 ${hourCST}시) | 오늘 뉴스: +${totalNews.rows[0].cnt}건 | 크론잡: 정상`);
       }
     } else {
-      // 문제 있었으면 항상 보고
-      let msg = `🚨 *달커넥트 크론 이상 감지 + 자동 복구*\n\n`;
+      // 문제 있었으면 항상 보고 (stdout → OpenClaw 크론이 달커넥트 방으로 전달)
+      let msg = `🚨 달커넥트 크론 이상 감지 + 자동 복구\n`;
       if (issues.length > 0) {
-        msg += `*발견된 문제:*\n`;
+        msg += `발견된 문제:\n`;
         issues.forEach(i => msg += `• ${i}\n`);
-        msg += '\n';
       }
       if (fixed.length > 0) {
-        msg += `*자동 복구 완료:*\n`;
+        msg += `자동 복구 완료:\n`;
         fixed.forEach(f => msg += `✅ ${f}\n`);
       }
-      msg += `\n_(${new Date().toLocaleTimeString('ko-KR', { timeZone: 'America/Chicago' })})_`;
-      await sendTelegram(msg);
+      console.log(msg);
     }
 
   } catch (e) {
     console.error('모니터 에러:', e.message);
-    await sendTelegram(`❌ *달커넥트 모니터 에러*\n${e.message?.slice(0, 200)}`);
   } finally {
     await pool.end();
   }
