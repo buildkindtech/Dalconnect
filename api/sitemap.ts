@@ -3,10 +3,15 @@ import pg from 'pg';
 
 const DOMAIN = 'https://dalkonnect.com';
 
+function urlEntry(loc: string, lastmod: string, changefreq: string, priority: string) {
+  return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
 
+  const { type } = req.query;
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
@@ -16,81 +21,91 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const now = new Date().toISOString().split('T')[0];
 
-    // Static pages
-    const staticPages = [
-      { url: '/', priority: '1.0', changefreq: 'daily' },
-      { url: '/businesses', priority: '0.9', changefreq: 'weekly' },
-      { url: '/news', priority: '0.9', changefreq: 'hourly' },
-      { url: '/blog', priority: '0.8', changefreq: 'daily' },
-      { url: '/marketplace', priority: '0.7', changefreq: 'daily' },
-      { url: '/community', priority: '0.7', changefreq: 'daily' },
-      { url: '/deals', priority: '0.7', changefreq: 'daily' },
-      { url: '/charts', priority: '0.6', changefreq: 'weekly' },
-      { url: '/about', priority: '0.5', changefreq: 'monthly' },
-    ];
-
-    // Dynamic content
-    const [businesses, news, blogs, community] = await Promise.all([
-      pool.query("SELECT id, updated_at FROM businesses ORDER BY updated_at DESC NULLS LAST").catch(() => ({ rows: [] })),
-      pool.query("SELECT id, published_date FROM news WHERE content IS NOT NULL AND LENGTH(content) > 50 ORDER BY published_date DESC").catch(() => ({ rows: [] })),
-      pool.query("SELECT slug, created_at FROM blogs WHERE slug IS NOT NULL ORDER BY created_at DESC").catch(() => ({ rows: [] })),
-      pool.query("SELECT id, created_at FROM community_posts ORDER BY created_at DESC").catch(() => ({ rows: [] })),
-    ]);
+    // Sitemap Index (default)
+    if (!type) {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${DOMAIN}/sitemap.xml?type=static</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${DOMAIN}/sitemap.xml?type=businesses</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${DOMAIN}/sitemap.xml?type=news</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${DOMAIN}/sitemap.xml?type=blogs</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${DOMAIN}/sitemap.xml?type=community</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
+</sitemapindex>`;
+      return res.status(200).send(xml);
+    }
 
     const urls: string[] = [];
 
-    // Static
-    for (const p of staticPages) {
-      urls.push(`  <url>
-    <loc>${DOMAIN}${p.url}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>${p.changefreq}</changefreq>
-    <priority>${p.priority}</priority>
-  </url>`);
+    if (type === 'static') {
+      const staticPages = [
+        { url: '/', priority: '1.0', changefreq: 'daily' },
+        { url: '/businesses', priority: '0.9', changefreq: 'weekly' },
+        { url: '/news', priority: '0.9', changefreq: 'hourly' },
+        { url: '/blog', priority: '0.8', changefreq: 'daily' },
+        { url: '/marketplace', priority: '0.7', changefreq: 'daily' },
+        { url: '/community', priority: '0.7', changefreq: 'daily' },
+        { url: '/deals', priority: '0.7', changefreq: 'daily' },
+        { url: '/charts', priority: '0.6', changefreq: 'weekly' },
+        { url: '/about', priority: '0.5', changefreq: 'monthly' },
+      ];
+      for (const p of staticPages) {
+        urls.push(urlEntry(`${DOMAIN}${p.url}`, now, p.changefreq, p.priority));
+      }
     }
 
-    // Businesses
-    for (const row of businesses.rows) {
-      const d = row.updated_at ? new Date(row.updated_at).toISOString().split('T')[0] : now;
-      urls.push(`  <url>
-    <loc>${DOMAIN}/business/${row.id}</loc>
-    <lastmod>${d}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`);
+    if (type === 'businesses') {
+      const { rows } = await pool.query(
+        "SELECT id, updated_at FROM businesses ORDER BY updated_at DESC NULLS LAST"
+      ).catch(() => ({ rows: [] as any[] }));
+      for (const row of rows) {
+        const d = row.updated_at ? new Date(row.updated_at).toISOString().split('T')[0] : now;
+        urls.push(urlEntry(`${DOMAIN}/business/${row.id}`, d, 'monthly', '0.7'));
+      }
     }
 
-    // News
-    for (const row of news.rows) {
-      const d = row.published_date ? new Date(row.published_date).toISOString().split('T')[0] : now;
-      urls.push(`  <url>
-    <loc>${DOMAIN}/news/${row.id}</loc>
-    <lastmod>${d}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>`);
+    if (type === 'news') {
+      const { rows } = await pool.query(
+        "SELECT id, published_date FROM news WHERE content IS NOT NULL AND LENGTH(content) > 50 ORDER BY published_date DESC LIMIT 10000"
+      ).catch(() => ({ rows: [] as any[] }));
+      for (const row of rows) {
+        const d = row.published_date ? new Date(row.published_date).toISOString().split('T')[0] : now;
+        urls.push(urlEntry(`${DOMAIN}/news/${row.id}`, d, 'monthly', '0.6'));
+      }
     }
 
-    // Blogs
-    for (const row of blogs.rows) {
-      const d = row.created_at ? new Date(row.created_at).toISOString().split('T')[0] : now;
-      urls.push(`  <url>
-    <loc>${DOMAIN}/blog/${row.slug}</loc>
-    <lastmod>${d}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`);
+    if (type === 'blogs') {
+      const { rows } = await pool.query(
+        "SELECT slug, created_at FROM blogs WHERE slug IS NOT NULL ORDER BY created_at DESC"
+      ).catch(() => ({ rows: [] as any[] }));
+      for (const row of rows) {
+        const d = row.created_at ? new Date(row.created_at).toISOString().split('T')[0] : now;
+        urls.push(urlEntry(`${DOMAIN}/blog/${row.slug}`, d, 'monthly', '0.7'));
+      }
     }
 
-    // Community
-    for (const row of community.rows) {
-      const d = row.created_at ? new Date(row.created_at).toISOString().split('T')[0] : now;
-      urls.push(`  <url>
-    <loc>${DOMAIN}/community/${row.id}</loc>
-    <lastmod>${d}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>`);
+    if (type === 'community') {
+      const { rows } = await pool.query(
+        "SELECT id, created_at FROM community_posts ORDER BY created_at DESC"
+      ).catch(() => ({ rows: [] as any[] }));
+      for (const row of rows) {
+        const d = row.created_at ? new Date(row.created_at).toISOString().split('T')[0] : now;
+        urls.push(urlEntry(`${DOMAIN}/community/${row.id}`, d, 'monthly', '0.5'));
+      }
     }
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

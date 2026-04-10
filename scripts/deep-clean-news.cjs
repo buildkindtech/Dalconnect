@@ -63,7 +63,36 @@ function deepClean(text, title) {
   return c;
 }
 
+// JS 코드 오염 여부 체크
+function hasJsContamination(text) {
+  if (!text) return false;
+  const JS_PATTERNS = [
+    'window_taboola', 'taboolaQ', 'COUNT_TEXT', 'dable(',
+    'createElement', 'HELLOARCHIVE', 'renderWidget',
+    'function(', 'var =', '.push(', 'addEventListener',
+    'document.', 'window.', '$("#', "$('"
+  ];
+  return JS_PATTERNS.some(p => text.includes(p));
+}
+
 async function run() {
+  // JS 코드 오염 기사 먼저 삭제
+  const jsDelResult = await pool.query(`
+    DELETE FROM news
+    WHERE content LIKE '%window_taboola%'
+       OR content LIKE '%COUNT_TEXT%'
+       OR content LIKE '%taboolaQ%'
+       OR content LIKE '%dable(%'
+       OR content LIKE '%createElement%'
+       OR content LIKE '%HELLOARCHIVE%'
+       OR content LIKE '%renderWidget%'
+       OR content LIKE '%function(%'
+       OR content LIKE '%var %=%'
+  `);
+  if (jsDelResult.rowCount > 0) {
+    console.log(`🗑️ JS 오염 기사 삭제: ${jsDelResult.rowCount}건`);
+  }
+
   const { rows } = await pool.query(`
     SELECT id, title, content FROM news
     WHERE content LIKE '%기사를 읽어드립니다%'

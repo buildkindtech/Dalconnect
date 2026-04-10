@@ -438,6 +438,13 @@ async function insertIfNew(article) {
       }
     }
 
+    // JS 코드 오염 체크 — 저장 거부
+    const JS_CONTAMINATION = ['window_taboola','taboolaQ','COUNT_TEXT','dable(','createElement','HELLOARCHIVE','renderWidget','function(','addEventListener','document.getElementById'];
+    if (JS_CONTAMINATION.some(p => (content || '').includes(p))) {
+      console.warn(`⛔ JS 코드 오염 감지 — 저장 거부: "${title.substring(0,60)}"`);
+      return false;
+    }
+
     const result = await pool.query(
       'INSERT INTO news (title, content, category, source, url, thumbnail_url, published_date, city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
       [

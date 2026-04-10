@@ -34,7 +34,7 @@ Allow: /businesses?city=*
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://dalconnect.buildkind.tech/sitemap.xml
+Sitemap: https://dalkonnect.com/sitemap.xml
 
 # Additional metadata for search engines
 # Korean and English content available
