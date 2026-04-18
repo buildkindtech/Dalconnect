@@ -14,10 +14,21 @@ const fs = require('fs');
 const path = require('path');
 const { askAI } = require('./ai.cjs');
 
-const BOT_TOKEN = '8675191741:AAF9c5aO_1OZdH3c6iXkyo4IMWG0Im4fyQY';
-const CHAT_ID = '-5280678324';
-const DATABASE_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
-const BASE = '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect';
+const BASE = path.resolve(__dirname, '..');
+// Load .env if not already in environment
+if (!process.env.DATABASE_URL) {
+  try {
+    const envFile = fs.readFileSync(path.join(BASE, '.env'), 'utf8');
+    for (const line of envFile.split('\n')) {
+      const m = line.match(/^([^#=]+)=(.*)$/);
+      if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
+    }
+  } catch {}
+}
+
+const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+const CHAT_ID = process.env.DALCONNECT_CHAT || '-5280678324';
+const DATABASE_URL = process.env.DATABASE_URL;
 
 function fetchWeather() {
   return new Promise((resolve) => {
