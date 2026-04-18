@@ -1,7 +1,42 @@
 # 📰 DalKonnect 아침 브리핑 릴스 — 프로덕션 가이드
 
-> 최종 확정: 2026-03-20 | 매일 아침 8시 전 IG+FB 포스팅
+> 최종 확정: 2026-04-12 | 매일 아침 포스팅 (Aaron "올려" 승인 후)
 > **이 파일은 아침 브리핑 릴스 제작의 유일한 기준. 반드시 먼저 읽고 따를 것.**
+
+---
+
+## 0. 🚨 운영 절대 규칙 (4/10 업데이트 — 반드시 준수)
+
+### WAV 파일 받으면 즉시 파이프라인 실행 (질문 금지)
+- Aaron이 Telegram으로 WAV/음성 파일을 보내면 → **즉시 `briefing-pipeline.sh` 실행**
+- Drive 어디에 있냐 묻지 말 것 — Telegram 첨부파일로 직접 받은 경우 그 파일 사용
+- 파일명, TTS 방법, 경로 등 확인 질문 일절 금지
+- **예외 없음: 음성 파일 도착 = 파이프라인 즉시 시작**
+
+```
+# WAV 받으면 바로 실행:
+./cron/briefing-pipeline.sh 2026-04-10 /path/to/received.wav
+```
+
+### 포스팅은 Aaron "올려" 후에만 (자동 포스팅 절대 금지)
+- 파이프라인은 영상+썸네일 생성 후 **Telegram 미리보기 전송**에서 멈춤
+- `briefing-pipeline.sh` Step 5 = 미리보기 전송 (포스팅 아님)
+- Aaron이 "올려"라고 답장 → `cron/briefing-post.cjs YYYY-MM-DD` 실행
+
+### 슬라이드 전환 자동 감지 (4/12 최종 — 하이브리드 방식)
+- **카테고리 헤더 감지**: 스크립트에서 "달라스 로컬 소식입니다", "한국 뉴스입니다" 등 감지 → 첫 슬라이드 전환
+- **카테고리 내 추가 슬라이드**: subtitle 키워드를 Whisper에서 검색 → 정확한 전환 시점
+- **CTA**: "여기까지" 감지 → 마지막 슬라이드
+- Fallback: 감지 < 절반 → 균등 분배
+
+### 타이밍 시스템 (4/12 리팩터 — 드리프트 원천 차단)
+- **절대 타임스탬프 방식**: 각 프레임에 Whisper startTime 저장
+- duration = `startTime[i+1] - startTime[i]`, 마지막 = `totalDur - lastStartTime`
+- `sum(dur) = totalDur` 수학적으로 보장 → 드리프트 불가능
+- 페이드 프레임 제거 (드리프트 원인이었음, 시각 효과 미미)
+- 렌더 끝에 자동 검증 로그: `🔍 타이밍 검증: 프레임 합산 Xs / 오디오 Xs (차이: 0.000s)`
+
+---
 
 ---
 
@@ -88,21 +123,38 @@
 
 ## 3. TTS 스크립트 작성 규칙
 
-### 구조 (항상 동일)
+### ⚠️ 날짜 규칙 (반드시 지킬 것 — 2026-04-08 실수 기록)
+- TTS 날짜 = **Aaron이 음성 파일을 전송하는 당일 날짜**
+- 뉴스 후보 리스트(4:45am)는 "내일" 기준이지만, 실제 TTS 녹음과 포스팅은 **그 다음날 아침** (= 당일)
+- Aaron이 수요일에 오디오 전송 → "4월 8일 수요일" (오늘 날짜 사용)
+- **절대 내일 날짜 쓰지 말 것**
+
+### 구조 (확정 형식 — 2026-04-08 기준)
 ```
-좋은 아침이에요, 달커넥트입니다.
+안녕하세요, 달커넥트 아침 브리핑입니다.
+{M}월 {D}일 {요일}, 달라스 날씨 먼저 전해드리겠습니다.
+오늘은 [날씨 설명] 최저 {min}도, 최고 {max}도가 예상됩니다.
+오늘 소식 {N}가지 전해드리겠습니다.
 
-{카테고리 1 인트로}
-{뉴스 내용 2-3문장}
+첫번째 소식입니다. {뉴스 2-3문장}
 
-{카테고리 2 인트로}
-{뉴스 내용 2-3문장}
+두번째입니다. {뉴스 2-3문장}
 
-...반복 (총 5개 카테고리)...
+세번째입니다. {뉴스 2-3문장}
 
-더 자세한 뉴스는 달커넥트 닷컴에서 확인하세요.
-팔로우하고 매일 아침 받아보세요!
+...
+
+마지막 소식입니다. {뉴스 2-3문장}
+
+오늘 달커넥트 뉴스 여기까지입니다.
+더 자세한 내용은 달커넥트닷컴에서 만나보세요.
+즐거운 {요일} 되세요. 감사합니다.
 ```
+
+### 핵심 규칙
+- **순서 번호 방식**: "첫번째 소식입니다 / 두번째입니다 / 마지막 소식입니다" (카테고리명 금지)
+- **각 소식 2-3문장** (너무 길면 안 됨 — 전체 130초 이내 목표)
+- 뉴스 소식 개수는 Aaron이 선택한 후보 수에 맞춤
 
 ### 발음 규칙
 - **고속도로**: 영어 그대로 "I-35E", "I-30" (한국어 변환 금지)
@@ -136,88 +188,113 @@
 
 ---
 
-## 5. 프로덕션 파이프라인
+## 5. 프로덕션 파이프라인 (2026-04-10 현행)
 
-### 전체 흐름 (목표: 8시 전 포스팅)
-```
-[6:00am]  ① 뉴스 수집 — DB에서 카테고리별 최신 1개씩 자동 선택
-              ↓
-[6:05am]  ② TTS 스크립트 생성 — Gemini로 자연스러운 한국어 변환
-              ↓
-[6:10am]  ③ TTS 음성 생성 ← ⚠️ 현재 병목 (Aaron 수동)
-              ↓
-[6:15am]  ④ ffmpeg 1.2x 속도 변환
-              ↓
-[6:16am]  ⑤ Whisper 전사 (word_timestamps) → JSON
-              ↓
-[6:18am]  ⑥ 슬라이드 전환 시점 계산 (Whisper 키워드 감지)
-              ↓
-[6:20am]  ⑦ Puppeteer 프레임 렌더링 (~1,540프레임, ~5분)
-              ↓
-[6:25am]  ⑧ ffmpeg 합성: 프레임 + 음성 + BGM(12%)
-              ↓
-[6:26am]  ⑨ 썸네일 생성 (날짜만 교체)
-              ↓
-[6:27am]  ⑩ Firebase 업로드 → IG Reel(cover_url) + FB Video(thumb)
-              ↓
-[7:00am]  ✅ 완료
+### Phase 1: 뉴스 후보 선정 (4:45am 자동 크론)
+```bash
+node cron/news-candidates.cjs
+# → DB 48h 뉴스 조회 → 12개 후보 → Telegram 달커넥트 방 전송
 ```
 
-### 슬라이드 전환 시점 자동 계산 방법
-Whisper JSON에서 카테고리 전환 키워드 감지:
-```javascript
-const TRANSITION_KEYWORDS = [
-  '달라스', '소식부터',           // → 달라스 로컬 슬라이드
-  '한국', '소식입니다',           // → 한국 뉴스 슬라이드
-  '문화', '소식이에요',           // → 문화 슬라이드
-  '환율정보', '환율',             // → 환율/경제 슬라이드
-  '이민', '비자', '업데이트',     // → 이민/비자 슬라이드
-  '자세한', '뉴스는',             // → CTA 슬라이드
-];
+### Phase 2: TTS 스크립트 생성 (Aaron 선택 후)
+```bash
+node cron/briefing-tts-gen.cjs 1,3,5,7,9   # Aaron이 선택한 번호
+# → tts-script.txt 생성 → Telegram으로 스크립트 전송
+# Aaron이 Freepik Leda로 녹음 → Telegram으로 WAV 파일 전송
 ```
 
-### Whisper 오타 교정 딕셔너리 (누적 — 매일 추가)
-```javascript
-const CORRECTIONS = {
-  '오해하세요.': '우회하세요.',
-  '화제가': '화재가',
-  '도절': '두절',
-  '한국의': '한국에',
-  '동양': '동향',
-  '잔여': '자녀',
-  '재산기준을': '계산 기준을',
-  '팔로워하고': '팔로우하고',
-  'uscis가': 'USCIS가',
-  '$1': '원달러',
-};
-// 새 오타 발견 시 여기에 추가
+### Phase 3: 영상 제작 파이프라인 (WAV 받으면 즉시 실행)
+```bash
+./cron/briefing-pipeline.sh YYYY-MM-DD /path/to/voice.wav
 ```
 
-### 세그먼트 분리 규칙
-- Whisper 세그먼트를 **0.3초 이상 갭** 기준으로 재분할
-- 슬라이드 전환 시 **세그먼트 중간점(segMid) 기준** 필터링
-  - `segMid >= slideStart && segMid < nextSlideStart`
-  - 이렇게 해야 경계에 걸린 세그먼트가 누락되지 않음
+파이프라인 내부 단계:
+```
+Step 1: ffmpeg 1.2x atempo 변환 (voice_raw.wav → voice_1.20x.mp3)
+Step 2: mlx_whisper (Apple Silicon 최적화, ~30초) 전사 → voice_1.20x.json
+        명령: mlx_whisper voice_1.20x.mp3 --model mlx-community/whisper-small-mlx
+              --language Korean --word-timestamps True --output-format json
+Step 2.5: briefing-auto-config.cjs → briefing-config.json 생성
+          (Claude AI로 뉴스 파싱 + 슬라이드 구조 생성)
+Step 3: briefing-render.cjs → frames/ + news-briefing-MMDD.mp4
+          ✅ 슬라이드 전환: "소식입니다" 단어 직접 감지 (한글/아라비아숫자/필러 모두 커버)
+          ✅ Slide-aware display groups: 슬라이드 경계에서 자막 그룹 재빌드 (단어 잘림 방지)
+          ⚠️ fallback: 감지 < 절반일 때만 균등 분배 사용
+Step 4: briefing-thumbnail.cjs → thumbnail.jpg
+Step 5: Telegram 미리보기 전송 (영상 + 썸네일)
+        → "확인 후 '올려' 라고 답장해주세요"
+        ⛔ 포스팅은 여기서 멈춤 — Aaron 승인 대기
+```
+
+### Phase 4: 포스팅 (Aaron "올려" 후 실행)
+```bash
+node cron/briefing-post.cjs YYYY-MM-DD
+# → Firebase 업로드 → IG Reel(cover_url) + FB Video(thumb)
+# → Telegram 완료 보고 (IG 링크 포함)
+```
+
+### 렌더링 상세 (briefing-render.cjs — 4/12 리팩터)
+
+#### 타이밍 소스 (우선순위)
+1. `slide-timings.json` — 수동 지정 (최우선)
+2. `tts-script.txt` + Whisper → DP 정렬 (스크립트 텍스트 표시, Whisper 타이밍)
+3. `tts-script.txt` 글자 수 비례 계산 (Whisper 없을 때)
+4. Whisper 전사 기반 (구형 fallback)
+5. 균등 분배 (최후 수단)
+
+#### 슬라이드 전환 — 절대 규칙 (4/13 확정)
+- **"N번째 소식입니다"가 들리는 순간, 이미 해당 뉴스 슬라이드로 바뀌어 있어야 함**
+- 전환 시점 = 순서 번호 단어("첫", "두", "세" 등)의 Whisper START 타임스탬프
+- "소식입니다" 끝이 아니라 "첫 번째"의 "첫"이 시작될 때 슬라이드 전환
+- "마지막 소식입니다" → "마지막"의 START 시점에 전환
+- **CTA**: "여기까지" 감지 → 마지막 슬라이드
+
+#### 슬라이드 전환 감지 (`detectTransitionsFromScript`)
+- **순서번호 패턴**: "번째" 포함 단어 감지 → i-1 위치(순서번호 시작 단어)의 타임스탬프로 전환
+- **"마지막"**: "마지막 소식입니다" 패턴 → "마지막" 시작 시점에 전환
+- **CTA**: "여기까지" → 마지막 CTA 슬라이드
+- Fallback: 감지 < 절반일 때만 균등 분배 사용
+
+#### 자막 표시 (display groups)
+- 스크립트 단어를 슬라이드별로 분류 후 문장 경계에서 그룹 분할 (최대 14단어)
+- 그룹 내 단어는 항상 동일 슬라이드 배경 위에 표시
+- 현재 말하는 단어: `#FFD700` (골드) 하이라이트
+
+#### 절대 타임스탬프 프레임 생성 (드리프트 방지)
+- 각 프레임에 Whisper `startTime` 저장 (duration 누적 ❌)
+- 렌더 후 `dur[i] = startTime[i+1] - startTime[i]`
+- 마지막 프레임: `dur = totalDur - lastStartTime`
+- `sum(dur) = totalDur` 보장 → 드리프트 원천 차단
+- 긴 쉼(>0.5s): 하이라이트 0.4s 표시 → 하이라이트 없는 blank 프레임
+
+#### Whisper 오타 교정
+- `briefing-config.json`의 `wordCorrections` 우선 → DEFAULT_CORRECTIONS fallback
+- Chirp3-HD 필러('으', '어', '음') 자동 제거
 
 ---
 
 ## 6. 썸네일 스펙
 
+### ⚠️ 중요: 반드시 레퍼런스 스크립트 기반으로 만들 것
+- 레퍼런스: `memory/morning-reels/2026-04-02/gen-thumbnail-0402.cjs`
+- **그린 배경, 밝은 배경 절대 금지** — 항상 다크 네이비
+
 ### 레이아웃
 - 1080 × 1920px
 - 전체 중앙 정렬 (flex column, justify-content: center)
-- 상단 배지: "DAILY NEWS BRIEFING"
-- 중앙: 날짜 → ☀️ 이모지 → "달커넥트 아침 브리핑" → 서브타이틀
-- 카테고리 아이콘 5개 그리드 (🏙️🚨🎵💸📋)
-- 하단: dalkonnect.com URL 뱃지 + 워터마크
-- **매일 날짜만 교체** — 나머지 동일
+- 배경: `linear-gradient(180deg, #0a0f1e 0%, #0d1530 40%, #091020 100%)`
+- 중앙: 날짜 → 헤드라인(오늘 핵심 뉴스 한 줄) → ☀️ → "달커넥트" → "아침 브리핑" → 서브타이틀 → 구분선 → 카테고리 카드 5개
+- 카테고리 카드: 오늘 다룬 소식 카테고리 아이콘+라벨 (고정값 아님, 매일 바꿀 것)
+- **매일 날짜 + 헤드라인 + 카테고리 카드만 교체** — 나머지 동일
 
 ### 색상
-- 배경: `#0a0c14 → #111827` 다크 네이비
-- accent: `#60a5fa` (블루)
-- 구분선: `linear-gradient(90deg, #60a5fa, #fbbf24)`
-- URL 뱃지: 블루 테두리
-- 워터마크: `#2ED8A3` (민트)
+- 배경: `linear-gradient(180deg, #0a0f1e 0%, #0d1530 40%, #091020 100%)` 다크 네이비
+- 날짜: `rgba(255,255,255,0.9)`, 38px, letter-spacing 2px
+- 헤드라인: `#fbbf24` (앰버), 32px
+- 타이틀 "달커넥트": `#22d3ee` (시안), 96px
+- 타이틀 "아침 브리핑": `#ffffff`, 96px
+- 구분선: `#22d3ee`, 60px width
+- 카테고리 카드: `rgba(255,255,255,0.07)` 배경, 160px width
 
 ---
 
@@ -259,17 +336,18 @@ const CORRECTIONS = {
 
 ```
 memory/morning-reels/YYYY-MM-DD/
-├── voice_raw.wav            # TTS 원본 (Leda)
-├── voice_1.20x.mp3          # 1.2x 속도 변환
-├── voice_1.20x.json         # Whisper 단어 타임스탬프
+├── voice_raw.wav            # TTS 원본 (Leda 1.0x)
+├── voice_1.20x.mp3          # ffmpeg 1.2x atempo 변환
+├── voice_1.20x.json         # Whisper word-level 타임스탬프
+├── tts-script.txt           # TTS 스크립트 원문 (자막 텍스트 소스)
+├── briefing-config.json     # 슬라이드 구조 + 오타 교정
 ├── thumbnail.png            # 썸네일 원본
 ├── thumbnail.jpg            # 썸네일 JPEG (IG용)
+├── concat.txt               # ffmpeg concat demuxer 입력 (절대 타임스탬프 기반)
 ├── frames/                  # Puppeteer 프레임들
 │   ├── frame_00000.png
-│   ├── frame_00001.png
-│   └── ... (~1,540개)
-├── news-briefing-final.mp4  # 최종 릴스
-└── gen-briefing.cjs         # 생성 스크립트 (당일 설정 포함)
+│   └── ... (~280개, 절대 타임스탬프 방식)
+└── news-briefing-MMDD.mp4   # 최종 릴스 (4-5MB)
 ```
 
 ---

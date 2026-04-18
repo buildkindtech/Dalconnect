@@ -10,9 +10,9 @@
  * 4. DB에 시온마트 딜 교체
  */
 
-const { execSync } = require('child_process');
 const { Pool } = require('pg');
 const https = require('https');
+const puppeteer = require('puppeteer');
 require('dotenv').config();
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
@@ -20,30 +20,42 @@ const GEMINI_KEY = process.env.GOOGLE_AI_KEY || '';
 const STORE_NAME = '시온마트 (Zion Market)';
 
 async function getZionSaleImageUrl() {
-  console.log('🌐 시온마트 페이지 로딩...');
+  console.log('🌐 시온마트 페이지 로딩 (Puppeteer)...');
+
+  // 1차: Puppeteer로 JS 렌더링 후 이미지 URL 추출
+  let browser;
   try {
-    // agent-browser로 TX 페이지 열기
-    execSync('agent-browser open "https://www.zionmarket.com/"', { timeout: 15000 });
-    execSync('sleep 2');
-    
-    // 다이얼로그 닫고 TX 선택
-    try { execSync('agent-browser click e8', { timeout: 5000 }); } catch(e) {}
-    try { execSync('agent-browser click e10', { timeout: 5000 }); } catch(e) {}
-    execSync('sleep 2');
-    
-    // 페이지 소스에서 이미지 URL 추출
-    const result = execSync(`agent-browser evaluate "Array.from(document.querySelectorAll('img')).find(i=>i.src&&i.src.includes('sale_images'))?.src||''"`, 
-      { timeout: 10000 }).toString().trim();
-    
-    if (result && result.includes('sale_images')) {
-      console.log(`✅ 이미지 URL: ${result}`);
-      return result;
+    browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36');
+    await page.goto('https://www.zionmarket.com/', { waitUntil: 'networkidle2', timeout: 20000 });
+    await new Promise(r => setTimeout(r, 2000));
+
+    // TX 위치 선택 (다이얼로그가 있으면)
+    try {
+      await page.click('[data-location="TX"], button:has-text("Texas"), #location-tx', { timeout: 3000 });
+      await new Promise(r => setTimeout(r, 1500));
+    } catch (_) {}
+
+    const imgUrl = await page.evaluate(() => {
+      const imgs = Array.from(document.querySelectorAll('img'));
+      const sale = imgs.find(i => i.src && i.src.includes('sale_images'));
+      return sale?.src || '';
+    });
+
+    await browser.close();
+
+    if (imgUrl && imgUrl.includes('sale_images')) {
+      console.log(`✅ Puppeteer URL: ${imgUrl}`);
+      return imgUrl;
     }
-  } catch(e) {
-    console.log(`⚠️ agent-browser 방법 실패: ${e.message}`);
+    console.log('⚠️ Puppeteer — sale_images URL 없음, 폴백 시도');
+  } catch (e) {
+    console.log(`⚠️ Puppeteer 실패: ${e.message}`);
+    try { await browser?.close(); } catch (_) {}
   }
 
-  // 폴백: 직접 fetch로 DOM 파싱
+  // 2차 폴백: 정적 fetch로 HTML에서 URL 파싱
   try {
     const html = await fetchPage('https://www.zionmarket.com/');
     const match = html.match(/https:\/\/admin\.zionmarket\.com\/app_images\/sale_images\/[a-f0-9]+\.jpeg/);
@@ -51,10 +63,11 @@ async function getZionSaleImageUrl() {
       console.log(`✅ 폴백 URL: ${match[0]}`);
       return match[0];
     }
-  } catch(e) {
-    console.log(`⚠️ 폴백도 실패: ${e.message}`);
+    console.log('⚠️ 폴백 HTML에서도 sale_images URL 없음');
+  } catch (e) {
+    console.log(`⚠️ 폴백 실패: ${e.message}`);
   }
-  
+
   return null;
 }
 
@@ -99,21 +112,47 @@ Include every visible item. If price has 2for format, keep it as-is.`;
         { text: prompt },
         { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } }
       ]}],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 2000, thinkingConfig: { thinkingBudget: 0 } }
+      generationConfig: { temperature: 0.1, maxOutputTokens: 8192 },
     })
   });
 
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) return [];
-  
-  try {
-    return JSON.parse(jsonMatch[0]);
-  } catch(e) {
-    console.log('⚠️ JSON 파싱 실패:', e.message);
+  if (data.error) {
+    console.log('⚠️ Gemini 오류:', JSON.stringify(data.error));
     return [];
   }
+  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  // 코드블록 제거 (```json ... ``` 또는 ``` ... ```)
+  const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+  console.log(`Gemini 응답 길이: ${text.length}자, 미리보기: ${text.slice(0, 150)}`);
+
+  // 완전한 배열 파싱 시도
+  const jsonMatch = text.match(/\[[\s\S]*\]/);
+  if (jsonMatch) {
+    try {
+      const items = JSON.parse(jsonMatch[0]);
+      console.log(`✅ JSON 파싱 성공: ${items.length}개`);
+      return items;
+    } catch(e) {
+      console.log('⚠️ 완전한 배열 파싱 실패, 개별 객체 추출 시도...');
+    }
+  }
+
+  // 폴백: 응답이 잘렸을 때 완성된 개별 객체만 추출
+  const objMatches = [...text.matchAll(/\{[^{}]*"name"[^{}]*"price"[^{}]*\}/g)];
+  if (objMatches.length > 0) {
+    const items = [];
+    for (const m of objMatches) {
+      try { items.push(JSON.parse(m[0])); } catch (_) {}
+    }
+    if (items.length > 0) {
+      console.log(`✅ 부분 파싱 성공: ${items.length}개 (응답 잘림 발생)`);
+      return items;
+    }
+  }
+
+  console.log('⚠️ JSON 추출 실패 — 응답:', text.slice(0, 500));
+  return [];
 }
 
 function getThisWeekExpiry() {

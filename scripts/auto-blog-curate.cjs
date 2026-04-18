@@ -360,12 +360,97 @@ async function main() {
     }
   }
   
+  // RSS 수집이 적으면 Gemini 원본 글로 보충
+  if (totalAdded < 2) {
+    console.log(`\n📝 RSS 수집 ${totalAdded}개 → Gemini 원본 블로그 생성으로 보충...`);
+    const aiAdded = await generateAIBlogs();
+    totalAdded += aiAdded;
+  }
+
   // Summary
   const total = await pool.query('SELECT count(*) FROM blogs');
   console.log(`\n📊 결과: ${totalAdded}개 새 블로그 추가 | 총 ${total.rows[0].count}개`);
   console.log(`✅ 큐레이션 완료: ${new Date().toLocaleString('ko-KR', { timeZone: 'America/Chicago' })}\n`);
-  
+
   await pool.end();
+}
+
+// ==================== Gemini 원본 블로그 생성 ====================
+
+async function generateAIBlogs() {
+  if (!GOOGLE_AI_KEY) return 0;
+
+  // 최근 뉴스 헤드라인 + 기존 블로그 제목 (중복 방지)
+  let recentNews = '';
+  let existingTitles = new Set();
+  try {
+    const nr = await pool.query("SELECT title FROM news WHERE created_at > NOW() - INTERVAL '72 hours' ORDER BY created_at DESC LIMIT 10");
+    recentNews = nr.rows.map(r => r.title).join('\n');
+    const br = await pool.query("SELECT title FROM blogs ORDER BY created_at DESC LIMIT 30");
+    existingTitles = new Set(br.rows.map(r => r.title));
+  } catch {}
+
+  const BLOG_CATEGORIES = ['생활정보','맛집','육아/교육','부동산','건강','이민/비자','달라스 생활'];
+  const prompt = `달라스(DFW) 한인 커뮤니티 포털 DalKonnect 블로그 글 2개를 작성해주세요.
+
+최근 뉴스 (글 주제 영감용):
+${recentNews}
+
+조건:
+- 달라스/DFW 한인 독자 대상
+- 실용적인 정보 (생활, 맛집, 육아, 부동산, 건강, 이민 등)
+- 자연스러운 한국어, 500-700자
+- 카테고리: ${BLOG_CATEGORIES.join(', ')} 중 선택
+- 뉴스 기반이면 달라스 한인 관점으로 로컬화
+
+JSON 배열로만 응답:
+[
+  {
+    "title": "SEO 최적화 한글 제목 (달라스/DFW 키워드 포함)",
+    "content": "마크다운 본문 500-700자",
+    "excerpt": "요약 2줄",
+    "category": "카테고리",
+    "tags": ["태그1","태그2","태그3"]
+  }
+]`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.8, maxOutputTokens: 3000, thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    });
+    const data = await res.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) { console.log('  ⚠️ AI 블로그 JSON 파싱 실패'); return 0; }
+
+    const posts = JSON.parse(jsonMatch[0]);
+    let added = 0;
+    for (const post of posts) {
+      if (existingTitles.has(post.title)) { console.log(`  ⏭️ 중복: ${post.title}`); continue; }
+      const result = await insertBlog({
+        title: post.title,
+        content: post.content,
+        excerpt: post.excerpt,
+        category: post.category,
+        tags: post.tags || [],
+        source_url: null,
+      });
+      if (result === 'inserted') {
+        console.log(`  ✅ [AI] ${post.title}`);
+        added++;
+      }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    return added;
+  } catch(e) {
+    console.log('  ⚠️ AI 블로그 생성 실패:', e.message);
+    return 0;
+  }
 }
 
 main().catch(e => { console.error('❌', e); pool.end(); process.exit(1); });

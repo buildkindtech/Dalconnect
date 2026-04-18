@@ -1,0 +1,43 @@
+{
+  "skill": "morning-briefing TTS 프롬프트",
+  "target_file": "cron/news-candidates.cjs",
+  "target_section": "ttsPrompt (lines 177-194)",
+  "baseline": {
+    "score": "5/7 (71%)",
+    "failing_evals": ["E3: 순서번호 소식 누락 8개", "E7: 뉴스수 2개 감지 (버그)"],
+    "char_count": 3705
+  },
+  "experiments": [
+    {
+      "id": "exp-1",
+      "change": "1) 모든 순서번호에 '소식입니다' 추가 (+⚠️ 경고), 2) '열 가지' 하드코딩 → 동적 countWord",
+      "score": "7/7 (100%)",
+      "char_count": 3001,
+      "decision": "KEEP"
+    },
+    {
+      "id": "exp-2",
+      "change": "일관성 확인 (동일 프롬프트)",
+      "score": "7/7 (100%)",
+      "char_count": 3001,
+      "decision": "KEEP"
+    },
+    {
+      "id": "exp-3",
+      "change": "일관성 확인 (동일 프롬프트)",
+      "score": "7/7 (100%)",
+      "char_count": 2981,
+      "decision": "KEEP"
+    }
+  ],
+  "final": {
+    "score": "7/7 (100%)",
+    "improvement": "+29%p (71% → 100%)",
+    "experiments_total": 3,
+    "keep_rate": "100%",
+    "top_fix": "모든 순서번호 '번째' 뒤에 '소식입니다' 강제 — 슬라이드 전환 감지 복구",
+    "second_fix": "뉴스 개수 동적 생성 (COUNT_KO 배열)",
+    "terminated": "3연속 100% — 종료 조건 충족",
+    "applied_to_production": true
+  }
+}

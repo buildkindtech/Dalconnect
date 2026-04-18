@@ -49,6 +49,67 @@ const POST_TEMPLATES = [
   { category: '뷰티', title: '미국에서 한국 스킨케어 어디서 사세요?', content: 'Innisfree, Laneige, Cosrx 같은 한국 스킨케어 여기서도 구할 수 있더라고요. H Mart, Walmart, Ulta, Amazon 다 가격이 달라서... 여러분은 어디서 구매하세요?', tags: ['스킨케어','뷰티','쇼핑'], nickname: '피부관리러' },
 ];
 
+// ─── Gemini AI 커뮤니티 글 생성 ───────────────────────────────────────────────
+async function generateAIPosts(existingTitles, count) {
+  const apiKey = (() => {
+    try { return require('fs').readFileSync('/Users/aaron/.claude/api-keys.env','utf8').match(/GOOGLE_AI_KEY=(.+)/)?.[1]?.trim(); } catch { return process.env.GOOGLE_AI_KEY; }
+  })();
+  if (!apiKey) { console.log('⚠️ GOOGLE_AI_KEY 없음'); return []; }
+
+  const CATEGORIES = ['생활정보','맛집','육아','Q&A','부동산','자유게시판','뷰티'];
+  const NICKNAMES = ['달라스이민5년차','주부맘','플라노엄마','IT직장인','주부3인가족','새이민자','맛집헌터','학부모고민중','절약러','이사준비중'];
+
+  // 최근 뉴스 헤드라인 가져오기 (시의성 있는 주제 생성용)
+  let recentNews = '';
+  try {
+    const nr = await pool.query("SELECT title FROM news WHERE created_at > NOW() - INTERVAL '48 hours' ORDER BY created_at DESC LIMIT 6");
+    recentNews = nr.rows.map(r => r.title).join(', ');
+  } catch {}
+
+  const existingList = [...existingTitles].slice(-20).join('\n');
+  const prompt = `달라스(DFW) 한인 커뮤니티 게시판에 올라올 법한 실제 주민 글 ${count}개를 생성해주세요.
+
+최근 뉴스 맥락 (참고용): ${recentNews}
+
+카테고리 중 선택: ${CATEGORIES.join(', ')}
+닉네임 풀: ${NICKNAMES.join(', ')}
+
+조건:
+- 실제 달라스 한인이 쓴 것처럼 자연스러운 한국어
+- 구체적인 장소/학교/마트명 포함 (Frisco, Plano, Carrollton, H-Mart, Costco 등)
+- 질문형 또는 경험 공유형
+- 각 글 200-350자
+- 아래 기존 제목과 중복 절대 금지:
+${existingList}
+
+JSON 배열로만 응답 (설명 없이):
+[
+  {"category":"카테고리","title":"제목","content":"본문","tags":["태그1","태그2"],"nickname":"닉네임"},
+  ...
+]`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.9, maxOutputTokens: 2000, thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    });
+    const data = await res.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) { console.log('⚠️ JSON 파싱 실패'); return []; }
+    const posts = JSON.parse(jsonMatch[0]);
+    // 중복 제목 최종 필터
+    return posts.filter(p => !existingTitles.has(p.title));
+  } catch(e) {
+    console.log('⚠️ Gemini 에러:', e.message);
+    return [];
+  }
+}
+
 // ─── 랜덤 유틸 ────────────────────────────────────────────────────────────────
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -113,17 +174,22 @@ async function seedCommunityPosts() {
   const unused = POST_TEMPLATES.filter(t => !existingTitles.has(t.title));
   console.log(`사용 가능한 템플릿: ${unused.length}개`);
 
-  if (unused.length === 0) {
-    console.log('⚠️  사용 가능한 신규 템플릿 없음 — POST_TEMPLATES 추가 필요');
-    await pool.end();
-    return;
-  }
+  // 템플릿 남아있으면 기존 방식, 소진되면 Gemini AI 생성
+  const count = randomInt(3, 5);
+  let toAdd = [];
 
-  // 이번 시드에 추가할 개수: 3-5개
-  const count = Math.min(randomInt(3, 5), unused.length);
-  // 랜덤 셔플 후 앞에서 count개 선택
-  const shuffled = unused.sort(() => Math.random() - 0.5);
-  const toAdd = shuffled.slice(0, count);
+  if (unused.length >= count) {
+    const shuffled = unused.sort(() => Math.random() - 0.5);
+    toAdd = shuffled.slice(0, count);
+  } else {
+    console.log('🤖 템플릿 소진 → Gemini AI로 신규 게시글 생성 중...');
+    toAdd = await generateAIPosts(existingTitles, count);
+    if (toAdd.length === 0) {
+      console.log('⚠️ AI 생성 실패');
+      await pool.end();
+      return;
+    }
+  }
 
   let added = 0;
   for (const template of toAdd) {

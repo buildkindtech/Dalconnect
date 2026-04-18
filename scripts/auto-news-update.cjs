@@ -113,6 +113,12 @@ const RSS_FEEDS = [
   { url: 'https://immigrationforum.org/feed/', category: '이민/비자', source: 'National Immigration Forum', city: null, translate: true },
   { url: 'https://lawprofessors.typepad.com/immigration/rss.xml', category: '이민/비자', source: 'ImmigrationProf Blog', city: null, translate: true },
 
+  // 마트/쇼핑 (Google News RSS — 한인들이 자주 가는 DFW 마트)
+  { url: 'https://news.google.com/rss/search?q=Costco+deals+Texas&hl=ko&gl=US&ceid=US:ko', category: '마트/쇼핑', source: '코스트코', city: 'dallas', translate: true },
+  { url: 'https://news.google.com/rss/search?q=Trader+Joes+new+products+2025&hl=en&gl=US&ceid=US:en', category: '마트/쇼핑', source: '트레이더 조', city: 'dallas', translate: true },
+  { url: 'https://news.google.com/rss/search?q=HEB+grocery+Texas+deals+2025&hl=en&gl=US&ceid=US:en', category: '마트/쇼핑', source: 'HEB', city: 'dallas', translate: true },
+  { url: 'https://news.google.com/rss/search?q=Central+Market+Texas+specials&hl=en&gl=US&ceid=US:en', category: '마트/쇼핑', source: '센트럴 마켓', city: 'dallas', translate: true },
+
   // K-POP / 연예
   { url: 'https://www.soompi.com/feed', category: 'K-POP', source: 'Soompi', city: null, translate: true },
 

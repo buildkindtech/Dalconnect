@@ -1,0 +1,217 @@
+#!/usr/bin/env node
+/**
+ * 아침 브리핑 Phase 1+2 통합 — 자동 선별 + TTS 스크립트 생성
+ * 매일 4:45am 실행
+ * 1. DB에서 48시간 뉴스 조회
+ * 2. 카테고리 다양하게 7개 자동 선별
+ * 3. TTS 스크립트 생성 (Gemini)
+ * 4. memory/morning-reels/YYYY-MM-DD/tts-script.txt 저장
+ * 5. Telegram으로 TTS 스크립트 전송 (Aaron이 Freepik에서 복붙 녹음)
+ */
+const { Client } = require('pg');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+const { askAI } = require('./ai.cjs');
+
+const BOT_TOKEN = '8675191741:AAF9c5aO_1OZdH3c6iXkyo4IMWG0Im4fyQY';
+const CHAT_ID = '-5280678324';
+const DATABASE_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const BASE = '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect';
+
+function fetchWeather() {
+  return new Promise((resolve) => {
+    https.get('https://wttr.in/Dallas,TX?format=j1', (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const w = JSON.parse(data);
+          const today = w.weather[0];
+          const minF = parseInt(today.mintempF);
+          const maxF = parseInt(today.maxtempF);
+          const desc = today.hourly[4]?.weatherDesc[0]?.value || '맑음';
+          resolve({ minF, maxF, desc });
+        } catch {
+          resolve({ minF: 59, maxF: 77, desc: '맑음' });
+        }
+      });
+    }).on('error', () => resolve({ minF: 59, maxF: 77, desc: '맑음' }));
+  });
+}
+
+function sendTelegram(text) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'HTML' });
+    const req = https.request({
+      hostname: 'api.telegram.org',
+      path: `/bot${BOT_TOKEN}/sendMessage`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+    }, (res) => {
+      let d = ''; res.on('data', c => d += c); res.on('end', () => resolve(JSON.parse(d)));
+    });
+    req.on('error', reject); req.write(body); req.end();
+  });
+}
+
+function getKoreanDate(d = new Date()) {
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  return {
+    label: `${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`,
+    dateStr: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,
+  };
+}
+
+async function main() {
+  const today = getKoreanDate();
+  console.log(`[${today.dateStr}] 아침 브리핑 자동 생성 시작`);
+
+  // 1. DB 연결
+  const client = new Client({ connectionString: DATABASE_URL });
+  await client.connect();
+
+  // 공통 제외 조건 — 저품질/무관련 소스 및 키워드
+  const BASE_WHERE = `
+    WHERE created_at >= NOW() - INTERVAL '24 hours'
+      AND title IS NOT NULL AND title != ''
+      AND content IS NOT NULL AND LENGTH(content) > 80
+      AND source NOT ILIKE 'r/%'
+      AND source NOT ILIKE '%reddit%'
+      AND source NOT ILIKE '%community%'
+      AND source NOT ILIKE '%Fast Company%'
+      AND source NOT ILIKE '%Inc.com%'
+      AND source NOT ILIKE '%Fortune%'
+      AND source NOT ILIKE '%Allure%'
+      AND source NOT ILIKE '%Elle%'
+      AND source NOT ILIKE '%W Korea%'
+      AND title NOT ILIKE '%패션%'
+      AND title NOT ILIKE '%뷰티%'
+      AND title NOT ILIKE '%반려동물%'
+      AND title NOT ILIKE '%햄스터%'
+      AND title NOT ILIKE '%고양이%'
+      AND title NOT ILIKE '%강아지%'
+      AND title NOT ILIKE '%레시피%'
+      AND title NOT ILIKE '%요리%'
+  `;
+
+  const query = (where) => client.query(`
+    SELECT id, title, content, category, source, published_date
+    FROM news ${BASE_WHERE} ${where}
+      AND id NOT IN (${usedIds.size > 0 ? [...usedIds].map(id=>`'${id}'`).join(',') : "''"})
+    ORDER BY published_date DESC LIMIT 1
+  `).catch(() => ({ rows: [] }));
+
+  const selected = [];
+  const usedIds = new Set();
+  const add = (rows, label) => {
+    for (const r of rows) { if (!usedIds.has(r.id)) { selected.push(r); usedIds.add(r.id); console.log(`✅ [${label}] ${r.title.slice(0,40)}`); } }
+  };
+
+  // ── 1단계: MUST-INCLUDE (달라스 한인 일상 직결) ─────────────────
+  // 환율/물가
+  add((await query(`AND (title ILIKE '%환율%' OR title ILIKE '%달러%원%' OR title ILIKE '%기름값%' OR title ILIKE '%물가%급%')`)).rows, '환율/물가');
+  // DFW 날씨 경보
+  add((await query(`AND (title ILIKE '%토네이도%' OR title ILIKE '%우박%' OR title ILIKE '%빙판%' OR (title ILIKE '%폭풍%' AND (title ILIKE '%달라스%' OR title ILIKE '%DFW%' OR title ILIKE '%텍사스%' OR title ILIKE '%경보%')) OR ((title ILIKE '%달라스%' OR title ILIKE '%DFW%' OR title ILIKE '%텍사스%') AND (title ILIKE '%경보%' OR title ILIKE '%홍수%' OR (title ILIKE '%날씨%' AND title ILIKE '%주의%'))))`)).rows, 'DFW날씨');
+  // 이민/비자 정책
+  add((await query(`AND (title ILIKE '%H1B%' OR title ILIKE '%H-1B%' OR title ILIKE '%영주권%' OR title ILIKE '%추방%' OR title ILIKE '%ICE%' OR (title ILIKE '%이민%' AND (title ILIKE '%정책%' OR title ILIKE '%단속%' OR title ILIKE '%법%')))`)).rows, '이민/비자');
+
+  // ── 2단계: HIGH-PRIORITY (정체성 + 미국생활 필수) ─────────────────
+  // 한국 선수 활약
+  add((await query(`AND (title ILIKE '%김혜성%' OR title ILIKE '%이정후%' OR title ILIKE '%류현진%' OR title ILIKE '%손흥민%' OR title ILIKE '%이강인%' OR title ILIKE '%김광현%' OR title ILIKE '%박효준%' OR title ILIKE '%고우석%')`)).rows, '한국선수');
+  // K-pop 빅뉴스
+  add((await query(`AND (title ILIKE '%BTS%' OR title ILIKE '%방탄%' OR title ILIKE '%블랙핑크%' OR title ILIKE '%아이브%' OR title ILIKE '%뉴진스%' OR title ILIKE '%세븐틴%') AND (title ILIKE '%컴백%' OR title ILIKE '%수상%' OR title ILIKE '%빌보드%' OR title ILIKE '%그래미%' OR title ILIKE '%1위%')`)).rows, 'KPOP');
+  // 트럼프 정책 (관세/이민/경제)
+  add((await query(`AND title ILIKE '%트럼프%' AND (title ILIKE '%관세%' OR title ILIKE '%이민%' OR title ILIKE '%경제%' OR title ILIKE '%정책%' OR title ILIKE '%제재%')`)).rows, '트럼프정책');
+  // DFW 로컬 (WFAA 등)
+  add((await query(`AND (source ILIKE '%WFAA%' OR source ILIKE '%dallasnews%' OR source ILIKE '%star-telegram%') AND title != ''`)).rows, 'DFW로컬');
+  // 텍사스 법안/정책
+  add((await query(`AND (title ILIKE '%텍사스%' OR title ILIKE '%달라스%') AND (title ILIKE '%법안%' OR title ILIKE '%총기%' OR title ILIKE '%세금%' OR title ILIKE '%교육%' OR title ILIKE '%의회%')`)).rows, '텍사스정책');
+  // IT 빅테크 레이오프
+  add((await query(`AND (title ILIKE '%레이오프%' OR title ILIKE '%감원%' OR (title ILIKE '%해고%' AND (title ILIKE '%구글%' OR title ILIKE '%메타%' OR title ILIKE '%애플%' OR title ILIKE '%아마존%' OR title ILIKE '%마이크로소프트%'))))`)).rows, 'IT레이오프');
+
+  // ── 3단계: 표준 슬롯 (다양성 확보, 최대 12개까지) ─────────────────
+  const STD = [
+    { label: '한국뉴스', count: 3, where: `AND category ILIKE '%한국뉴스%'` },
+    { label: '월드',     count: 2, where: `AND (category ILIKE '%월드%' OR category ILIKE '%국제%')` },
+    { label: '경제',     count: 1, where: `AND (category ILIKE '%경제%' OR title ILIKE '%환율%' OR title ILIKE '%금리%' OR title ILIKE '%주식%')` },
+    { label: '연예스포츠', count: 2, where: `AND (category ILIKE '%연예%' OR category ILIKE '%K-POP%' OR category ILIKE '%스포츠%')` },
+    { label: '미국',     count: 2, where: `AND (category ILIKE '%미국%' OR title ILIKE '%트럼프%' OR title ILIKE '%바이든%' OR title ILIKE '%의회%')` },
+  ];
+  for (const slot of STD) {
+    if (selected.length >= 12) break;
+    const remain = Math.min(slot.count, 12 - selected.length);
+    const { rows } = await client.query(`
+      SELECT id, title, content, category, source, published_date
+      FROM news ${BASE_WHERE} ${slot.where}
+        AND id NOT IN (${[...usedIds].map(id=>`'${id}'`).join(',') || "''"})
+      ORDER BY published_date DESC LIMIT ${remain}
+    `).catch(() => ({ rows: [] }));
+    add(rows, slot.label);
+  }
+
+  await client.end();
+  console.log(`선별 완료: ${selected.length}개 (목표 12개)`);
+
+  // ── 카테고리 순서 정렬: 로컬 → 미국 → 한국 → 월드 → 경제 → 연예 → 스포츠 ──
+  const CAT_ORDER = ['달라스', '로컬', 'DFW', 'WFAA', '텍사스', '미국', '트럼프', '한국', '월드', '국제', '경제', '금리', '환율', '연예', 'K-POP', 'KPOP', 'BTS', '방탄', '스포츠'];
+  function catPriority(article) {
+    const t = (article.title + ' ' + (article.category || '')).toLowerCase();
+    for (let i = 0; i < CAT_ORDER.length; i++) {
+      if (t.includes(CAT_ORDER[i].toLowerCase())) return i;
+    }
+    return CAT_ORDER.length;
+  }
+  selected.sort((a, b) => catPriority(a) - catPriority(b));
+  console.log('정렬 순서:', selected.map(n => `[${n.category}] ${n.title.slice(0,20)}`).join(' → '));
+
+  // 3. 날씨
+  const weather = await fetchWeather();
+  console.log(`날씨: ${weather.desc} / 최저 ${weather.minF}°F 최고 ${weather.maxF}°F`);
+
+  // 4. Gemini로 TTS 스크립트 생성
+  const newsListText = selected.map((n, i) =>
+    `${i+1}. [${n.category}] ${n.title}\n내용: ${(n.content || '').slice(0, 200)}`
+  ).join('\n\n');
+
+  const ttsPrompt = `아래 뉴스 목록으로 달커넥트 아침 브리핑 TTS 스크립트를 작성해주세요.
+
+날짜: ${today.label}
+날씨: 최저 ${weather.minF}도, 최고 ${weather.maxF}도, ${weather.desc}
+뉴스 ${selected.length}개:
+${newsListText}
+
+작성 규칙:
+- "안녕하세요, 달커넥트 아침 브리핑입니다."로 시작
+- 날짜, 날씨 멘트 포함 (날씨는 "최저 XX도, 최고 XX도" 형식으로 — °F, F, 화씨 등 영어/기호 절대 쓰지 말 것)
+- "오늘 소식 열 가지 전해드리겠습니다." (항상 열 가지로 고정)
+- 각 뉴스: "첫번째 소식입니다. [내용]", "두번째입니다. [내용]", ..., "마지막 소식입니다. [내용]"
+- 뉴스 순서: 위에 번호 매긴 순서 그대로 작성 (이미 카테고리별 정렬됨, 순서 절대 바꾸지 말 것)
+- 각 뉴스 2~3문장, 달라스 한인 관점에서 생동감 있게
+- 숫자/영어는 한글 발음으로 (예: I-35E → 아이삼십오이, DFW → 디에프더블유)
+- 마무리: "오늘 달커넥트 뉴스 여기까지입니다. 더 자세한 내용은 달커넥트닷컴에서 만나보세요. [요일] 되세요. 감사합니다."
+- 전체 2분 30초 분량 (약 550~650자)
+- 스크립트 텍스트만 출력, 다른 설명 없이`;
+
+  const ttsScript = (await askAI(ttsPrompt, { maxTokens: 4000, temperature: 0.5, thinkingBudget: 0 })).trim();
+  console.log(`TTS 스크립트 생성 완료 (${ttsScript.length}자)`);
+
+  // 5. 파일 저장
+  const dateDir = path.join(BASE, 'memory', 'morning-reels', today.dateStr);
+  if (!fs.existsSync(dateDir)) fs.mkdirSync(dateDir, { recursive: true });
+  const scriptPath = path.join(dateDir, 'tts-script.txt');
+  fs.writeFileSync(scriptPath, ttsScript);
+  console.log(`저장: ${scriptPath}`);
+
+  // briefing-config 기본 저장 (선별 뉴스 목록)
+  const configPath = path.join(dateDir, 'selected-news.json');
+  fs.writeFileSync(configPath, JSON.stringify(selected.map(n => ({
+    id: n.id, title: n.title, category: n.category, source: n.source
+  })), null, 2));
+
+  // 6. 완료 로그 (Telegram 전송은 full-auto 파이프라인에서 영상과 함께)
+  console.log(`✅ TTS 스크립트 저장 완료: ${scriptPath} (${ttsScript.length}자)`);
+  console.log(`📝 선별 뉴스 ${selected.length}개 → Leda TTS → 렌더 → 미리보기 자동 진행`);
+}
+
+main().catch(e => { console.error('❌', e.message); process.exit(1); });

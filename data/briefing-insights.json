@@ -1,0 +1,15 @@
+{
+  "dayAvg": {
+    "0": 138,
+    "2": 15
+  },
+  "lengthAvg": {
+    "short": null,
+    "mid": null,
+    "long": 77
+  },
+  "targetSec": 160,
+  "recentAvg": 77,
+  "sampleCount": 2,
+  "updated_at": "2026-04-16T13:00:00.440Z"
+}

@@ -277,6 +277,26 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
+  // 마트픽 뉴스 (코스트코/트레이더조/HEB/센트럴마켓)
+  const [martNews, setMartNews] = useState<Record<string, any[]>>({});
+  useEffect(() => {
+    fetch('/api/news?category=%EB%A7%88%ED%8A%B8%2F%EC%87%BC%ED%95%91&limit=20')
+      .then(r => r.ok ? r.json() : [])
+      .then((items: any[]) => {
+        if (!Array.isArray(items)) return;
+        const grouped: Record<string, any[]> = { costco: [], traderjoes: [], heb: [], centralmarket: [] };
+        for (const item of items) {
+          const t = (item.title || '').toLowerCase();
+          if ((t.includes('costco') || t.includes('코스트코')) && grouped.costco.length < 3) grouped.costco.push(item);
+          else if ((t.includes('trader') || t.includes('트레이더')) && grouped.traderjoes.length < 3) grouped.traderjoes.push(item);
+          else if ((t.includes('heb') || t.includes('에이치이비')) && grouped.heb.length < 3) grouped.heb.push(item);
+          else if ((t.includes('central market') || t.includes('센트럴')) && grouped.centralmarket.length < 3) grouped.centralmarket.push(item);
+        }
+        setMartNews(grouped);
+      })
+      .catch(() => {});
+  }, []);
+
   // Fetch hot deals
   const [hotDeals, setHotDeals] = useState<any[]>([]);
   const [loadingDeals, setLoadingDeals] = useState(true);
@@ -1740,101 +1760,97 @@ export default function Home() {
       </section>
 
       {/* 마트 픽 섹션 */}
-      <section className="py-20 bg-gradient-to-b from-white to-slate-50">
+      <section className="py-16 bg-gradient-to-b from-white to-slate-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               <ShoppingCart className="h-8 w-8 text-primary" />
               <div>
                 <h2 className="text-xl md:text-4xl font-bold">마트 픽 🛒</h2>
-                <p className="text-slate-500 mt-1 text-sm md:text-base">DFW 인기 마트 신상 & 핫 아이템</p>
+                <p className="text-slate-500 mt-1 text-sm md:text-base">한인들이 자주 가는 DFW 마트 최신 소식</p>
               </div>
             </div>
-            <Link href="/shopping">
+            <Link href="/deals">
               <Button variant="ghost" className="gap-2">
-                전체 보기 <ArrowRight className="h-4 w-4" />
+                핫딜 보기 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
 
           {/* 마트 카드 4개 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {[
+            {([
               {
-                id: "costco",
+                id: "costco" as const,
                 emoji: "🔴",
                 name: "코스트코",
                 tagline: "대용량 & 가성비",
                 color: "from-red-600 to-red-700",
-                items: ["비비고 만두", "커클랜드 코코넛오일", "치킨 브레스트"],
+                href: "https://www.costco.com",
+                fallback: ["멤버십 Executive 할인", "커클랜드 시그니처 특가", "푸드코트 핫도그 $1.50"],
               },
               {
-                id: "traderjoes",
+                id: "traderjoes" as const,
                 emoji: "🌿",
                 name: "트레이더 조",
                 tagline: "유니크 & 시즌 픽",
                 color: "from-orange-500 to-red-500",
-                items: ["오렌지 치킨", "베이글 시즈닝", "쿠키 버터"],
+                href: "https://www.traderjoes.com",
+                fallback: ["오렌지 치킨 신상", "베이글 시즈닝 핫템", "쿠키 버터 시즌 한정"],
               },
               {
-                id: "centralmarket",
+                id: "centralmarket" as const,
                 emoji: "🌟",
                 name: "센트럴 마켓",
                 tagline: "프리미엄 식재료",
                 color: "from-green-600 to-emerald-700",
-                items: ["부라타 치즈", "자연산 연어", "아사이베리"],
+                href: "https://www.centralmarket.com",
+                fallback: ["유기농 & 프리미엄", "현지 농장 직거래", "HEB 계열 프리미엄"],
               },
               {
-                id: "heb",
+                id: "heb" as const,
                 emoji: "🤠",
                 name: "HEB",
-                tagline: "텍사스 로컬 신상",
+                tagline: "텍사스 로컬 No.1",
                 color: "from-red-700 to-red-800",
-                items: ["타말레스", "텍사스 자몽", "크리미 아이스크림"],
+                href: "https://www.heb.com",
+                fallback: ["텍사스 자몽 제철", "HEB 브랜드 특가", "주간 세일 업데이트"],
               },
-            ].map((store) => (
-              <Link key={store.id} href={`/shopping#${store.id}`}>
-                <div
-                  className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group h-full"
-                  onClick={() => {}}
-                >
-                  {/* 컬러 상단 */}
-                  <div className={`bg-gradient-to-br ${store.color} p-5 text-white`}>
-                    <div className="text-3xl mb-2">{store.emoji}</div>
-                    <div className="font-bold text-lg leading-tight">{store.name}</div>
-                    <div className="text-white/80 text-xs mt-1">{store.tagline}</div>
-                  </div>
-                  {/* 아이템 미리보기 */}
-                  <div className="bg-white p-4 border border-t-0 rounded-b-2xl">
-                    <ul className="space-y-1.5">
-                      {store.items.map((item, i) => (
-                        <li key={i} className="text-sm text-slate-700 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-3 flex items-center gap-1 text-xs text-primary font-medium group-hover:gap-2 transition-all">
-                      더 보기 <ArrowRight className="h-3 w-3" />
+            ] as const).map((store) => {
+              const news = martNews[store.id] || [];
+              return (
+                <a key={store.id} href={store.href} target="_blank" rel="noopener noreferrer">
+                  <div className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group h-full">
+                    <div className={`bg-gradient-to-br ${store.color} p-5 text-white`}>
+                      <div className="text-3xl mb-2">{store.emoji}</div>
+                      <div className="font-bold text-lg leading-tight">{store.name}</div>
+                      <div className="text-white/80 text-xs mt-1">{store.tagline}</div>
+                    </div>
+                    <div className="bg-white p-4 border border-t-0 rounded-b-2xl">
+                      <ul className="space-y-1.5">
+                        {news.length > 0
+                          ? news.slice(0, 3).map((item: any, i: number) => (
+                              <li key={i} className="text-xs text-slate-700 flex items-start gap-1.5 leading-tight">
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0 mt-1" />
+                                <span className="line-clamp-2">{item.title}</span>
+                              </li>
+                            ))
+                          : store.fallback.map((item, i) => (
+                              <li key={i} className="text-xs text-slate-700 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-200 flex-shrink-0" />
+                                {item}
+                              </li>
+                            ))
+                        }
+                      </ul>
+                      <div className="mt-3 flex items-center gap-1 text-xs text-primary font-medium group-hover:gap-2 transition-all">
+                        {news.length > 0 ? '최신 소식 보기' : '사이트 바로가기'} <ArrowRight className="h-3 w-3" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* Glass Cart 배지 */}
-          <div className="mt-5 flex items-center gap-2 justify-center">
-            <span className="text-xs text-slate-400">콘텐츠 제공:</span>
-            <a
-              href="https://youtube.com/channel/UCzikZfE3N5Lx3t9xWlh8wUg"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-red-600 hover:underline"
-            >
-              <Gift className="h-3 w-3" />
-              Glass Cart YouTube
-            </a>
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>
