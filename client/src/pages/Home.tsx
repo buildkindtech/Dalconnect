@@ -217,6 +217,10 @@ export default function Home() {
   const { data: listingsData, isLoading: loadingListings } = useListings({ limit: 6 });
   const { data: categories } = useCategories();
   
+  useEffect(() => {
+    document.title = 'DalKonnect | 달라스 한인 업체·뉴스·커뮤니티';
+  }, []);
+
   // Fetch random restaurant for "Restaurant of the Day"
   const [restaurantOfDay, setRestaurantOfDay] = useState<any>(null);
   useEffect(() => {
@@ -417,9 +421,6 @@ export default function Home() {
   const recentNews = newsByCat.flatMap(c => c.items).slice(0, 8);
   const recentBlogs = blogPosts?.slice(0, 4) ?? [];
   const recentListings = listingsData?.items ?? [];
-  const trending: any[] = [];
-  const recent: any[] = [];
-  const popularSearches: any[] = [];
 
   // Get count for each category
   const getCategoryCount = (categoryId: string) => {
@@ -469,7 +470,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* Hero Section — 100vw 탈출 (사이드 광고 컬럼 무시) */}
       <section
-        className="relative h-[240px] md:h-[600px] flex items-center justify-center bg-cover bg-center"
+        className="relative h-[320px] md:h-[600px] flex items-center justify-center bg-cover bg-center"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url(https://images.unsplash.com/photo-1545194445-dddb8f4487c6?w=1600&q=80)`,
           width: '100vw',
@@ -481,7 +482,7 @@ export default function Home() {
             DFW 한인 커뮤니티의 모든 것
           </h1>
           <p className="hidden md:block text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-slate-200">
-            달라스-포트워스 지역 {1210}개 한인 업체 정보와 최신 한인 뉴스
+            달라스-포트워스 지역 1,175개 한인 업체 정보와 매일 최신 한인 뉴스
           </p>
 
           {/* Big Search Bar with Autocomplete */}
@@ -576,6 +577,19 @@ export default function Home() {
             )}
           </div>
 
+          {/* 신뢰 지표 배지 */}
+          <div className="flex justify-center gap-3 mt-3 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-semibold">
+              <span>🏪</span><span>업체 1,175+</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-semibold">
+              <span>📰</span><span>매일 뉴스 업데이트</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-semibold">
+              <span>👥</span><span>DFW 한인 커뮤니티</span>
+            </div>
+          </div>
+
           {/* Popular Search Tags */}
           <div className="mt-3 md:mt-6 flex flex-wrap gap-2 md:gap-3 justify-center">
             {POPULAR_SEARCH_TAGS.map((tag) => (
@@ -591,7 +605,19 @@ export default function Home() {
         </div>
       </section>
 
-
+      {/* 업체 등록 CTA 배너 */}
+      <section className="bg-gradient-to-r from-blue-600 to-blue-700 py-3">
+        <div className="container mx-auto px-4 flex items-center justify-between gap-3">
+          <p className="text-white text-sm font-semibold">
+            🏪 내 업체를 달라스 한인들에게 알리세요
+          </p>
+          <Link href="/business/register">
+            <Button size="sm" variant="secondary" className="text-blue-700 font-bold text-xs whitespace-nowrap flex-shrink-0">
+              무료 등록 →
+            </Button>
+          </Link>
+        </div>
+      </section>
 
       {/* 히어로 바로 아래 광고 배너 (데스크탑) */}
       {featured.length > 0 && (
@@ -908,48 +934,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trending Businesses - NEW */}
-      {trending.length > 0 && (
-        <section className="py-12 bg-gradient-to-b from-primary/5 to-white">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <div>
-                  <h2 className="text-xl md:text-4xl font-bold">이번 주 인기 업체</h2>
-                  <p className="text-xs text-slate-500 mt-0.5 md:mt-1">높은 평점과 많은 리뷰를 받은 업체들</p>
-                </div>
-              </div>
-              <Link href="/businesses?sort=rating">
-                <Button variant="ghost" className="gap-1 text-sm">전체 보기 <ArrowRight className="h-4 w-4" /></Button>
-              </Link>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {trending.slice(0, 6).map((biz) => (
-                <Link key={biz.id} href={`/businesses/${biz.id}`}>
-                  <div className="flex gap-3 py-3 items-center hover:bg-slate-50 rounded-lg px-1 transition-colors">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
-                      {biz.photos?.[0] ? (
-                        <img src={biz.photos[0]} alt={biz.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-primary/10 flex items-center justify-center text-2xl">🏢</div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm md:text-base font-bold text-slate-800 truncate">{biz.name}</p>
-                      <p className="text-xs md:text-sm text-slate-500 truncate">{biz.category} · {biz.city || biz.address}</p>
-                      {biz.rating > 0 && (
-                        <p className="text-xs md:text-sm text-amber-500 font-semibold mt-0.5">★ {biz.rating.toFixed(1)}</p>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* 광고 배너 — 뉴스 섹션 바로 위 */}
       {featured.length > 0 && (
         <section className="py-4 bg-white border-t border-slate-100">
@@ -1231,46 +1215,6 @@ export default function Home() {
                           등록일: {new Date(biz.created_at).toLocaleDateString('ko-KR')}
                         </p>
                       )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Recent Businesses - NEW */}
-      {recent.length > 0 && (
-        <section className="py-12 bg-slate-50">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                <div>
-                  <h2 className="text-xl md:text-4xl font-bold">신규 등록 업체</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">최근 DalKonnect에 추가된 업체들</p>
-                </div>
-              </div>
-              <Link href="/businesses?sort=recent">
-                <Button variant="ghost" className="gap-1 text-sm">전체 보기 <ArrowRight className="h-4 w-4" /></Button>
-              </Link>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {recent.slice(0, 6).map((biz) => (
-                <Link key={biz.id} href={`/businesses/${biz.id}`}>
-                  <div className="flex gap-3 py-3 items-center hover:bg-slate-50 rounded-lg px-1 transition-colors">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
-                      {biz.photos?.[0] ? (
-                        <img src={biz.photos[0]} alt={biz.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-primary/10 flex items-center justify-center text-2xl">🏢</div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm md:text-base font-bold text-slate-800 truncate">{biz.name}</p>
-                      <p className="text-xs md:text-sm text-slate-500 truncate">{biz.category} · {biz.city || biz.address}</p>
-                      <p className="text-xs text-green-600 font-semibold mt-0.5">🆕 신규</p>
                     </div>
                   </div>
                 </Link>
