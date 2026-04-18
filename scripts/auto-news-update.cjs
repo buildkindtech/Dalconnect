@@ -126,8 +126,6 @@ const RSS_FEEDS = [
   { url: 'https://www.yna.co.kr/rss/health.xml', category: '건강', source: '연합뉴스 건강', city: null },
 
   // 부동산
-  { url: 'https://www.realtor.com/news/feed/', category: '부동산/숙소', source: 'Realtor.com', city: null, translate: true },
-  { url: 'https://www.housingwire.com/feed/', category: '부동산/숙소', source: 'HousingWire', city: null, translate: true },
   { url: 'https://www.redfin.com/blog/feed/', category: '부동산/숙소', source: 'Redfin Blog', city: null, translate: true },
   { url: 'https://feeds.feedburner.com/TheMortgageReports', category: '부동산/숙소', source: 'The Mortgage Reports', city: null, translate: true },
   { url: 'https://feeds.feedburner.com/fortunebuilders', category: '부동산/숙소', source: 'Fortune Builders', city: null, translate: true },
@@ -139,15 +137,19 @@ const RSS_FEEDS = [
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: '월드뉴스', source: 'BBC World', city: null, translate: true },
 
   // 육아
-  { url: 'https://www.ibabynews.com/rss/S1N4.xml', category: '육아', source: '베이비뉴스 육아교육', city: null },
-  { url: 'https://www.ibabynews.com/rss/S1N3.xml', category: '육아', source: '베이비뉴스 생활건강', city: null },
-  { url: 'https://www.ibabynews.com/rss/S1N2.xml', category: '육아', source: '베이비뉴스 임신출산', city: null },
   { url: 'https://www.mother.ly/feed/', category: '육아', source: 'Motherly', city: null, translate: true },
+  { url: 'https://rss.donga.com/child.xml', category: '육아', source: '동아 육아', city: null },
+
+  // 이민/비자
+  { url: 'https://www.uscis.gov/newsroom/news-releases/feed', category: '이민/비자', source: 'USCIS', city: null, translate: true },
+  { url: 'https://www.uscis.gov/newsroom/alerts/feed', category: '이민/비자', source: 'USCIS 공지', city: null, translate: true },
+  { url: 'https://travel.state.gov/content/travel/en/News/visas-news.html.rss.xml', category: '이민/비자', source: '미국무부 비자', city: null, translate: true },
+  { url: 'https://www.boundless.com/blog/feed/', category: '이민/비자', source: 'Boundless Immigration', city: null, translate: true },
 
   // 취업/사업
   { url: 'https://www.entrepreneur.com/latest/feed', category: '취업/사업', source: 'Entrepreneur', city: null, translate: true },
   { url: 'https://www.inc.com/rss', category: '취업/사업', source: 'Inc.com', city: null, translate: true },
-  { url: 'https://feeds.feedburner.com/SmallBusinessTrends', category: '취업/사업', source: 'Small Business Trends', city: null, translate: true },
+  { url: 'https://www.yna.co.kr/rss/industry.xml', category: '취업/사업', source: '연합뉴스 산업', city: null },
   { url: 'https://www.fastcompany.com/latest/rss', category: '취업/사업', source: 'Fast Company', city: null, translate: true },
   { url: 'https://fortune.com/feed', category: '취업/사업', source: 'Fortune', city: null, translate: true },
   { url: 'https://rss.donga.com/economy.xml', category: '취업/사업', source: '동아 경제', city: null },

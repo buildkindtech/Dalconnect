@@ -264,6 +264,15 @@ export default function Home() {
     fetchPopularPosts();
   }, []);
 
+  // Fetch immigration/visa news
+  const [immigrationNews, setImmigrationNews] = useState<any[]>([]);
+  useEffect(() => {
+    fetch('/api/news?category=%EC%9D%B4%EB%AF%BC%2F%EB%B9%84%EC%9E%90&limit=4')
+      .then(r => r.ok ? r.json() : [])
+      .then(d => setImmigrationNews(Array.isArray(d) ? d.slice(0, 4) : []))
+      .catch(() => {});
+  }, []);
+
   // Fetch hot deals
   const [hotDeals, setHotDeals] = useState<any[]>([]);
   const [loadingDeals, setLoadingDeals] = useState(true);
@@ -1622,6 +1631,67 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 이민/비자 섹션 */}
+      <section className="py-12 bg-gradient-to-r from-indigo-50 to-blue-50 border-y border-indigo-100">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl md:text-3xl font-bold flex items-center gap-2">
+                <span>📋</span> 이민·비자 뉴스
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">USCIS 공지 · 비자 정책 · 이민법 최신 업데이트</p>
+            </div>
+            <Link href="/news?category=%EC%9D%B4%EB%AF%BC%2F%EB%B9%84%EC%9E%90">
+              <Button variant="outline" size="sm" className="gap-1 border-indigo-300 text-indigo-700 hover:bg-indigo-50 font-semibold">
+                더 보기 <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+            {immigrationNews.length > 0 ? immigrationNews.map((item: any) => (
+              <Link key={item.id} href={`/news/${item.id}`}>
+                <div className="flex gap-3 bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow border border-indigo-100">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{item.source}</span>
+                    <p className="text-sm font-bold text-slate-800 line-clamp-2 mt-1 leading-snug">{item.title}</p>
+                    <p className="text-xs text-slate-400 mt-1">{new Date(item.published_date || item.created_at).toLocaleDateString('ko-KR')}</p>
+                  </div>
+                  {item.thumbnail_url && (
+                    <img src={item.thumbnail_url} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                  )}
+                </div>
+              </Link>
+            )) : (
+              <div className="md:col-span-2 bg-white rounded-xl p-4 border border-indigo-100 text-center text-slate-400 text-sm">
+                이민/비자 뉴스를 수집 중입니다. 곧 업데이트됩니다.
+              </div>
+            )}
+          </div>
+
+          {/* 빠른 링크 */}
+          <div className="flex flex-wrap gap-2">
+            <a href="https://www.uscis.gov" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
+              🏛️ USCIS 공식사이트
+            </a>
+            <a href="https://travel.state.gov" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
+              ✈️ 비자 신청 (State.gov)
+            </a>
+            <a href="https://www.uscis.gov/tools/track-a-case" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
+              🔍 케이스 추적
+            </a>
+            <Link href="/community?category=Q%26A">
+              <span className="flex items-center gap-1.5 bg-indigo-600 text-white rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer">
+                💬 이민 Q&A 커뮤니티
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Community Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
@@ -1632,11 +1702,18 @@ export default function Home() {
               </h2>
               <p className="text-slate-600 mt-2">달라스 한인들이 함께 나누는 이야기</p>
             </div>
-            <Link href="/community">
-              <Button variant="ghost" className="gap-2">
-                전체 보기 <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/community/new">
+                <Button size="sm" className="gap-1.5 font-semibold shadow-sm">
+                  ✍️ 글쓰기
+                </Button>
+              </Link>
+              <Link href="/community">
+                <Button variant="ghost" size="sm" className="gap-1">
+                  전체 보기 <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {loadingCommunity ? (
