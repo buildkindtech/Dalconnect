@@ -78,7 +78,16 @@ async function handleGetPosts(pool: pg.Pool, req: VercelRequest, res: VercelResp
   }
 
   let orderBy = 'ORDER BY is_pinned DESC, created_at DESC';
-  if (sort === 'popular') orderBy = 'ORDER BY likes DESC, views DESC';
+  if (sort === 'popular') {
+    // 최신성 + 인기 혼합: 7일 이내 글은 likes*3 보너스, 30일 이내는 likes*1.5
+    orderBy = `ORDER BY is_pinned DESC,
+      (likes * CASE
+        WHEN created_at > NOW() - INTERVAL '7 days' THEN 3
+        WHEN created_at > NOW() - INTERVAL '30 days' THEN 1.5
+        ELSE 1
+      END + views * 0.1) DESC,
+      created_at DESC`;
+  }
   if (sort === 'comments') orderBy = 'ORDER BY comment_count DESC';
 
   params.push(pg_limit, offset);
