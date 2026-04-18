@@ -103,6 +103,8 @@ const RSS_FEEDS = [
   // DFW 로컬 뉴스 (영어 → 번역)
   { url: 'https://www.wfaa.com/feeds/syndication/rss/news', category: '로컬뉴스', source: 'WFAA', city: 'dallas', translate: true },
   { url: 'https://www.nbcdfw.com/news/feed/', category: '로컬뉴스', source: 'NBC DFW', city: 'dallas', translate: true },
+  { url: 'https://www.dallasnews.com/arcio/rss/', category: '로컬뉴스', source: 'Dallas Morning News', city: 'dallas', translate: true },
+  { url: 'https://www.fox4news.com/feeds/syndication/rss/news', category: '로컬뉴스', source: 'Fox4 DFW', city: 'dallas', translate: true },
 
   // 이민/비자
   { url: 'https://www.murthy.com/feed/', category: '이민/비자', source: 'Murthy Law', city: null, translate: true },
