@@ -64,20 +64,27 @@ async function fetchMusicChart() {
   return items;
 }
 
-// ─── Netflix Chart: flixpatrol ────────────────────────────────────
+// ─── Netflix Chart: TMDB trending/week × Netflix KR ─────────────
+// 소스: TMDB 이번 주 트렌딩 TV × Netflix KR(provider=8) 교집합
+// FlixPatrol은 JS 렌더링으로 정적 파싱 불가 → TMDB 두 엔드포인트 교집합이 현재 최선
 async function fetchNetflixChart() {
-  console.log('📺 Netflix chart (TMDB 넷플릭스 한국)...');
+  console.log('📺 Netflix chart (TMDB 트렌딩 × Netflix KR)...');
   const items = [];
-  
+  const TMDB_KEY = process.env.TMDB_API_KEY;
+  if (!TMDB_KEY) { console.log('  ⚠️ TMDB_API_KEY 없음'); return items; }
+
   try {
-    const TMDB_KEY = process.env.TMDB_API_KEY;
-    if (!TMDB_KEY) throw new Error('TMDB_API_KEY 없음');
+    // 현재 방영 중인 한국 Netflix 작품 (최신순)
+    // on_the_air = 지금 방영 중, with_watch_providers=8 = Netflix, with_origin_country=KR
+    const sixMonthsAgo = new Date(Date.now() - 180 * 86400000).toISOString().slice(0, 10);
     const res = await fetchWithTimeout(
-      `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&language=ko-KR&with_watch_providers=8&watch_region=KR&with_origin_country=KR&sort_by=first_air_date.desc&page=1`
+      `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&language=ko-KR&with_origin_country=KR&with_watch_providers=8&watch_region=KR&sort_by=first_air_date.desc&first_air_date.gte=${sixMonthsAgo}&page=1`
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    data.results?.filter(t => t.poster_path).slice(0, 10).forEach((t, i) => {
+    const merged = (data.results || []).filter(t => t.poster_path).slice(0, 10);
+
+    merged.forEach((t, i) => {
       items.push({
         chart_type: 'netflix',
         rank: i + 1,
@@ -89,64 +96,9 @@ async function fetchNetflixChart() {
         description: `평점 ${t.vote_average.toFixed(1)} | 첫방송: ${t.first_air_date}`,
       });
     });
-    console.log(`  ✅ Netflix ${items.length}개`);
-    return items;
+    console.log(`  ✅ Netflix ${items.length}개 (트렌딩×넷플릭스 교집합 ${trendingOnNetflix.length}개)`);
   } catch (e) {
-    console.log(`  ⚠️ TMDB Netflix 실패: ${e.message}`);
-  }
-
-  // Fallback: flixpatrol 스크래이핑
-  try {
-    const res = await fetchWithTimeout('https://flixpatrol.com/top10/netflix/south-korea/', {
-      headers: { 'Accept': 'text/html', 'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8' }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    
-    // Parse flixpatrol table rows
-    const tableRegex = /<tr[^>]*>[\s\S]*?<td[^>]*>(\d+)<\/td>[\s\S]*?class="table-title"[^>]*>\s*<a[^>]*>([^<]+)</g;
-    let match;
-    while ((match = tableRegex.exec(html)) !== null && items.length < 10) {
-      items.push({
-        chart_type: 'netflix',
-        rank: parseInt(match[1]),
-        title_ko: match[2].trim(),
-        title_en: match[2].trim(),
-        artist: '',
-        platform: 'Netflix',
-        score: String(99 - items.length * 3),
-      });
-    }
-  } catch (e) {
-    console.log(`  ⚠️ flixpatrol failed: ${e.message}`);
-  }
-
-  // Fallback: Netflix tudum / JSON feed
-  if (items.length === 0) {
-    try {
-      const res = await fetchWithTimeout('https://www.netflix.com/tudum/top10/south-korea');
-      if (res.ok) {
-        const html = await res.text();
-        const jsonMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-        if (jsonMatch) {
-          const data = JSON.parse(jsonMatch[1]);
-          const shows = data?.props?.pageProps?.data?.weeklyTopTen || [];
-          shows.slice(0, 10).forEach((show, i) => {
-            items.push({
-              chart_type: 'netflix',
-              rank: i + 1,
-              title_ko: show.showName || `Show ${i+1}`,
-              title_en: show.showName || `Show ${i+1}`,
-              artist: '',
-              platform: 'Netflix',
-              score: String(99 - i * 3),
-            });
-          });
-        }
-      }
-    } catch (e) {
-      console.log(`  ⚠️ Netflix tudum fallback failed: ${e.message}`);
-    }
+    console.log(`  ⚠️ Netflix chart 실패: ${e.message}`);
   }
 
   return items;
@@ -207,31 +159,56 @@ async function fetchMovieChart() {
   return items;
 }
 
-// ─── Drama Chart: TMDB 한국 드라마 인기순 ────────────────────────
+// ─── Drama Chart: TMDB 이번 주 트렌딩 한국 드라마 ─────────────────
 async function fetchDramaChart() {
-  console.log('📺 Drama chart (TMDB 한국 드라마)...');
+  console.log('📺 Drama chart (TMDB 이번 주 트렌딩 한국)...');
   const items = [];
   try {
     const TMDB_KEY = process.env.TMDB_API_KEY;
     if (!TMDB_KEY) throw new Error('TMDB_API_KEY 없음');
+    // trending/tv/week — 이번 주 실제 인기 상승 기준 (popularity.desc보다 정확)
     const res = await fetchWithTimeout(
-      `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&language=ko-KR&with_origin_country=KR&sort_by=popularity.desc&first_air_date.gte=2025-01-01&page=1`
+      `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}&language=ko-KR`
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    data.results?.slice(0, 10).forEach((t, i) => {
+    // 한국 원산지 작품만 필터
+    const krShows = data.results?.filter(t => t.origin_country?.includes('KR') && t.poster_path) || [];
+    krShows.slice(0, 10).forEach((t, i) => {
       items.push({
         chart_type: 'drama',
         rank: i + 1,
         title_ko: t.name,
         title_en: t.original_name,
         platform: 'TV드라마',
-        thumbnail_url: t.poster_path ? `https://image.tmdb.org/t/p/w342${t.poster_path}` : null,
+        thumbnail_url: `https://image.tmdb.org/t/p/w342${t.poster_path}`,
         score: String((t.vote_average * 10).toFixed(1)),
         description: `평점 ${t.vote_average.toFixed(1)} | 첫방송: ${t.first_air_date}`,
       });
     });
-    console.log(`  ✅ TMDB 드라마 ${items.length}개`);
+    // 한국 작품이 10개 미만이면 discover로 보충
+    if (items.length < 5) {
+      const res2 = await fetchWithTimeout(
+        `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&language=ko-KR&with_origin_country=KR&sort_by=popularity.desc&first_air_date.gte=2025-01-01&page=1`
+      );
+      if (res2.ok) {
+        const data2 = await res2.json();
+        const existing = new Set(items.map(i => i.title_ko));
+        data2.results?.filter(t => t.poster_path && !existing.has(t.name)).slice(0, 10 - items.length).forEach((t, i) => {
+          items.push({
+            chart_type: 'drama',
+            rank: items.length + 1,
+            title_ko: t.name,
+            title_en: t.original_name,
+            platform: 'TV드라마',
+            thumbnail_url: `https://image.tmdb.org/t/p/w342${t.poster_path}`,
+            score: String((t.vote_average * 10).toFixed(1)),
+            description: `평점 ${t.vote_average.toFixed(1)} | 첫방송: ${t.first_air_date}`,
+          });
+        });
+      }
+    }
+    console.log(`  ✅ TMDB 드라마 트렌딩 ${items.length}개`);
   } catch (e) {
     console.log(`  ⚠️ Drama chart 실패: ${e.message}`);
   }
