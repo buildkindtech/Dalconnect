@@ -631,7 +631,7 @@ export default function Home() {
           <p className="text-white text-sm font-semibold">
             🏪 내 업체를 달라스 한인들에게 알리세요
           </p>
-          <Link href="/business/register">
+          <Link href="/register-business">
             <Button size="sm" variant="secondary" className="text-blue-700 font-bold text-xs whitespace-nowrap flex-shrink-0">
               무료 등록 →
             </Button>
