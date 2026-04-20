@@ -5,7 +5,7 @@
  */
 const https = require('https');
 
-const GOOGLE_AI_KEY = 'AIzaSyAhF8MA0mxt6PfmJMwMGABUNyxXoBnBYO0';
+const GOOGLE_AI_KEY = process.env.GOOGLE_AI_KEY;
 const MODEL = 'gemini-2.5-flash';
 
 /**

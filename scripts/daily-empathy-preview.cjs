@@ -18,7 +18,7 @@ const FormData = require('form-data');
 const https = require('https');
 const { askAI } = require('../cron/ai.cjs');
 
-const GOOGLE_AI_KEY = 'AIzaSyAhF8MA0mxt6PfmJMwMGABUNyxXoBnBYO0';
+const GOOGLE_AI_KEY = process.env.GOOGLE_AI_KEY;
 
 // ── Imagen 일러스트 배경 생성 ─────────────────────────────────
 async function genImagenBg(prompt) {
@@ -50,7 +50,7 @@ async function genImagenBg(prompt) {
   });
 }
 
-const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const DB_URL = 'postgresql://neondb_owner:npg_RytfuOoH98hJ@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
 const OUT_DIR = '/tmp/empathy-carousel-today';
 const PREVIEW_FILE = '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/data/empathy-preview.json';
 const POSTED_FILE  = '/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/data/empathy-posted-ids.json';
