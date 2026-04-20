@@ -58,7 +58,7 @@ export default function Marketplace() {
       const response = await fetch(`/api/market?${params}`);
       if (!response.ok) throw new Error('Failed to fetch listings');
       const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data) ? { items: data, pagination: null } : data as { items: any[]; pagination: { totalPages: number } | null };
     },
   });
 
@@ -157,7 +157,7 @@ export default function Marketplace() {
           <>
             {/* 모두마켓 스타일 리스트 */}
             <div className="bg-white rounded-xl border divide-y overflow-hidden">
-              {(Array.isArray(data) ? data : data?.items || []).map((listing: any) => (
+              {(data?.items || []).map((listing: any) => (
                 <Link key={listing.id} href={`/marketplace/${listing.id}`}>
                   <div className="flex items-center gap-4 px-4 py-3.5 hover:bg-slate-50 transition-colors cursor-pointer">
                     {/* 썸네일 */}
@@ -234,7 +234,7 @@ export default function Marketplace() {
                 </span>
                 <Button
                   variant="outline"
-                  onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
+                  onClick={() => setPage((p) => Math.min(data?.pagination?.totalPages ?? p, p + 1))}
                   disabled={page === data.pagination.totalPages}
                 >
                   다음

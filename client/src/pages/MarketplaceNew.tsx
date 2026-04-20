@@ -78,6 +78,8 @@ export default function MarketplaceNew() {
     contact_info: '',
     author_name: '',
     location: '',
+    nickname: '',
+    password: '',
   });
 
   const handleChange = (field: string, value: string) => {
