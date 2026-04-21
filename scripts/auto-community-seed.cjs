@@ -88,6 +88,7 @@ JSON 배열로만 응답 (설명 없이):
   ...
 ]`;
 
+  // Gemini 시도
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
@@ -98,14 +99,33 @@ JSON 배열로만 응답 (설명 없이):
       }),
     });
     const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const jsonMatch = raw.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) { console.log('⚠️ JSON 파싱 실패'); return []; }
+    if (!jsonMatch) throw new Error('JSON 파싱 실패');
     const posts = JSON.parse(jsonMatch[0]);
-    // 중복 제목 최종 필터
     return posts.filter(p => !existingTitles.has(p.title));
   } catch(e) {
-    console.log('⚠️ Gemini 에러:', e.message);
+    console.log('⚠️ Gemini 실패, Claude Haiku 폴백:', e.message);
+  }
+
+  // Claude CLI 폴백 (Max Pro 구독 사용 — API 비용 없음)
+  try {
+    const { spawnSync } = require('child_process');
+    const result = spawnSync('/opt/homebrew/bin/claude', ['-p', '--output-format', 'text'], {
+      input: prompt,
+      encoding: 'utf8',
+      timeout: 90000,
+    });
+    if (result.status !== 0) throw new Error(result.stderr || 'claude CLI 실패');
+    const raw = (result.stdout || '').trim();
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error('JSON 파싱 실패');
+    const posts = JSON.parse(jsonMatch[0]);
+    console.log(`✅ Claude CLI 폴백으로 ${posts.length}개 생성`);
+    return posts.filter(p => !existingTitles.has(p.title));
+  } catch(e) {
+    console.log('⚠️ Claude CLI 에러:', e.message);
     return [];
   }
 }
