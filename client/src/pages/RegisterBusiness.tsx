@@ -232,9 +232,9 @@ export default function RegisterBusiness() {
               <div className="mb-6">
                 <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto" />
               </div>
-              <h1 className="text-3xl font-bold mb-4 text-slate-900">
+              <h2 className="text-3xl font-bold mb-4 text-slate-900">
                 등록이 완료되었습니다!
-              </h1>
+              </h2>
               <p className="text-lg text-slate-600 mb-6">
                 제출하신 업체 정보를 검토 후 <strong>24시간 내</strong>에 승인됩니다.
               </p>

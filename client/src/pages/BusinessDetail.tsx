@@ -16,7 +16,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useBusiness } from "@/lib/api";
+import { useBusiness, useBusinesses } from "@/lib/api";
+import BusinessCard from "@/components/BusinessCard";
 import { getCategoryImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import { useToast } from "@/hooks/use-toast";
 
@@ -35,6 +36,8 @@ const DAYS_KO: Record<string, string> = {
 export default function BusinessDetail() {
   const { id } = useParams();
   const { data: business, isLoading, error } = useBusiness(id!);
+  // 같은 카테고리 관련 업소 — 내부링크(SEO) + 탐색 유도
+  const { data: relatedData } = useBusinesses({ category: business?.category, city: business?.city, limit: 9 });
   const { toast } = useToast();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
@@ -251,7 +254,36 @@ export default function BusinessDetail() {
     }
   };
 
+  // LocalBusiness JSON-LD 스키마 (검색결과 별점 표시)
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: business.name_ko || business.name_en,
+    description: business.description || `${business.category} · 달라스 한인 업소`,
+    url: `https://dalkonnect.com/business/${business.id}`,
+    telephone: business.phone || undefined,
+    address: business.address ? {
+      '@type': 'PostalAddress',
+      streetAddress: business.address,
+      addressLocality: business.city || 'Dallas',
+      addressRegion: 'TX',
+      addressCountry: 'US',
+    } : undefined,
+    image: business.photos?.[0] || undefined,
+    ...(business.rating && parseFloat(business.rating) > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: parseFloat(business.rating).toFixed(1),
+        reviewCount: business.review_count || 1,
+        bestRating: '5',
+        worstRating: '1',
+      },
+    } : {}),
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="min-h-screen bg-slate-50">
       {/* Cover Image Gallery */}
       <div className="w-full h-[400px] bg-slate-900 relative overflow-hidden">
@@ -643,7 +675,28 @@ export default function BusinessDetail() {
             )}
           </div>
         </div>
+
+        {/* 관련 업소 — 내부링크/탐색 (SEO) */}
+        {relatedData?.businesses && relatedData.businesses.filter(b => b.id !== business.id).length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-xl md:text-2xl font-bold mb-1">
+              같은 카테고리 업소 <span className="text-primary">{business.category}</span>
+            </h2>
+            <p className="text-sm text-slate-500 mb-5">달라스 한인 {business.category} 더 둘러보기</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
+              {relatedData.businesses.filter(b => b.id !== business.id).slice(0, 6).map((b) => (
+                <BusinessCard key={b.id} business={b} />
+              ))}
+            </div>
+            <div className="mt-6 text-center">
+              <Link href="/businesses">
+                <Button variant="outline">달라스 한인 업소 전체 보기</Button>
+              </Link>
+            </div>
+          </section>
+        )}
       </div>
     </div>
+    </>
   );
 }

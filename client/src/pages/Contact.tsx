@@ -47,7 +47,7 @@ export default function Contact() {
         <Card className="max-w-lg w-full shadow-xl">
           <CardContent className="pt-12 pb-8 text-center">
             <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold mb-4">문의가 접수되었습니다!</h1>
+            <h2 className="text-3xl font-bold mb-4">문의가 접수되었습니다!</h2>
             <p className="text-lg text-slate-600 mb-2">빠른 시일 내에 답변 드리겠습니다.</p>
             <p className="text-slate-500 mb-8">info@dalkonnect.com</p>
             <Button onClick={() => window.location.href = '/'} size="lg">
