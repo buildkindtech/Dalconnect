@@ -141,9 +141,9 @@ function NewsListItem({ news }: { news: NewsItem }) {
         {/* Thumbnail */}
         {news.thumbnail_url ? (
           <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
-            <img 
-              src={news.thumbnail_url} 
-              alt=""
+            <img
+              src={news.thumbnail_url}
+              alt={news.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
               onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
             />
