@@ -133,7 +133,28 @@ export default function NewsDetail() {
       <meta property="og:description" content={metaDesc} />
       <meta property="og:image" content={metaImage} />
       <meta property="og:type" content="article" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={metaTitle} />
+      <meta name="twitter:description" content={metaDesc} />
+      <meta name="twitter:image" content={metaImage} />
       <link rel="canonical" href={`https://dalkonnect.com/news/${newsItem?.id}`} />
+      <script type="application/ld+json">{JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": newsItem?.title,
+        "description": metaDesc,
+        "image": metaImage,
+        "datePublished": newsItem?.published_date,
+        "dateModified": newsItem?.published_date,
+        "publisher": {
+          "@type": "Organization",
+          "name": "DalKonnect",
+          "url": "https://dalkonnect.com",
+          "logo": { "@type": "ImageObject", "url": "https://dalkonnect.com/logo.png" }
+        },
+        "mainEntityOfPage": { "@type": "WebPage", "@id": `https://dalkonnect.com/news/${newsItem?.id}` },
+        "inLanguage": "ko-KR"
+      })}</script>
     </Helmet>
     <div className="bg-slate-50 min-h-screen">
       {/* 뉴스 헤더 + 카테고리 필터 (고정) */}
