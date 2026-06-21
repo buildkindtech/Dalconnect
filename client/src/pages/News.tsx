@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Link, useLocation } from "wouter";
 import { useNews, type NewsItem } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
@@ -273,6 +274,16 @@ export default function News() {
   const newsInfeed = allFeaturedNews.slice(8, 24);
 
   return (
+    <>
+    <Helmet>
+      <title>달라스 한인 뉴스 | DalKonnect</title>
+      <meta name="description" content="달라스-포트워스(DFW) 한인 최신 뉴스 — 로컬, 한국, K-POP, 스포츠, 이민/비자, 경제 뉴스를 매일 업데이트합니다." />
+      <meta property="og:title" content="달라스 한인 뉴스 | DalKonnect" />
+      <meta property="og:description" content="DFW 한인 뉴스 — 로컬, 한국, K-POP, 스포츠, 이민/비자 최신 뉴스" />
+      <meta property="og:url" content="https://dalkonnect.com/news" />
+      <meta property="og:type" content="website" />
+      <link rel="canonical" href="https://dalkonnect.com/news" />
+    </Helmet>
     <div className="bg-slate-50 min-h-screen py-8 md:py-12">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
@@ -434,5 +445,6 @@ export default function News() {
         </div>
       </div>
     </div>
+    </>
   );
 }

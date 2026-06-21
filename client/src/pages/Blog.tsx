@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Link } from "wouter";
 import { Calendar, User, BookOpen, Clock } from "lucide-react";
 import { useState } from "react";
@@ -47,6 +48,16 @@ export default function Blog() {
   const rest = blogs?.slice(3) || [];
 
   return (
+    <>
+    <Helmet>
+      <title>달라스 한인 블로그 | DalKonnect</title>
+      <meta name="description" content="달라스-포트워스(DFW) 한인 생활 정보, 이민/비자, 부동산, 육아, 취업 블로그 — 달라스 한인 커뮤니티 DalKonnect" />
+      <meta property="og:title" content="달라스 한인 블로그 | DalKonnect" />
+      <meta property="og:description" content="DFW 한인 생활 정보 블로그 — 이민/비자, 부동산, 육아, 취업" />
+      <meta property="og:url" content="https://dalkonnect.com/blog" />
+      <meta property="og:type" content="website" />
+      <link rel="canonical" href="https://dalkonnect.com/blog" />
+    </Helmet>
     <div className="min-h-screen bg-slate-50">
       {/* Hero */}
       <section className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white py-12">
@@ -215,5 +226,6 @@ export default function Blog() {
         </div>
       </section>
     </div>
+    </>
   );
 }

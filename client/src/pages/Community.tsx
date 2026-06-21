@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -103,6 +104,16 @@ export default function Community() {
   };
 
   return (
+    <>
+    <Helmet>
+      <title>달라스 한인 커뮤니티 | DalKonnect</title>
+      <meta name="description" content="달라스-포트워스(DFW) 한인 커뮤니티 게시판 — 질문, 정보공유, 생활팁, 부동산, 취업, 육아 이야기" />
+      <meta property="og:title" content="달라스 한인 커뮤니티 | DalKonnect" />
+      <meta property="og:description" content="DFW 한인 커뮤니티 — 질문, 정보공유, 생활팁 게시판" />
+      <meta property="og:url" content="https://dalkonnect.com/community" />
+      <meta property="og:type" content="website" />
+      <link rel="canonical" href="https://dalkonnect.com/community" />
+    </Helmet>
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -317,5 +328,6 @@ export default function Community() {
         </Button>
       </Link>
     </div>
+    </>
   );
 }
