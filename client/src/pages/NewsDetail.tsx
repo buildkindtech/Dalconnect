@@ -3,9 +3,24 @@ import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ExternalLink, Calendar, Building, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useBusiness, type NewsItem } from "@/lib/api";
+import { useBusiness, type NewsItem, type Business } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useEffect } from "react";
+import BusinessCard from "@/components/BusinessCard";
+
+// 뉴스 제목/내용 키워드 → 관련 업소 카테고리 매핑
+function getRelatedBizCategory(title: string, content?: string): string | null {
+  const text = `${title} ${content ?? ''}`.toLowerCase();
+  if (/맛집|식당|레스토랑|음식|카페|주점|술집|barbecue|bbq/.test(text)) return '식당';
+  if (/병원|의료|의사|건강|치료|수술|약국|치과/.test(text)) return '병원';
+  if (/미용|헤어|네일|뷰티|스파|피부과/.test(text)) return '미용실';
+  if (/부동산|집값|주택|렌트|아파트|mortgage/.test(text)) return '부동산';
+  if (/법률|이민|비자|세금|회계|소송|attorney/.test(text)) return '법률/회계';
+  if (/자동차|차량|딜러|사고|운전|car|auto/.test(text)) return '자동차';
+  if (/학원|교육|학교|학생|과외|tutor/.test(text)) return '학원';
+  if (/마트|슈퍼|grocery|시장/.test(text)) return '한인마트';
+  return null;
+}
 
 // Helper function to split content into paragraphs
 function splitIntoParagraphs(content: string): string[] {
@@ -62,6 +77,20 @@ export default function NewsDetail() {
       return allNews; // 현재 기사도 포함 (위치 표시용)
     },
     enabled: !!newsItem?.category
+  });
+
+  // 뉴스 키워드 기반 관련 업소 — 내부링크 SEO
+  const relatedBizCategory = newsItem ? getRelatedBizCategory(newsItem.title, newsItem.content) : null;
+  const { data: relatedBusinesses } = useQuery<Business[]>({
+    queryKey: ['news-related-biz', relatedBizCategory],
+    queryFn: async () => {
+      if (!relatedBizCategory) return [];
+      const res = await fetch(`/api/businesses?category=${encodeURIComponent(relatedBizCategory)}&limit=4`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.businesses ?? [];
+    },
+    enabled: !!relatedBizCategory,
   });
 
   // 페이지 상단으로 스크롤 (기사 이동 시)
@@ -310,6 +339,27 @@ export default function NewsDetail() {
             </div>
           </div>
         </article>
+
+        {/* 달라스 관련 업소 — 뉴스 키워드 기반 내부링크 */}
+        {relatedBusinesses && relatedBusinesses.length > 0 && (
+          <div className="mt-10 border-t pt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold font-ko text-slate-800">
+                달라스 한인 {relatedBizCategory}
+              </h2>
+              <Link href={`/businesses?category=${encodeURIComponent(relatedBizCategory ?? '')}`}>
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                  전체 보기 →
+                </Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {relatedBusinesses.slice(0, 4).map(b => (
+                <BusinessCard key={b.id} business={b} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 같은 카테고리 뉴스 목록 — modu.market 스타일 */}
         {relatedNews && relatedNews.length > 0 && (

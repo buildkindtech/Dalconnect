@@ -16,7 +16,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useBusiness, useBusinesses } from "@/lib/api";
+import { useBusiness, useBusinesses, type NewsItem } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 import BusinessCard from "@/components/BusinessCard";
 import { getCategoryImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +39,17 @@ export default function BusinessDetail() {
   const { data: business, isLoading, error } = useBusiness(id!);
   // 같은 카테고리 관련 업소 — 내부링크(SEO) + 탐색 유도
   const { data: relatedData } = useBusinesses({ category: business?.category, city: business?.city, limit: 9 });
+  // 카테고리 연관 뉴스 — 내부링크 SEO
+  const { data: relatedNews } = useQuery<NewsItem[]>({
+    queryKey: ['biz-related-news', business?.category],
+    queryFn: async () => {
+      const res = await fetch('/api/news?limit=4');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.news ?? data ?? [];
+    },
+    enabled: !!business,
+  });
   const { toast } = useToast();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
@@ -675,6 +687,35 @@ export default function BusinessDetail() {
             )}
           </div>
         </div>
+
+        {/* 관련 뉴스 — 달라스 한인 최신 뉴스 내부링크 */}
+        {relatedNews && relatedNews.length > 0 && (
+          <section className="mt-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">달라스 한인 최신 뉴스</h2>
+              <Link href="/news">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">전체 뉴스 →</Button>
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {relatedNews.slice(0, 4).map(item => (
+                <Link key={item.id} href={`/news/${item.id}`}>
+                  <div className="flex gap-3 p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-colors cursor-pointer">
+                    {item.thumbnail_url && (
+                      <img src={item.thumbnail_url} alt={item.title} className="w-16 h-12 object-cover rounded flex-shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium line-clamp-2 font-ko">{item.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {item.source} · {item.published_date ? new Date(item.published_date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : ''}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 관련 업소 — 내부링크/탐색 (SEO) */}
         {relatedData?.businesses && relatedData.businesses.filter(b => b.id !== business.id).length > 0 && (
