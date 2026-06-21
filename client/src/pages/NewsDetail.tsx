@@ -332,7 +332,7 @@ export default function NewsDetail() {
                   }}
                   className="gap-2"
                 >
-                  <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png" alt="카카오" className="w-5 h-5" />
+                  <img loading="lazy" src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png" alt="카카오" className="w-5 h-5" />
                   카카오 공유
                 </Button>
               </div>

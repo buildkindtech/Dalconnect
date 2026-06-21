@@ -349,7 +349,7 @@ export default function MarketplaceDetail() {
                   {/* 썸네일 */}
                   <div className="w-14 h-14 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden">
                     {r.images?.length > 0 ? (
-                      <img src={r.images[0]} alt={r.title} className="w-full h-full object-cover" />
+                      <img loading="lazy" src={r.images[0]} alt={r.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xl">
                         {r.category === '전자기기' ? '📱' : r.category === '가전/가구' ? '🛋️' : r.category === '자동차' ? '🚗' : r.category === '아이용품' ? '🧸' : '📦'}

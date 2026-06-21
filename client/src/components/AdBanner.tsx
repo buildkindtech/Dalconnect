@@ -54,7 +54,7 @@ function FeaturedBusinessCard({ business }: { business: Business }) {
         {/* 이미지 */}
         <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
           {imageUrl ? (
-            <img src={imageUrl} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <img loading="lazy" src={imageUrl} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           ) : (
             <div className={`w-full h-full flex items-center justify-center ${colorClass} bg-opacity-10`}>
               <span className="text-4xl">{icon}</span>

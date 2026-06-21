@@ -98,7 +98,7 @@ function RoomCard({ post }: { post: typeof DUMMY_POSTS[0] }) {
       {/* 이미지 영역 */}
       <div className="h-40 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center relative">
         {post.thumbnail ? (
-          <img src={post.thumbnail} alt={post.title} className="w-full h-full object-cover" />
+          <img loading="lazy" src={post.thumbnail} alt={post.title} className="w-full h-full object-cover" />
         ) : (
           <Home className="w-12 h-12 text-blue-300" />
         )}

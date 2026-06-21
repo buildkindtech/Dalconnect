@@ -91,7 +91,7 @@ function HeadlineCard({ news, size = 'large' }: { news: NewsItem; size?: 'large'
         {/* Image area */}
         {news.thumbnail_url ? (
           <div className={`${isLarge ? 'h-48 md:h-64' : 'h-40'} overflow-hidden bg-slate-100`}>
-            <img 
+            <img loading="lazy" 
               src={news.thumbnail_url} 
               alt={news.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { useBusiness, useBusinesses, type NewsItem } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import BusinessCard from "@/components/BusinessCard";
 import { getCategoryImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import { useToast } from "@/hooks/use-toast";
@@ -293,8 +294,27 @@ export default function BusinessDetail() {
     } : {}),
   };
 
+  const bizName = business.name_ko || business.name_en;
+  const bizDesc = business.description
+    ? business.description.slice(0, 160)
+    : `달라스 한인 ${business.category} — ${bizName}. dalkonnect.com에서 정보 확인.`;
+  const bizImage = business.photos?.[0] || business.cover_url || business.logo_url || '';
+
   return (
     <>
+      <Helmet>
+        <title>{bizName} | 달라스 한인 {business.category} — DalKonnect</title>
+        <meta name="description" content={bizDesc} />
+        <meta property="og:title" content={`${bizName} | 달라스 한인 ${business.category}`} />
+        <meta property="og:description" content={bizDesc} />
+        {bizImage && <meta property="og:image" content={bizImage} />}
+        <meta property="og:url" content={`https://dalkonnect.com/business/${business.id}`} />
+        <meta property="og:type" content="business.business" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${bizName} | DalKonnect`} />
+        <meta name="twitter:description" content={bizDesc} />
+        {bizImage && <meta name="twitter:image" content={bizImage} />}
+      </Helmet>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="min-h-screen bg-slate-50">
       {/* Cover Image Gallery */}
@@ -702,7 +722,7 @@ export default function BusinessDetail() {
                 <Link key={item.id} href={`/news/${item.id}`}>
                   <div className="flex gap-3 p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-colors cursor-pointer">
                     {item.thumbnail_url && (
-                      <img src={item.thumbnail_url} alt={item.title} className="w-16 h-12 object-cover rounded flex-shrink-0" />
+                      <img src={item.thumbnail_url} alt={item.title} loading="lazy" className="w-16 h-12 object-cover rounded flex-shrink-0" />
                     )}
                     <div className="min-w-0">
                       <p className="text-sm font-medium line-clamp-2 font-ko">{item.title}</p>

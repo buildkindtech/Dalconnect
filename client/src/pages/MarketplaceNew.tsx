@@ -336,7 +336,7 @@ export default function MarketplaceNew() {
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-3">
                 {images.map((img) => (
                   <div key={img.preview} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                    <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                    <img loading="lazy" src={img.preview} alt="" className="w-full h-full object-cover" />
                     {img.uploading && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

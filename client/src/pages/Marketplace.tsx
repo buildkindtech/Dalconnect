@@ -163,7 +163,7 @@ export default function Marketplace() {
                     {/* 썸네일 */}
                     <div className="w-16 h-16 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden">
                       {listing.images?.length > 0 ? (
-                        <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
+                        <img loading="lazy" src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">
                           {listing.category === '전자기기' ? '📱' :

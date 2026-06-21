@@ -144,7 +144,7 @@ export default function Listings() {
                 <Card key={business.id} className="overflow-hidden hover:shadow-md transition-shadow" data-testid={`card-business-${business.id}`}>
                   <div className="flex flex-col sm:flex-row h-full">
                     <div className="w-full sm:w-64 h-48 sm:h-auto relative shrink-0">
-                      <img src={proxyPhotoUrl(business.cover_url) || business.cover_url || ''} alt={business.name_en} className="w-full h-full object-cover" />
+                      <img src={proxyPhotoUrl(business.cover_url) || business.cover_url || ''} alt={business.name_en} loading="lazy" className="w-full h-full object-cover" />
                       {business.featured && <Badge className="absolute top-3 left-3 bg-secondary text-secondary-foreground border-none">추천</Badge>}
                     </div>
                     <CardContent className="p-6 flex-1 flex flex-col justify-between">

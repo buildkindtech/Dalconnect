@@ -118,9 +118,10 @@ function ChartsPreview() {
                   {/* YouTube Thumbnail */}
                   {chartItem.thumbnail_url && (
                     <div className="relative h-36 md:h-48 overflow-hidden">
-                      <img 
-                        src={chartItem.thumbnail_url} 
+                      <img
+                        src={chartItem.thumbnail_url}
                         alt={chartItem.title_ko}
+                        loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
                           // Fallback to gradient background if image fails
@@ -752,7 +753,7 @@ export default function Home() {
                       <div className="flex gap-3 py-2.5 items-start hover:bg-slate-50 rounded-lg px-2 transition-colors cursor-pointer">
                         <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
                           {hasValidImage(news.thumbnail_url) ? (
-                            <img src={news.thumbnail_url} alt={news.title} className="w-full h-full object-cover" />
+                            <img src={news.thumbnail_url} alt={news.title} loading="lazy" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-xl">📰</div>
                           )}
@@ -1552,7 +1553,7 @@ export default function Home() {
                             {/* 이미지 or 이모지 placeholder */}
                             <div className="h-32 relative overflow-hidden">
                               {listing.photos?.[0] ? (
-                                <img src={listing.photos[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                <img src={listing.photos[0]} alt={listing.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                               ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center gap-1">
                                   <span className="text-4xl">{emoji}</span>
@@ -1622,7 +1623,7 @@ export default function Home() {
                     <p className="text-xs text-slate-400 mt-1">{new Date(item.published_date || item.created_at).toLocaleDateString('ko-KR')}</p>
                   </div>
                   {item.thumbnail_url && (
-                    <img src={item.thumbnail_url} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                    <img src={item.thumbnail_url} alt={item.title_ko ?? ''} loading="lazy" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
                   )}
                 </div>
               </Link>

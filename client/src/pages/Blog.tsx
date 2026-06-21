@@ -117,7 +117,7 @@ export default function Blog() {
                         <article className={`bg-white rounded-xl overflow-hidden shadow-sm border hover:shadow-lg transition-all cursor-pointer group ${i === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}>
                           <div className={`relative ${i === 0 ? 'h-64 md:h-80' : 'h-48'} bg-gradient-to-br from-emerald-50 to-teal-100`}>
                             {blog.cover_image ? (
-                              <img src={blog.cover_image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                              <img loading="lazy" src={blog.cover_image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <span className={i === 0 ? 'text-8xl' : 'text-6xl'}>{CATEGORY_EMOJI[blog.category || ''] || '📝'}</span>
