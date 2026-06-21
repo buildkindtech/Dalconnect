@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { Helmet } from "react-helmet-async";
 import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame, MessageCircle, Trophy, Music, Film, Tv, Gift, Sun, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -488,6 +489,21 @@ export default function Home() {
   };
 
   return (
+    <>
+    <Helmet>
+      <title>DalKonnect — DFW 달라스 한인 커뮤니티</title>
+      <meta name="description" content="달라스-포트워스 DFW 한인 커뮤니티. 1,175개 한인 업체 정보, 매일 업데이트 최신 한인 뉴스, 커뮤니티, 마켓플레이스." />
+      <meta property="og:title" content="DalKonnect — DFW 달라스 한인 커뮤니티" />
+      <meta property="og:description" content="달라스-포트워스 DFW 한인 커뮤니티. 1,175개 한인 업체 정보, 매일 업데이트 최신 한인 뉴스, 커뮤니티, 마켓플레이스." />
+      <meta property="og:image" content="https://dalkonnect.com/og-image.png" />
+      <meta property="og:url" content="https://dalkonnect.com/" />
+      <meta property="og:type" content="website" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="DalKonnect — DFW 달라스 한인 커뮤니티" />
+      <meta name="twitter:description" content="달라스-포트워스 DFW 한인 업체 & 뉴스 커뮤니티" />
+      <meta name="twitter:image" content="https://dalkonnect.com/og-image.png" />
+      <link rel="canonical" href="https://dalkonnect.com/" />
+    </Helmet>
     <div className="flex flex-col min-h-screen">
       {/* Hero Section — 100vw 탈출 (사이드 광고 컬럼 무시) */}
       <section
@@ -1917,5 +1933,6 @@ export default function Home() {
         </div>
       </section>
     </div>
+    </>
   );
 }

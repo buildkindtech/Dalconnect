@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { Search, MapPin, Star, Phone, Globe, SlidersHorizontal, X, Building2 } from "lucide-react";
@@ -287,6 +288,16 @@ export default function Businesses() {
 
 
   return (
+    <>
+    <Helmet>
+      <title>달라스 한인 업체 디렉토리 | DalKonnect</title>
+      <meta name="description" content="달라스-포트워스(DFW) 한인 업체 1,175개 — 식당, 병원, 미용실, 부동산, 학원, 법률 등 카테고리별 검색" />
+      <meta property="og:title" content="달라스 한인 업체 디렉토리 | DalKonnect" />
+      <meta property="og:description" content="DFW 한인 식당, 병원, 미용실, 부동산, 학원, 법률 등 1,175개 업체 정보" />
+      <meta property="og:url" content="https://dalkonnect.com/businesses" />
+      <meta property="og:type" content="website" />
+      <link rel="canonical" href="https://dalkonnect.com/businesses" />
+    </Helmet>
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40 shadow-sm">
@@ -647,5 +658,6 @@ export default function Businesses() {
         </div>
       </div>
     </div>
+    </>
   );
 }
