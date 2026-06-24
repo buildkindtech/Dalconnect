@@ -80,6 +80,7 @@ import FAQ from "./pages/FAQ";
 import Roommate from "./pages/Roommate";
 import ClaimBusiness from "./pages/ClaimBusiness";
 import Partnership from "./pages/Partnership";
+import Services from "./pages/Services";
 
 // 양쪽 광고 — 데스크탑: 사이드 카드 3개, 모바일: 플로팅 뱃지 3개
 function SideAdStrip({ bizList, side, isHome }: { bizList: any[]; side: 'left' | 'right'; isHome?: boolean }) {
@@ -179,6 +180,7 @@ function Router() {
           <Route path="/roommate" component={Roommate} />
           <Route path="/claim" component={ClaimBusiness} />
           <Route path="/partnership" component={Partnership} />
+          <Route path="/services" component={Services} />
           <Route component={NotFound} />
         </Switch>
         </ErrorBoundary>

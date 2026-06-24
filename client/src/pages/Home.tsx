@@ -1911,6 +1911,24 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Home Services Hub Banner */}
+      <section className="py-10 bg-gradient-to-br from-gray-900 to-gray-700">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-white text-center md:text-left">
+              <div className="text-2xl mb-1">🔧 달라스 홈서비스 허브</div>
+              <div className="text-gray-300 text-sm">에어컨 · 전기 · 배관 · 청소 · 이사 · 핸디맨</div>
+              <div className="text-gray-400 text-xs mt-1">영어 걱정 없이 — 한국어로 편하게 연결해드립니다</div>
+            </div>
+            <Link href="/services">
+              <span className="inline-block bg-white text-gray-900 font-bold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors whitespace-nowrap">
+                무료 견적 받기 →
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Newsletter Section */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-4 max-w-4xl">
