@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Helmet } from "react-helmet-async";
-import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, BookOpen, TrendingUp, Sparkles, Clock, ShoppingBag, Eye, Calendar, Phone, Users, Flame, MessageCircle, Trophy, Music, Film, Tv, Gift, Sun, Play, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, UtensilsCrossed, Church, Heart, Scissors, Home as HomeIcon, Scale, Car, GraduationCap, ShoppingCart, TrendingUp, Clock, ShoppingBag, Eye, Phone, Flame, MessageCircle, Gift, Sun, Play } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFeaturedBusinesses, useNews, useBlogs, useListings, useCategories } from "@/lib/api";
 import { getCategoryColor, getCategoryIcon, hasValidImage, proxyPhotoUrl } from "@/lib/imageDefaults";
 import { getBlogCategoryStyle, getNewsCategoryStyle } from "@/lib/blogNewsDefaults";
+import { fetchWithRetry, filterValidDeals } from "@/lib/utils";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import BusinessCard from "@/components/BusinessCard";
 import * as Icons from "lucide-react";
@@ -38,163 +39,6 @@ const POPULAR_SEARCH_TAGS = [
   { label: "한인마트", category: "한인마트" },
 ];
 
-// Charts Preview Component
-function ChartsPreview() {
-  const [chartsData, setChartsData] = useState<any>({});
-  const [loading, setLoading] = useState(true);
-
-  const chartTypes = [
-    { id: 'drama', label: '드라마', icon: Tv, color: 'from-blue-500 to-blue-600' },
-    { id: 'music', label: '음악', icon: Music, color: 'from-green-500 to-green-600' },
-    { id: 'movie', label: '영화', icon: Film, color: 'from-purple-500 to-purple-600' },
-    { id: 'netflix', label: '넷플릭스', icon: Tv, color: 'from-red-500 to-red-600' },
-  ];
-
-  useEffect(() => {
-    const fetchChartPreview = async () => {
-      try {
-        const promises = chartTypes.map(type =>
-          fetch(`/api/categories?action=charts&type=${type.id}`)
-            .then(res => res.json())
-            .catch(() => ({ success: false, data: [] }))
-        );
-        
-        const results = await Promise.all(promises);
-        const chartsObj: any = {};
-        
-        results.forEach((result, index) => {
-          if (result.success && result.data && result.data.length > 0) {
-            chartsObj[chartTypes[index].id] = result.data[0]; // Get #1 from each chart
-          }
-        });
-        
-        setChartsData(chartsObj);
-      } catch (error) {
-        console.error('Failed to fetch charts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchChartPreview();
-  }, []);
-
-  if (loading) {
-    return (
-      <section className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-center items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (Object.keys(chartsData).length === 0) {
-    return null; // Don't show section if no data
-  }
-
-  return (
-    <section className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <div className="flex justify-center items-center gap-3 mb-4">
-            <Trophy className="h-8 w-8 text-yellow-500" />
-            <h2 className="text-xl md:text-4xl font-bold">🏆 인기 차트</h2>
-          </div>
-          <p className="text-slate-600 text-lg">지금 가장 핫한 드라마, 음악, 영화를 확인하세요!</p>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-          {chartTypes.map((chart) => {
-            const chartItem = chartsData[chart.id];
-            const IconComponent = chart.icon;
-            
-            if (!chartItem) return null;
-
-            return (
-              <Card key={chart.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer">
-                <CardContent className="p-0">
-                  {/* YouTube Thumbnail */}
-                  {chartItem.thumbnail_url && (
-                    <div className="relative h-36 md:h-48 overflow-hidden">
-                      <img
-                        src={chartItem.thumbnail_url}
-                        alt={chartItem.title_ko}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          // Fallback to gradient background if image fails
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                      <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent`}></div>
-                      <div className="absolute top-4 right-4 bg-white/90 rounded-full px-3 py-1">
-                        <span className="text-lg font-bold text-slate-800">#1</span>
-                      </div>
-                      <div className="absolute bottom-4 left-4 right-4 text-white">
-                        <div className="flex items-center gap-2 mb-2">
-                          <IconComponent className="w-5 h-5" />
-                          <span className="text-sm font-medium">{chart.label}</span>
-                        </div>
-                        <h3 className="font-bold text-lg line-clamp-2 mb-1">{chartItem.title_ko}</h3>
-                        <p className="text-sm opacity-90 line-clamp-1">{chartItem.artist}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Fallback gradient if no thumbnail */}
-                  {!chartItem.thumbnail_url && (
-                    <div className={`bg-gradient-to-r ${chart.color} p-6 text-white relative overflow-hidden`}>
-                      <div className="absolute -top-4 -right-4 opacity-20 transform group-hover:scale-110 transition-transform">
-                        <IconComponent className="w-20 h-20" />
-                      </div>
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium opacity-90">{chart.label}</span>
-                          <div className="bg-white/20 rounded-full px-3 py-1">
-                            <span className="text-lg font-bold">#1</span>
-                          </div>
-                        </div>
-                        <h3 className="font-bold text-lg line-clamp-2 mb-1">{chartItem.title_ko}</h3>
-                        <p className="text-sm opacity-90 line-clamp-1">{chartItem.artist}</p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="p-4">
-                    <div className="flex items-center justify-between text-sm text-slate-600">
-                      <span className="bg-slate-100 px-2 py-1 rounded-full text-xs font-medium">
-                        {chartItem.platform}
-                      </span>
-                      {chartItem.score && (
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">{chartItem.score}</span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2 line-clamp-2">{chartItem.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="text-center">
-          <Link href="/charts">
-            <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white gap-2">
-              <Trophy className="h-5 w-5" />
-              전체 차트 보기
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function Home() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -202,8 +46,6 @@ export default function Home() {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [activeTab, setActiveTab] = useState<'trending' | 'news' | 'community' | 'deals'>('trending');
-  const [carouselBizIdx, setCarouselBizIdx] = useState(0);
   const [grandOpeningBiz, setGrandOpeningBiz] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const [visitorStats, setVisitorStats] = useState<{
@@ -229,8 +71,8 @@ export default function Home() {
     const fetchRandomRestaurant = async () => {
       try {
         // 구글 리뷰 많은 순 top 20 가져와서 한인 식당(한국어 이름 있는 곳)만 필터 → 랜덤 선택
-        const response = await fetch('/api/businesses?category=식당&sort=reviews&limit=20');
-        if (response.ok) {
+        const response = await fetchWithRetry('/api/businesses?category=식당&sort=reviews&limit=20');
+        {
           const data = await response.json();
           if (data.businesses && data.businesses.length > 0) {
             const koreanRegex = /[가-힣]/;
@@ -256,11 +98,9 @@ export default function Home() {
   useEffect(() => {
     const fetchPopularPosts = async () => {
       try {
-        const response = await fetch('/api/community?action=posts&sort=popular&limit=8');
-        if (response.ok) {
-          const data = await response.json();
-          setPopularPosts(data.posts || data.data || []);
-        }
+        const response = await fetchWithRetry('/api/community?action=posts&sort=popular&limit=8');
+        const data = await response.json();
+        setPopularPosts(data.posts || data.data || []);
       } catch (error) {
         console.error('Failed to fetch community posts:', error);
       } finally {
@@ -273,29 +113,9 @@ export default function Home() {
   // Fetch immigration/visa news
   const [immigrationNews, setImmigrationNews] = useState<any[]>([]);
   useEffect(() => {
-    fetch('/api/news?category=%EC%9D%B4%EB%AF%BC%2F%EB%B9%84%EC%9E%90&limit=4')
-      .then(r => r.ok ? r.json() : [])
+    fetchWithRetry('/api/news?category=%EC%9D%B4%EB%AF%BC%2F%EB%B9%84%EC%9E%90&limit=4')
+      .then(r => r.json())
       .then(d => setImmigrationNews(Array.isArray(d) ? d.slice(0, 4) : []))
-      .catch(() => {});
-  }, []);
-
-  // 마트픽 뉴스 (코스트코/트레이더조/HEB/센트럴마켓)
-  const [martNews, setMartNews] = useState<Record<string, any[]>>({});
-  useEffect(() => {
-    fetch('/api/news?category=%EB%A7%88%ED%8A%B8%2F%EC%87%BC%ED%95%91&limit=20')
-      .then(r => r.ok ? r.json() : [])
-      .then((items: any[]) => {
-        if (!Array.isArray(items)) return;
-        const grouped: Record<string, any[]> = { costco: [], traderjoes: [], heb: [], centralmarket: [] };
-        for (const item of items) {
-          const t = (item.title || '').toLowerCase();
-          if ((t.includes('costco') || t.includes('코스트코')) && grouped.costco.length < 3) grouped.costco.push(item);
-          else if ((t.includes('trader') || t.includes('트레이더')) && grouped.traderjoes.length < 3) grouped.traderjoes.push(item);
-          else if ((t.includes('heb') || t.includes('에이치이비')) && grouped.heb.length < 3) grouped.heb.push(item);
-          else if ((t.includes('central market') || t.includes('센트럴')) && grouped.centralmarket.length < 3) grouped.centralmarket.push(item);
-        }
-        setMartNews(grouped);
-      })
       .catch(() => {});
   }, []);
 
@@ -305,11 +125,11 @@ export default function Home() {
   useEffect(() => {
     const fetchHotDeals = async () => {
       try {
-        const response = await fetch('/api/deals?limit=6&sort=hot');
-        if (response.ok) {
-          const deals = await response.json();
-          setHotDeals(deals || []);
-        }
+        // 오염 딜이 섞여 있으므로 여유있게 20개 가져와 필터 후 6개 사용
+        const response = await fetchWithRetry('/api/deals?limit=20&sort=hot');
+        const deals = await response.json();
+        // 스크레이퍼 파싱 오류 딜("$190$80", "100% OFF", 중복 placeholder 이미지) 제외
+        setHotDeals(filterValidDeals(Array.isArray(deals) ? deals : []));
       } catch (error) {
         console.error('Failed to fetch hot deals:', error);
       } finally {
@@ -321,8 +141,8 @@ export default function Home() {
 
   // Grand opening businesses (newest first)
   useEffect(() => {
-    fetch('/api/businesses?sort=recent&limit=3')
-      .then(r => r.ok ? r.json() : { businesses: [] })
+    fetchWithRetry('/api/businesses?sort=recent&limit=3')
+      .then(r => r.json())
       .then(d => setGrandOpeningBiz(d.businesses || []))
       .catch(() => {});
   }, []);
@@ -331,13 +151,11 @@ export default function Home() {
   useEffect(() => {
     const recordVisit = async () => {
       try {
-        const response = await fetch('/api/categories?action=visit&page=/');
-        if (response.ok) {
-          const stats = await response.json();
-          // Only set if it has the expected shape
-          if (stats && typeof stats.todayUnique === 'number') {
-            setVisitorStats(stats);
-          }
+        const response = await fetchWithRetry('/api/categories?action=visit&page=/');
+        const stats = await response.json();
+        // Only set if it has the expected shape
+        if (stats && typeof stats.todayUnique === 'number') {
+          setVisitorStats(stats);
         }
       } catch (error) {
         console.error('Failed to record visit:', error);
@@ -383,66 +201,33 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Featured carousel auto-advance every 5s
-  const allFeaturedRef = useRef<any[]>([]);
-  useEffect(() => {
-    if (allFeaturedRef.current.length === 0) return;
-    const t = setInterval(() => setCarouselBizIdx(i => (i + 1) % allFeaturedRef.current.length), 5000);
-    return () => clearInterval(t);
-  }, []);
-
-  // 추천 업체 랜덤 로테이션 (8초마다 6개 교체)
-  const [featuredSlot, setFeaturedSlot] = useState(0);
+  // 추천 업체 — 단일 노출용 (자동 로테이션 없음, 수동 스와이프만)
   const allFeatured = featuredBusinesses ?? [];
-  // keep ref in sync for carousel auto-scroll
-  allFeaturedRef.current = allFeatured;
-  useEffect(() => {
-    if (allFeatured.length <= 6) return;
-    const t = setInterval(() => setFeaturedSlot(s => s + 1), 8000);
-    return () => clearInterval(t);
-  }, [allFeatured.length]);
-  // 3등분 — 각 배너 타입이 겹치지 않는 업체 풀 사용
-  const { leaderboardPool, leaderboard2Pool, infeedPool } = useMemo(() => {
-    if (allFeatured.length === 0) return { leaderboardPool: [], leaderboard2Pool: [], infeedPool: [] };
-    const f = [...allFeatured];
-    // 3등분: 배너1(0-19) | 배너2(20-39) | 그리드(40+)
-    return {
-      leaderboardPool:  f.slice(0, 20),
-      leaderboard2Pool: f.slice(20, 40),
-      infeedPool:       f.slice(40),
-    };
-  }, [allFeatured]);
-
-  const shuffledFeatured = useMemo(() => {
-    const arr = infeedPool.length > 0 ? [...infeedPool] : [...allFeatured];
-    if (arr.length === 0) return [];
-    const offset = (featuredSlot * 6) % arr.length;
-    return [...arr.slice(offset), ...arr.slice(0, offset)].slice(0, 6);
-  }, [allFeatured, infeedPool, featuredSlot]);
-  const featured = shuffledFeatured;
-  // Reddit 제외 + 카테고리별 2개씩 그룹핑
-  const NEWS_CATS = [
-    { key: '로컬뉴스', label: '🏙️ 로컬뉴스' },
-    { key: '미국뉴스', label: '🇺🇸 미국뉴스' },
-    { key: '스포츠',   label: '⚽ 스포츠' },
-    { key: 'K-POP',   label: '🎵 K-POP' },
-    { key: '이민/비자', label: '📋 이민·비자' },
-    { key: '세금/재정', label: '💰 세금·재정' },
-    { key: '한국뉴스', label: '🇰🇷 한국뉴스' },
-    { key: '월드뉴스', label: '🌍 월드뉴스' },
-  ];
+  // 추천 업체 섹션에 노출할 카드 (최대 8개)
+  const featuredForAd = useMemo(() => allFeatured.slice(0, 8), [allFeatured]);
+  // Reddit 제외
   const isReddit = (n: any) => n.source?.startsWith('r/') || n.category === '달라스';
-  const newsByCat = (() => {
-    if (!newsItems) return [];
-    const filtered = newsItems.filter((n: any) => !isReddit(n));
-    return NEWS_CATS.map(cat => ({
-      ...cat,
-      items: filtered.filter((n: any) => n.category === cat.key).slice(0, 2),
-    })).filter(cat => cat.items.length > 0);
-  })();
-  const recentNews = newsByCat.flatMap(c => c.items).slice(0, 8);
+  // 뉴스 헤드라인 — 카테고리별 인터리브 후 최신 5개 (정적 리스트)
+  const headlineNews = useMemo(() => {
+    const filtered = (newsItems ?? []).filter((n: any) => !isReddit(n));
+    const catGroups: Record<string, any[]> = {};
+    filtered.forEach((n: any) => {
+      if (!catGroups[n.category]) catGroups[n.category] = [];
+      catGroups[n.category].push(n);
+    });
+    const interleaved: any[] = [];
+    const maxLen = Math.max(0, ...Object.values(catGroups).map(g => g.length));
+    for (let i = 0; i < maxLen; i++) {
+      Object.values(catGroups).forEach(g => { if (g[i]) interleaved.push(g[i]); });
+    }
+    return interleaved.slice(0, 5);
+  }, [newsItems]);
   const recentBlogs = blogPosts?.slice(0, 4) ?? [];
-  const recentListings = listingsData?.items ?? [];
+  const recentListings = (listingsData?.items ?? []).filter((l: any) => {
+    // 테스트/더미 매물 제외
+    const nick = (l as any).nickname ?? '';
+    return !nick.includes('테스터') && !nick.includes('달커넥트테스터');
+  });
 
   // Get count for each category
   const getCategoryCount = (categoryId: string) => {
@@ -642,291 +427,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 업체 등록 CTA 배너 */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-700 py-3">
-        <div className="container mx-auto px-4 flex items-center justify-between gap-3">
-          <p className="text-white text-sm font-semibold">
-            🏪 내 업체를 달라스 한인들에게 알리세요
-          </p>
-          <Link href="/register-business">
-            <Button size="sm" variant="secondary" className="text-blue-700 font-bold text-xs whitespace-nowrap flex-shrink-0">
-              무료 등록 →
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* 히어로 바로 아래 광고 배너 (데스크탑) */}
-      {featured.length > 0 && (
-        <section className="bg-white pt-4 pb-2 hidden md:block">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <AdBanner size="leaderboard" businesses={leaderboardPool} />
-          </div>
-        </section>
-      )}
-
-      {/* 모바일 전용: 히어로 아래 가로 스크롤 광고 strip */}
-      {leaderboardPool.length > 0 && (
-        <section className="md:hidden bg-white py-3">
-          <div className="px-3 mb-1.5 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">추천 업체</span>
-            <span className="text-[10px] text-gray-400 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">광고</span>
-          </div>
-          <div className="flex gap-3 overflow-x-auto px-3 pb-1 scrollbar-hide" style={{ scrollSnapType: 'x mandatory' }}>
-            {leaderboardPool.slice(0, 10).map((biz: any) => {
-              const name = biz.name_ko || biz.name_en || '';
-              const rating = Number(biz.rating || 0).toFixed(1);
-              return (
-                <a key={biz.id} href={`/business/${biz.id}`}
-                  className="flex-shrink-0 w-[120px] rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-white"
-                  style={{ scrollSnapAlign: 'start' }}>
-                  {biz.cover_url ? (
-                    <div className="h-[80px] w-full relative"
-                      style={{ backgroundImage: `url(${biz.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    </div>
-                  ) : (
-                    <div className="h-[80px] bg-gradient-to-br from-blue-500 to-indigo-600" />
-                  )}
-                  <div className="p-2">
-                    <p className="text-[11px] font-bold text-gray-800 leading-tight line-clamp-2">{name}</p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">⭐ {rating} · {biz.category}</p>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
 
-
-
-
-      {/* Tabbed Content Feed */}
-      <section className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4">
-          {/* Tab Pills — horizontally scrollable on mobile */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3">
-            {([
-              { key: 'trending', label: '🔥 인기' },
-              { key: 'news',     label: '📰 뉴스' },
-              { key: 'community',label: '💬 커뮤니티' },
-              { key: 'deals',    label: '🏷️ 딜' },
-            ] as const).map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
-                  activeTab === tab.key
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab content */}
-          <div className="space-y-0.5">
-            {activeTab === 'trending' && (() => {
-              const newsSlice = (newsItems ?? []).filter((n: any) => !isReddit(n)).slice(0, 3).map((n: any) => ({ _type: 'news', ...n }));
-              const commSlice = popularPosts.slice(0, 2).map((p: any) => ({ _type: 'community', ...p }));
-              const items = [...newsSlice, ...commSlice];
-              if (items.length === 0) return <div className="py-6 text-center text-slate-400 text-sm">불러오는 중...</div>;
-              return (
-                <>
-                  {items.map((item: any, i: number) => (
-                    <Link key={`${item._type}-${item.id}`} href={item._type === 'news' ? `/news/${item.id}` : `/community/${item.id}`}>
-                      <div className="flex gap-3 py-2.5 items-start hover:bg-slate-50 rounded-lg px-2 transition-colors cursor-pointer">
-                        <span className="w-5 h-5 flex items-center justify-center text-xs font-bold text-slate-400 flex-shrink-0 mt-0.5">{i + 1}</span>
-                        <div className="flex-1 min-w-0">
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${item._type === 'news' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
-                            {item._type === 'news' ? '뉴스' : '커뮤니티'}
-                          </span>
-                          <p className="text-sm font-semibold text-slate-800 line-clamp-1 mt-0.5">{item.title}</p>
-                          <p className="text-xs text-slate-400">{item.source || item.nickname}</p>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                  <div className="pt-2 flex gap-4">
-                    <Link href="/news"><span className="text-xs text-primary font-medium hover:underline">뉴스 더보기 →</span></Link>
-                    <Link href="/community"><span className="text-xs text-primary font-medium hover:underline">커뮤니티 →</span></Link>
-                  </div>
-                </>
-              );
-            })()}
-
-            {activeTab === 'news' && (() => {
-              const items = (newsItems ?? []).filter((n: any) => !isReddit(n)).slice(0, 5);
-              if (items.length === 0) return <div className="py-6 text-center text-slate-400 text-sm">뉴스를 불러오는 중...</div>;
-              return (
-                <>
-                  {items.map((news: any) => (
-                    <Link key={news.id} href={`/news/${news.id}`}>
-                      <div className="flex gap-3 py-2.5 items-start hover:bg-slate-50 rounded-lg px-2 transition-colors cursor-pointer">
-                        <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
-                          {hasValidImage(news.thumbnail_url) ? (
-                            <img src={news.thumbnail_url} alt={news.title} loading="lazy" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-xl">📰</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug">{news.title}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">{news.source}</p>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                  <div className="pt-2">
-                    <Link href="/news"><span className="text-xs text-primary font-medium hover:underline">전체 뉴스 보기 →</span></Link>
-                  </div>
-                </>
-              );
-            })()}
-
-            {activeTab === 'community' && (() => {
-              const items = popularPosts.slice(0, 5);
-              if (items.length === 0) return <div className="py-6 text-center text-slate-400 text-sm">커뮤니티 글을 불러오는 중...</div>;
-              return (
-                <>
-                  {items.map((post: any, i: number) => (
-                    <Link key={post.id} href={`/community/${post.id}`}>
-                      <div className="flex gap-3 py-2.5 items-start hover:bg-slate-50 rounded-lg px-2 transition-colors cursor-pointer">
-                        <span className="w-6 h-6 flex items-center justify-center text-xs font-bold bg-primary text-white rounded-full flex-shrink-0 mt-0.5">{i + 1}</span>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{post.category}</span>
-                          <p className="text-sm font-semibold text-slate-800 line-clamp-1 mt-0.5">{post.title}</p>
-                          <div className="flex gap-2 text-xs text-slate-400 mt-0.5">
-                            <span>{post.nickname}</span>
-                            <span>💬 {post.comment_count}</span>
-                            <span>❤️ {post.likes}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                  <div className="pt-2">
-                    <Link href="/community"><span className="text-xs text-primary font-medium hover:underline">커뮤니티 더보기 →</span></Link>
-                  </div>
-                </>
-              );
-            })()}
-
-            {activeTab === 'deals' && (() => {
-              const items = hotDeals.slice(0, 5);
-              if (items.length === 0) return <div className="py-6 text-center text-slate-400 text-sm">딜을 불러오는 중...</div>;
-              return (
-                <>
-                  {items.map((deal: any) => (
-                    <div
-                      key={deal.id}
-                      className="flex gap-3 py-2.5 items-center cursor-pointer hover:bg-slate-50 rounded-lg px-2 transition-colors"
-                      onClick={() => deal.deal_url && window.open(deal.deal_url, '_blank')}
-                    >
-                      <div
-                        className="w-14 h-14 rounded-lg flex-shrink-0 bg-gradient-to-br from-red-100 to-orange-100 overflow-hidden"
-                        style={deal.image_url ? { backgroundImage: `url(${deal.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs font-bold text-red-500">{deal.discount}</span>
-                        <p className="text-sm font-semibold text-slate-800 line-clamp-1">{deal.title}</p>
-                        <p className="text-xs text-slate-400">{deal.store} · {deal.deal_price}</p>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="pt-2">
-                    <Link href="/deals"><span className="text-xs text-primary font-medium hover:underline">전체 딜 보기 →</span></Link>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      </section>
-
-      {/* Restaurant of the Day */}
-      {restaurantOfDay && (
-        <section className="py-16 bg-gradient-to-r from-orange-50 to-red-50">
-          <div className="container mx-auto px-4">
-            <div className="max-w-5xl mx-auto">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm mb-4">
-                  <UtensilsCrossed className="h-5 w-5 text-orange-600" />
-                  <span className="font-bold text-orange-600">오늘의 맛집</span>
-                </div>
-                <h2 className="text-3xl font-bold mb-2">이 주의 추천 레스토랑</h2>
-                <p className="text-slate-600">DalKonnect가 추천하는 특별한 맛집을 소개합니다</p>
-              </div>
-              
-              <Card className="overflow-hidden hover:shadow-2xl transition-shadow">
-                <div className="grid md:grid-cols-2 gap-0">
-                  {/* Image */}
-                  <div className="relative h-64 md:h-auto">
-                    {hasValidImage(restaurantOfDay.cover_url) ? (
-                      <div 
-                        className="w-full h-full bg-cover bg-center"
-                        style={{ backgroundImage: `url(${proxyPhotoUrl(restaurantOfDay.cover_url) || restaurantOfDay.cover_url})` }}
-                      />
-                    ) : (
-                      <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(restaurantOfDay.category)} flex items-center justify-center`}>
-                        <UtensilsCrossed className="w-24 h-24 text-white/80" />
-                      </div>
-                    )}
-                    {restaurantOfDay.featured && (
-                      <Badge className="absolute top-4 right-4 bg-orange-600">⭐ 추천</Badge>
-                    )}
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="p-8 flex flex-col justify-center">
-                    <Badge variant="secondary" className="w-fit mb-4">
-                      {restaurantOfDay.category}
-                    </Badge>
-                    <h3 className="text-3xl font-bold mb-2 font-ko">
-                      {restaurantOfDay.name_ko || restaurantOfDay.name_en}
-                    </h3>
-                    {restaurantOfDay.name_ko && restaurantOfDay.name_en && (
-                      <p className="text-lg text-slate-500 mb-4">{restaurantOfDay.name_en}</p>
-                    )}
-                    
-                    {restaurantOfDay.description && (
-                      <p className="text-slate-700 mb-4 line-clamp-3">{restaurantOfDay.description}</p>
-                    )}
-                    
-                    <div className="flex items-center gap-4 mb-4">
-                      {restaurantOfDay.rating && (
-                        <div className="flex items-center gap-2">
-                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xl font-bold">{restaurantOfDay.rating}</span>
-                          <span className="text-slate-500">({restaurantOfDay.review_count || 0} 리뷰)</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {restaurantOfDay.address && (
-                      <div className="flex items-start gap-2 text-slate-600 mb-6">
-                        <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                        <span>{restaurantOfDay.address}</span>
-                      </div>
-                    )}
-                    
-                    <Link href={`/business/${restaurantOfDay.id}`}>
-                      <Button size="lg" className="w-full md:w-auto bg-orange-600 hover:bg-orange-700">
-                        자세히 보기
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Popular Searches */}
       <section className="py-6 md:py-10 bg-white border-y">
@@ -971,35 +473,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 광고 배너 — 뉴스 섹션 바로 위 */}
-      {featured.length > 0 && (
-        <section className="py-4 bg-white border-t border-slate-100">
-          <div className="container mx-auto px-4">
-            <AdBanner size="leaderboard" businesses={leaderboard2Pool.length > 0 ? leaderboard2Pool : leaderboardPool} />
-          </div>
-        </section>
-      )}
 
-      {/* Latest News — Auto-rotating carousel */}
-      <section className="py-12 bg-slate-50 overflow-hidden">
-        <style>{`
-          @keyframes newsScroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .news-carousel-track {
-            display: flex;
-            gap: 12px;
-            width: max-content;
-            animation: newsScroll 80s linear infinite;
-          }
-          .news-carousel-track:hover {
-            animation-play-state: paused;
-          }
-        `}</style>
-        <div className="container mx-auto px-4">
+      {/* 뉴스 헤드라인 — 정적 리스트 */}
+      <section className="py-12 bg-slate-50">
+        <div className="container mx-auto px-4 max-w-3xl">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl md:text-4xl font-bold">최신 뉴스</h2>
+            <h2 className="text-xl md:text-3xl font-bold">📰 오늘의 뉴스 헤드라인</h2>
             <Link href="/news">
               <Button variant="ghost" className="gap-1 text-sm">
                 전체 보기 <ArrowRight className="h-4 w-4" />
@@ -1008,260 +487,287 @@ export default function Home() {
           </div>
 
           {loadingNews ? (
-            <div className="flex gap-3">
-              {[1,2,3,4,5,6].map((i) => (
-                <div key={i} className="flex-shrink-0 w-32">
-                  <Skeleton className="w-32 h-24 rounded-lg mb-2" />
-                  <Skeleton className="h-3 w-full mb-1" />
-                  <Skeleton className="h-3 w-2/3" />
+            <div className="space-y-2">
+              {[1,2,3,4,5].map((i) => (
+                <div key={i} className="flex gap-3 items-center py-3">
+                  <Skeleton className="h-5 w-16 rounded-full flex-shrink-0" />
+                  <Skeleton className="h-4 flex-1" />
                 </div>
               ))}
             </div>
-          ) : (() => {
-            // 카테고리별 최신 4개씩 뽑아서 인터리브
-            const filtered = (newsItems ?? []).filter((n: any) => !isReddit(n));
-            const catGroups: Record<string, any[]> = {};
-            filtered.forEach((n: any) => {
-              if (!catGroups[n.category]) catGroups[n.category] = [];
-              if (catGroups[n.category].length < 4) catGroups[n.category].push(n);
-            });
-            // 인터리브: 카테고리별 1개씩 번갈아 배치
-            const interleaved: any[] = [];
-            const maxLen = Math.max(...Object.values(catGroups).map(g => g.length));
-            for (let i = 0; i < maxLen; i++) {
-              Object.values(catGroups).forEach(g => { if (g[i]) interleaved.push(g[i]); });
-            }
-            const carouselNews = interleaved;
-            if (carouselNews.length === 0) return (
-              <div className="text-center py-8 text-slate-400">
-                <div className="text-3xl mb-2">📰</div>
-                <p className="text-sm">뉴스를 불러오지 못했습니다.</p>
-              </div>
-            );
-            const doubled = [...carouselNews, ...carouselNews];
-            return (
-              <div className="overflow-hidden -mx-4 px-4">
-                <div className="news-carousel-track">
-                  {doubled.map((news: any, idx: number) => {
-                    const style = getNewsCategoryStyle(news.category);
-                    const catLabel =
-                      news.category === '로컬뉴스' ? '🏙️ 로컬' :
-                      news.category === '미국뉴스' ? '🇺🇸 미국' :
-                      news.category === '스포츠'   ? '⚽ 스포츠' :
-                      news.category === 'K-POP'   ? '🎵 K-POP' :
-                      news.category === '이민/비자' ? '📋 이민' :
-                      news.category === '세금/재정' ? '💰 재정' :
-                      news.category === '한국뉴스' ? '🇰🇷 한국' :
-                      news.category === '월드뉴스' ? '🌍 월드' :
-                      news.category ?? '뉴스';
-                    return (
-                      <Link key={`${news.id}-${idx}`} href={`/news/${news.id}`}>
-                        <div className="flex-shrink-0 w-32 md:w-40 group cursor-pointer">
-                          {/* 썸네일 — 차트카드 절반 크기 */}
-                          <div className="w-32 h-20 md:w-40 md:h-24 rounded-xl overflow-hidden bg-slate-200 relative mb-2">
-                            {hasValidImage(news.thumbnail_url) ? (
-                              <img
-                                src={news.thumbnail_url}
-                                alt={news.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            ) : (
-                              <div className={`w-full h-full bg-gradient-to-br ${style.gradient} flex items-center justify-center`}>
-                                <span className="text-2xl">{style.emoji}</span>
-                              </div>
-                            )}
-                            {/* 카테고리 배지 */}
-                            <span className="absolute bottom-1 left-1 text-[9px] font-bold bg-black/60 text-white px-1.5 py-0.5 rounded-full">
-                              {catLabel}
-                            </span>
-                          </div>
-                          <p className="text-xs font-semibold text-slate-800 line-clamp-2 leading-snug font-ko">
-                            {news.title}
-                          </p>
-                          <p className="text-[10px] text-slate-400 mt-0.5 truncate">{news.source}</p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      </section>
-
-      {/* 추천 업체 카드 캐러셀 */}
-      {allFeatured.length > 0 && (
-        <section className="py-6 bg-amber-50">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base md:text-xl font-bold">추천 업체</h2>
-                <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">광고</span>
-              </div>
-              <div className="flex gap-1.5">
-                <button
-                  onClick={() => setCarouselBizIdx(i => (i - 1 + allFeatured.length) % allFeatured.length)}
-                  className="w-7 h-7 rounded-full bg-white shadow-sm border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
-                  aria-label="이전"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setCarouselBizIdx(i => (i + 1) % allFeatured.length)}
-                  className="w-7 h-7 rounded-full bg-white shadow-sm border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
-                  aria-label="다음"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Scrollable card row */}
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
-              {Array.from({ length: Math.min(8, allFeatured.length) }).map((_, j) => {
-                const biz = allFeatured[(carouselBizIdx + j) % allFeatured.length];
-                const name = biz.name_ko || biz.name_en || '';
-                const rating = Number(biz.rating || 0).toFixed(1);
+          ) : headlineNews.length > 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100">
+              {headlineNews.map((news: any) => {
+                const style = getNewsCategoryStyle(news.category);
+                const catLabel =
+                  news.category === '로컬뉴스' ? '🏙️ 로컬' :
+                  news.category === '미국뉴스' ? '🇺🇸 미국' :
+                  news.category === '스포츠'   ? '⚽ 스포츠' :
+                  news.category === 'K-POP'   ? '🎵 K-POP' :
+                  news.category === '이민/비자' ? '📋 이민' :
+                  news.category === '세금/재정' ? '💰 재정' :
+                  news.category === '한국뉴스' ? '🇰🇷 한국' :
+                  news.category === '월드뉴스' ? '🌍 월드' :
+                  news.category ?? '뉴스';
                 return (
-                  <a
-                    key={`${biz.id}-${j}`}
-                    href={`/business/${biz.id}`}
-                    className="flex-shrink-0 w-[150px] md:w-[180px] snap-start rounded-xl overflow-hidden shadow-sm border border-white bg-white hover:shadow-md transition-shadow"
-                  >
-                    {biz.cover_url ? (
-                      <div
-                        className="h-[90px] md:h-[110px] bg-cover bg-center"
-                        style={{ backgroundImage: `url(${biz.cover_url})` }}
-                      />
-                    ) : (
-                      <div className="h-[90px] md:h-[110px] bg-gradient-to-br from-amber-200 to-orange-300" />
-                    )}
-                    <div className="p-2.5">
-                      <p className="text-[12px] font-bold text-gray-800 line-clamp-1">{name}</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">⭐ {rating} · {biz.category}</p>
-                      {biz.phone && (
-                        <a
-                          href={`tel:${biz.phone}`}
-                          className="flex items-center gap-1 text-[11px] text-blue-600 mt-1 hover:underline"
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <Phone className="w-3 h-3" />{biz.phone}
-                        </a>
-                      )}
+                  <Link key={news.id} href={`/news/${news.id}`}>
+                    <div className="flex gap-3 items-center py-3.5 px-4 hover:bg-slate-50 transition-colors cursor-pointer">
+                      <span className={`text-[11px] font-bold px-2 py-1 rounded-full flex-shrink-0 bg-gradient-to-br ${style.gradient} text-white`}>
+                        {catLabel}
+                      </span>
+                      <p className="text-sm md:text-base font-semibold text-slate-800 line-clamp-1 flex-1 font-ko">
+                        {news.title}
+                      </p>
+                      <ArrowRight className="w-4 h-4 text-slate-300 flex-shrink-0" />
                     </div>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 text-center py-10 text-slate-400">
+              <div className="text-3xl mb-2">📰</div>
+              <p className="text-sm">뉴스를 불러오는 중입니다.</p>
+            </div>
+          )}
+
+          <div className="text-center mt-5">
+            <Link href="/news">
+              <span className="text-sm text-primary font-semibold hover:underline">전체 뉴스 보기 →</span>
+            </Link>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* Charts Section */}
-      <ChartsPreview />
 
-      {/* Featured Businesses */}
-      <section className="py-20">
+      {/* 이민/비자 섹션 */}
+      <section className="py-12 bg-gradient-to-r from-indigo-50 to-blue-50 border-y border-indigo-100">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-xl md:text-4xl font-bold">추천 업체</h2>
-            <Link href="/businesses?featured=true">
-              <Button variant="ghost" className="gap-2">
-                전체 보기 <ArrowRight className="h-4 w-4" />
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl md:text-3xl font-bold flex items-center gap-2">
+                <span>📋</span> 이민·비자 뉴스
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">USCIS 공지 · 비자 정책 · 이민법 최신 업데이트</p>
+            </div>
+            <Link href="/news?category=%EC%9D%B4%EB%AF%BC%2F%EB%B9%84%EC%9E%90">
+              <Button variant="outline" size="sm" className="gap-1 border-indigo-300 text-indigo-700 hover:bg-indigo-50 font-semibold">
+                더 보기 <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
           </div>
 
-          {loadingFeatured ? (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+            {immigrationNews.length > 0 ? immigrationNews.map((item: any) => (
+              <Link key={item.id} href={`/news/${item.id}`}>
+                <div className="flex gap-3 bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow border border-indigo-100">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{item.source}</span>
+                    <p className="text-sm font-bold text-slate-800 line-clamp-2 mt-1 leading-snug">{item.title}</p>
+                    <p className="text-xs text-slate-400 mt-1">{new Date(item.published_date || item.created_at).toLocaleDateString('ko-KR')}</p>
+                  </div>
+                  {item.thumbnail_url && (
+                    <img src={item.thumbnail_url} alt={item.title_ko ?? ''} loading="lazy" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                  )}
+                </div>
+              </Link>
+            )) : (
+              <div className="md:col-span-2 bg-white rounded-xl p-4 border border-indigo-100 text-center text-slate-400 text-sm">
+                이민/비자 뉴스를 수집 중입니다. 곧 업데이트됩니다.
+              </div>
+            )}
+          </div>
+
+          {/* 빠른 링크 */}
+          <div className="flex flex-wrap gap-2">
+            <a href="https://www.uscis.gov" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
+              🏛️ USCIS 공식사이트
+            </a>
+            <a href="https://travel.state.gov" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
+              ✈️ 비자 신청 (State.gov)
+            </a>
+            <a href="https://www.uscis.gov/tools/track-a-case" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
+              🔍 케이스 추적
+            </a>
+            <Link href="/community?category=Q%26A">
+              <span className="flex items-center gap-1.5 bg-indigo-600 text-white rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer">
+                💬 이민 Q&A 커뮤니티
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+
+      {/* Community Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-xl md:text-4xl font-bold flex items-center gap-3">
+                <span className="text-2xl">🔥</span> 커뮤니티 인기글
+              </h2>
+              <p className="text-slate-600 mt-2">달라스 한인들이 함께 나누는 이야기</p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/community/new">
+                <Button size="sm" className="gap-1.5 font-semibold shadow-sm">
+                  ✍️ 글쓰기
+                </Button>
+              </Link>
+              <Link href="/community">
+                <Button variant="ghost" size="sm" className="gap-1">
+                  전체 보기 <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {loadingCommunity ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
                 <Card key={i}>
-                  <CardContent className="p-0">
-                    <Skeleton className="w-full h-48" />
-                    <div className="p-6 space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-4 w-full" />
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-6 w-full" />
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          ) : (
-            <div
-              key={featuredSlot}
-              className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 transition-opacity duration-500"
-              style={{ animation: 'fadeIn 0.5s ease' }}
-            >
-              {featured.map((business) => (
-                <BusinessCard key={business.id} business={business} />
-              ))}
-            </div>
-          )}
-          {/* 로테이션 인디케이터 */}
-          {allFeatured.length > 6 && (
-            <div className="flex justify-center mt-6 gap-1.5">
-              {Array.from({ length: Math.ceil(allFeatured.length / 6) }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setFeaturedSlot(i)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    Math.floor((featuredSlot * 6) / allFeatured.length) === i || (featuredSlot % Math.ceil(allFeatured.length / 6)) === i
-                      ? 'w-6 bg-primary' : 'w-1.5 bg-slate-300'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Grand Opening — 새로 오픈한 업체 */}
-      {grandOpeningBiz.length > 0 && (
-        <section className="py-10 bg-gradient-to-b from-white to-green-50">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl md:text-2xl font-bold">🎉 새로 오픈한 업체</h2>
-              <Link href="/businesses?sort=recent">
-                <Button variant="ghost" className="gap-1 text-sm">전체 보기 <ArrowRight className="h-4 w-4" /></Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {grandOpeningBiz.map((biz: any) => (
-                <Link key={biz.id} href={`/business/${biz.id}`}>
-                  <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-green-100 overflow-hidden group">
-                    <div className="relative h-32 overflow-hidden">
-                      {biz.cover_url ? (
-                        <div
-                          className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
-                          style={{ backgroundImage: `url(${biz.cover_url})` }}
-                        />
-                      ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(biz.category)} flex items-center justify-center`}>
-                          <span className="text-5xl">🏢</span>
-                        </div>
-                      )}
-                      <Badge className="absolute top-2 left-2 bg-green-500 text-white font-bold text-xs shadow">🎉 NEW</Badge>
+          ) : popularPosts.length > 0 ? (
+            <div className="divide-y divide-slate-100">
+              {popularPosts.slice(0, 8).map((post, index) => (
+                <Link key={post.id} href={`/community/${post.id}`}>
+                  <div className="flex gap-3 py-3 items-start hover:bg-slate-50 rounded-lg px-1 transition-colors">
+                    <div className="flex items-center justify-center w-7 h-7 md:w-9 md:h-9 bg-primary text-white text-xs md:text-sm font-bold rounded-full flex-shrink-0 mt-0.5">
+                      {index + 1}
                     </div>
-                    <div className="p-3">
-                      <p className="font-bold text-slate-800 text-sm line-clamp-1">{biz.name_ko || biz.name_en}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{biz.category}</p>
-                      {biz.created_at && (
-                        <p className="text-[11px] text-green-600 font-medium mt-1">
-                          등록일: {new Date(biz.created_at).toLocaleDateString('ko-KR')}
-                        </p>
-                      )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <span className="text-xs font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{post.category}</span>
+                        {post.is_pinned && <span className="text-xs text-red-500 font-bold">📌 공지</span>}
+                      </div>
+                      <p className="text-sm md:text-base font-bold text-slate-800 line-clamp-2 leading-snug mt-1">{post.title}</p>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
+                        <span className="font-medium text-slate-500">{post.nickname}</span>
+                        <span className="flex items-center gap-0.5">
+                          <MessageCircle className="w-3 h-3 text-blue-400" />
+                          <span className="font-semibold text-blue-500">{post.comment_count}</span>
+                        </span>
+                        <span className="flex items-center gap-0.5">
+                          <Heart className="w-3 h-3 text-red-400" />
+                          <span className="font-semibold text-red-500">{post.likes}</span>
+                        </span>
+                        <span className="flex items-center gap-0.5">
+                          <Eye className="w-3 h-3" />
+                          {post.views}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <MessageCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600 mb-4">아직 커뮤니티 글이 없습니다</p>
+                <Link href="/community/new">
+                  <Button>첫 번째 글 작성하기</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {popularPosts.length > 0 && (
+            <div className="text-center mt-8">
+              <Link href="/community">
+                <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all font-bold px-8">
+                  <MessageCircle className="h-5 w-5" />
+                  커뮤니티 더보기 →
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+
+      {/* 추천 업체 (통합 — 광고 1곳, 자동 로테이션 없이 수동 스와이프) */}
+      {featuredForAd.length > 0 && (
+        <section className="py-12 bg-amber-50">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl md:text-3xl font-bold">추천 업체</h2>
+                <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">광고</span>
+              </div>
+              <Link href="/businesses?featured=true">
+                <Button variant="ghost" className="gap-1 text-sm">
+                  전체 보기 <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+
+            {loadingFeatured ? (
+              <div className="flex gap-4 overflow-x-hidden">
+                {[1,2,3,4].map((i) => (
+                  <div key={i} className="flex-shrink-0 w-[240px]">
+                    <Skeleton className="w-full h-40 rounded-xl mb-3" />
+                    <Skeleton className="h-5 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* 가로 스와이프 카드 (수동 스크롤만) */
+              <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 -mx-4 px-4">
+                {featuredForAd.map((business: any) => (
+                  <div key={business.id} className="flex-shrink-0 w-[220px] md:w-[280px] snap-start">
+                    <BusinessCard business={business} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
 
-      {/* Hot Deals Section */}
+
+      {/* Home Services Hub Banner */}
+      <section className="py-10 bg-gradient-to-br from-gray-900 to-gray-700">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-white text-center md:text-left">
+              <div className="text-2xl mb-1">🔧 달라스 홈서비스 허브</div>
+              <div className="text-gray-300 text-sm">에어컨 · 전기 · 배관 · 청소 · 이사 · 핸디맨</div>
+              <div className="text-gray-400 text-xs mt-1">영어 걱정 없이 — 한국어로 편하게 연결해드립니다</div>
+            </div>
+            <Link href="/services">
+              <span className="inline-block bg-white text-gray-900 font-bold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors whitespace-nowrap">
+                무료 견적 받기 →
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+
+      {/* Hot Deals Section — 유효 딜 0건이면 섹션 숨김 (오염 딜 필터 후 빈 상태 노출 방지) */}
+      {(loadingDeals || hotDeals.length > 0) && (
       <section className="py-20 bg-gradient-to-r from-red-50 to-orange-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
@@ -1424,16 +930,269 @@ export default function Home() {
             </div>
             </>
           )}
+        </div>
+      </section>
+      )}
 
-          {!loadingDeals && hotDeals.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🔥</div>
-              <p className="text-gray-500 text-lg">아직 등록된 딜이 없습니다.</p>
-              <p className="text-gray-400">곧 멋진 딜들을 준비해드릴게요!</p>
+
+      {/* 마트픽 — 딜 섹션 하단 작은 로고 4개 가로 줄로 압축 */}
+      <section className="pb-14 -mt-6 bg-gradient-to-r from-red-50 to-orange-50">
+        <div className="container mx-auto px-4">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3 text-center">🛒 자주 가는 DFW 마트</p>
+          <div className="flex flex-wrap items-stretch justify-center gap-2 md:gap-3">
+            {([
+              { emoji: "🔴", name: "코스트코", color: "from-red-600 to-red-700", href: "https://www.costco.com" },
+              { emoji: "🌿", name: "트레이더 조", color: "from-orange-500 to-red-500", href: "https://www.traderjoes.com" },
+              { emoji: "🌟", name: "센트럴 마켓", color: "from-green-600 to-emerald-700", href: "https://www.centralmarket.com" },
+              { emoji: "🤠", name: "HEB", color: "from-red-700 to-red-800", href: "https://www.heb.com" },
+            ]).map((store) => (
+              <a key={store.name} href={store.href} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-white rounded-full shadow-sm border border-slate-100 pl-2 pr-4 py-2 hover:shadow-md transition-shadow">
+                <span className={`w-8 h-8 rounded-full bg-gradient-to-br ${store.color} flex items-center justify-center text-base`}>{store.emoji}</span>
+                <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">{store.name}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+      {/* Recent Marketplace Listings — 홈에서는 매물 0건이면 섹션 자체를 숨김 (빈 상태 카드 노출 방지) */}
+      {(loadingListings || recentListings.length > 0) && (
+      <section className="py-20 bg-gradient-to-b from-green-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-12">
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="h-8 w-8 text-green-600" />
+              <div>
+                <h2 className="text-xl md:text-4xl font-bold">최근 올라온 매물</h2>
+                <p className="text-slate-600 mt-1">DFW 한인 커뮤니티 사고팔기</p>
+              </div>
+            </div>
+            <Link href="/marketplace">
+              <Button variant="outline" className="gap-2 border-green-600 text-green-700 hover:bg-green-50 font-semibold">
+                전체 보기 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {loadingListings ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-xl overflow-hidden border border-slate-100">
+                  <Skeleton className="h-32 w-full" />
+                  <div className="p-3 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentListings.length > 0 ? (
+            (() => {
+              const categoryEmoji: Record<string, string> = {
+                '자동차': '🚗', '가전제품': '📺', '가전': '📺', '전자기기': '💻', '전자제품': '💻',
+                '가구': '🛋️', '의류': '👕', '유아용품': '🍼', '육아용품': '🍼',
+                '스포츠': '⚽', '스포츠/레저': '🏃', '도서': '📚', '도서/교재': '📚',
+                '악기': '🎸', '주방용품': '🍳', '식품': '🍱', '기타': '📦',
+              };
+              return (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                  {recentListings.slice(0, 6).map((listing: any) => {
+                    const isFree = listing.price_type === 'free';
+                    const price = isFree ? '무료나눔' : listing.price_type === 'contact' ? '가격문의' : listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의';
+                    const emoji = categoryEmoji[listing.category] || '🛍️';
+                    return (
+                      <Link key={listing.id} href={`/marketplace/${listing.id}`}>
+                        <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-slate-100 group">
+                          {/* 이미지 or 이모지 placeholder */}
+                          <div className="h-32 relative overflow-hidden">
+                            {listing.photos?.[0] ? (
+                              <img src={listing.photos[0]} alt={listing.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center gap-1">
+                                <span className="text-4xl">{emoji}</span>
+                                <span className="text-xs text-slate-400 font-medium">{listing.category}</span>
+                              </div>
+                            )}
+                            {/* 가격 뱃지 */}
+                            <div className={`absolute bottom-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full ${isFree ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'}`}>
+                              {price}
+                            </div>
+                          </div>
+                          <div className="p-3">
+                            <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug">{listing.title}</p>
+                            <p className="text-xs text-slate-400 mt-1">{listing.location || 'DFW'}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })()
+          ) : null /* 홈에서는 빈 상태 카드 미노출 — 섹션 자체가 위 조건에서 숨겨짐 */}
+
+          {recentListings.length > 0 && (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+              <Link href="/marketplace">
+                <Button size="lg" variant="outline" className="gap-2 border-green-600 text-green-700 hover:bg-green-50 font-bold px-8 shadow-sm">
+                  전체 매물 보기 →
+                </Button>
+              </Link>
+              <Link href="/marketplace/new">
+                <Button size="lg" className="gap-2 font-bold shadow-md">
+                  <ShoppingBag className="h-5 w-5" />
+                  무료로 올리기
+                </Button>
+              </Link>
             </div>
           )}
         </div>
       </section>
+      )}
+
+
+      {/* 오늘의 맛집 (카드 크기 절반 축소) + 새로 오픈 통합 */}
+      {(restaurantOfDay || grandOpeningBiz.length > 0) && (
+        <section className="py-12 bg-gradient-to-r from-orange-50 to-red-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              {/* 오늘의 맛집 — 컴팩트 가로 카드 */}
+              {restaurantOfDay && (
+                <>
+                  <div className="flex items-center gap-2 mb-4">
+                    <UtensilsCrossed className="h-5 w-5 text-orange-600" />
+                    <h2 className="text-lg md:text-2xl font-bold">오늘의 맛집</h2>
+                  </div>
+                  <Link href={`/business/${restaurantOfDay.id}`}>
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow mb-8">
+                      <div className="flex">
+                        {/* Image — 절반 크기 */}
+                        <div className="relative w-28 h-28 md:w-40 md:h-40 flex-shrink-0">
+                          {hasValidImage(restaurantOfDay.cover_url) ? (
+                            <div
+                              className="w-full h-full bg-cover bg-center"
+                              style={{ backgroundImage: `url(${proxyPhotoUrl(restaurantOfDay.cover_url) || restaurantOfDay.cover_url})` }}
+                            />
+                          ) : (
+                            <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(restaurantOfDay.category)} flex items-center justify-center`}>
+                              <UtensilsCrossed className="w-10 h-10 text-white/80" />
+                            </div>
+                          )}
+                          {restaurantOfDay.featured && (
+                            <Badge className="absolute top-2 left-2 bg-orange-600 text-[10px] px-1.5 py-0.5">⭐ 추천</Badge>
+                          )}
+                        </div>
+                        {/* Content */}
+                        <div className="p-3 md:p-5 flex flex-col justify-center min-w-0 flex-1">
+                          <Badge variant="secondary" className="w-fit mb-1.5 text-[11px]">{restaurantOfDay.category}</Badge>
+                          <h3 className="text-base md:text-xl font-bold font-ko line-clamp-1">
+                            {restaurantOfDay.name_ko || restaurantOfDay.name_en}
+                          </h3>
+                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                            {restaurantOfDay.rating && (
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span className="font-bold text-sm">{restaurantOfDay.rating}</span>
+                                <span className="text-slate-400 text-xs">({restaurantOfDay.review_count || 0})</span>
+                              </div>
+                            )}
+                          </div>
+                          {restaurantOfDay.address && (
+                            <div className="flex items-center gap-1 text-slate-500 text-xs mt-1.5">
+                              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="line-clamp-1">{restaurantOfDay.address}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                </>
+              )}
+
+              {/* 새로 오픈한 업체 — "새로 오픈" 뱃지 통합 */}
+              {grandOpeningBiz.length > 0 && (
+                <>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg md:text-2xl font-bold">🎉 새로 오픈한 업체</h2>
+                    <Link href="/businesses?sort=recent">
+                      <Button variant="ghost" className="gap-1 text-sm">전체 보기 <ArrowRight className="h-4 w-4" /></Button>
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {grandOpeningBiz.map((biz: any) => (
+                      <Link key={biz.id} href={`/business/${biz.id}`}>
+                        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-green-100 overflow-hidden group">
+                          <div className="relative h-28 overflow-hidden">
+                            {biz.cover_url ? (
+                              <div
+                                className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
+                                style={{ backgroundImage: `url(${biz.cover_url})` }}
+                              />
+                            ) : (
+                              <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(biz.category)} flex items-center justify-center`}>
+                                <span className="text-4xl">🏢</span>
+                              </div>
+                            )}
+                            <Badge className="absolute top-2 left-2 bg-green-500 text-white font-bold text-xs shadow">🎉 새로 오픈</Badge>
+                          </div>
+                          <div className="p-3">
+                            <p className="font-bold text-slate-800 text-sm line-clamp-1">{biz.name_ko || biz.name_en}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{biz.category}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+
+      {/* ☀️ 오늘의 아침 브리핑 — static promo card */}
+      <section className="py-8 bg-gradient-to-r from-orange-50 to-yellow-50">
+        <div className="container mx-auto px-4">
+          <a
+            href="https://www.instagram.com/dalkonnect"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block max-w-lg mx-auto"
+          >
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow border border-orange-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-orange-400 to-pink-500 p-5 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xl font-bold mb-1 flex items-center gap-2">
+                      <Sun className="w-5 h-5" /> 오늘의 아침 브리핑
+                    </div>
+                    <p className="text-orange-100 text-sm">
+                      {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}
+                    </p>
+                  </div>
+                  <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Play className="w-6 h-6 text-white fill-white" />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">DFW 한인 커뮤니티 최신 소식</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    <span className="text-pink-500 font-medium">@dalkonnect</span> Instagram에서 보기
+                  </p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+              </div>
+            </div>
+          </a>
+        </div>
+      </section>
+
 
       {/* Blog Section */}
       <section className="py-12 bg-white">
@@ -1510,424 +1269,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Recent Marketplace Listings */}
-      <section className="py-20 bg-gradient-to-b from-green-50 to-white">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <div className="flex items-center gap-3">
-              <ShoppingBag className="h-8 w-8 text-green-600" />
-              <div>
-                <h2 className="text-xl md:text-4xl font-bold">최근 올라온 매물</h2>
-                <p className="text-slate-600 mt-1">DFW 한인 커뮤니티 사고팔기</p>
-              </div>
-            </div>
-            <Link href="/marketplace">
-              <Button variant="outline" className="gap-2 border-green-600 text-green-700 hover:bg-green-50 font-semibold">
-                전체 보기 <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          {loadingListings ? (
-            <div className="space-y-3 md:hidden">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-3">
-                  <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : recentListings.length > 0 && (
-            <>
-              {/* 카테고리별 이모지 맵 */}
-              {(() => {
-                const categoryEmoji: Record<string, string> = {
-                  '자동차': '🚗', '가전제품': '📺', '가전': '📺', '전자기기': '💻', '전자제품': '💻',
-                  '가구': '🛋️', '의류': '👕', '유아용품': '🍼', '육아용품': '🍼',
-                  '스포츠': '⚽', '스포츠/레저': '🏃', '도서': '📚', '도서/교재': '📚',
-                  '악기': '🎸', '주방용품': '🍳', '식품': '🍱', '기타': '📦',
-                };
-                return (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                    {recentListings.slice(0, 6).map((listing) => {
-                      const isFree = listing.price_type === 'free';
-                      const price = isFree ? '무료나눔' : listing.price_type === 'contact' ? '가격문의' : listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : '가격협의';
-                      const isTest = (listing as any).nickname?.includes('테스터') || (listing as any).nickname?.includes('달커넥트테스터');
-                      const emoji = categoryEmoji[listing.category] || '🛍️';
-                      const handleClick = (e: React.MouseEvent) => {
-                        if (isTest) {
-                          e.preventDefault();
-                          alert('📦 아직 매물이 없어요!\n첫 번째 매물을 무료로 올려보세요.\n물건을 팔거나 나누고 싶다면 지금 바로 등록해보세요 😊');
-                        }
-                      };
-                      return (
-                        <Link key={listing.id} href={isTest ? '/marketplace/new' : `/marketplace/${listing.id}`} onClick={handleClick}>
-                          <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-slate-100 group">
-                            {/* 이미지 or 이모지 placeholder */}
-                            <div className="h-32 relative overflow-hidden">
-                              {listing.photos?.[0] ? (
-                                <img src={listing.photos[0]} alt={listing.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center gap-1">
-                                  <span className="text-4xl">{emoji}</span>
-                                  <span className="text-xs text-slate-400 font-medium">{listing.category}</span>
-                                </div>
-                              )}
-                              {/* 가격 뱃지 */}
-                              <div className={`absolute bottom-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full ${isFree ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'}`}>
-                                {price}
-                              </div>
-                            </div>
-                            <div className="p-3">
-                              <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug">{listing.title}</p>
-                              <p className="text-xs text-slate-400 mt-1">{listing.location || 'DFW'}</p>
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            
-            </>
-          )}
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-            <Link href="/marketplace">
-              <Button size="lg" variant="outline" className="gap-2 border-green-600 text-green-700 hover:bg-green-50 font-bold px-8 shadow-sm">
-                전체 매물 보기 →
-              </Button>
-            </Link>
-            <Link href="/marketplace/new">
-              <Button size="lg" className="gap-2 font-bold shadow-md">
-                <ShoppingBag className="h-5 w-5" />
-                무료로 올리기
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 이민/비자 섹션 */}
-      <section className="py-12 bg-gradient-to-r from-indigo-50 to-blue-50 border-y border-indigo-100">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-xl md:text-3xl font-bold flex items-center gap-2">
-                <span>📋</span> 이민·비자 뉴스
-              </h2>
-              <p className="text-sm text-slate-500 mt-1">USCIS 공지 · 비자 정책 · 이민법 최신 업데이트</p>
-            </div>
-            <Link href="/news?category=%EC%9D%B4%EB%AF%BC%2F%EB%B9%84%EC%9E%90">
-              <Button variant="outline" size="sm" className="gap-1 border-indigo-300 text-indigo-700 hover:bg-indigo-50 font-semibold">
-                더 보기 <ArrowRight className="h-3.5 w-3.5" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-            {immigrationNews.length > 0 ? immigrationNews.map((item: any) => (
-              <Link key={item.id} href={`/news/${item.id}`}>
-                <div className="flex gap-3 bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow border border-indigo-100">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{item.source}</span>
-                    <p className="text-sm font-bold text-slate-800 line-clamp-2 mt-1 leading-snug">{item.title}</p>
-                    <p className="text-xs text-slate-400 mt-1">{new Date(item.published_date || item.created_at).toLocaleDateString('ko-KR')}</p>
-                  </div>
-                  {item.thumbnail_url && (
-                    <img src={item.thumbnail_url} alt={item.title_ko ?? ''} loading="lazy" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
-                  )}
-                </div>
-              </Link>
-            )) : (
-              <div className="md:col-span-2 bg-white rounded-xl p-4 border border-indigo-100 text-center text-slate-400 text-sm">
-                이민/비자 뉴스를 수집 중입니다. 곧 업데이트됩니다.
-              </div>
-            )}
-          </div>
-
-          {/* 빠른 링크 */}
-          <div className="flex flex-wrap gap-2">
-            <a href="https://www.uscis.gov" target="_blank" rel="noopener noreferrer"
-               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
-              🏛️ USCIS 공식사이트
-            </a>
-            <a href="https://travel.state.gov" target="_blank" rel="noopener noreferrer"
-               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
-              ✈️ 비자 신청 (State.gov)
-            </a>
-            <a href="https://www.uscis.gov/tools/track-a-case" target="_blank" rel="noopener noreferrer"
-               className="flex items-center gap-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-50 transition-colors shadow-sm">
-              🔍 케이스 추적
-            </a>
-            <Link href="/community?category=Q%26A">
-              <span className="flex items-center gap-1.5 bg-indigo-600 text-white rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer">
-                💬 이민 Q&A 커뮤니티
-              </span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Community Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <div>
-              <h2 className="text-xl md:text-4xl font-bold flex items-center gap-3">
-                <span className="text-2xl">🔥</span> 커뮤니티 인기글
-              </h2>
-              <p className="text-slate-600 mt-2">달라스 한인들이 함께 나누는 이야기</p>
-            </div>
-            <div className="flex gap-2">
-              <Link href="/community/new">
-                <Button size="sm" className="gap-1.5 font-semibold shadow-sm">
-                  ✍️ 글쓰기
-                </Button>
-              </Link>
-              <Link href="/community">
-                <Button variant="ghost" size="sm" className="gap-1">
-                  전체 보기 <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {loadingCommunity ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-6">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-6 w-20" />
-                        <Skeleton className="h-6 w-full" />
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <Skeleton className="h-4 w-16" />
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : popularPosts.length > 0 ? (
-            <div className="divide-y divide-slate-100">
-              {popularPosts.slice(0, 8).map((post, index) => (
-                <Link key={post.id} href={`/community/${post.id}`}>
-                  <div className="flex gap-3 py-3 items-start hover:bg-slate-50 rounded-lg px-1 transition-colors">
-                    <div className="flex items-center justify-center w-7 h-7 md:w-9 md:h-9 bg-primary text-white text-xs md:text-sm font-bold rounded-full flex-shrink-0 mt-0.5">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <span className="text-xs font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{post.category}</span>
-                        {post.is_pinned && <span className="text-xs text-red-500 font-bold">📌 공지</span>}
-                      </div>
-                      <p className="text-sm md:text-base font-bold text-slate-800 line-clamp-2 leading-snug mt-1">{post.title}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
-                        <span className="font-medium text-slate-500">{post.nickname}</span>
-                        <span className="flex items-center gap-0.5">
-                          <MessageCircle className="w-3 h-3 text-blue-400" />
-                          <span className="font-semibold text-blue-500">{post.comment_count}</span>
-                        </span>
-                        <span className="flex items-center gap-0.5">
-                          <Heart className="w-3 h-3 text-red-400" />
-                          <span className="font-semibold text-red-500">{post.likes}</span>
-                        </span>
-                        <span className="flex items-center gap-0.5">
-                          <Eye className="w-3 h-3" />
-                          {post.views}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <MessageCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-600 mb-4">아직 커뮤니티 글이 없습니다</p>
-                <Link href="/community/new">
-                  <Button>첫 번째 글 작성하기</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-
-          {popularPosts.length > 0 && (
-            <div className="text-center mt-8">
-              <Link href="/community">
-                <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all font-bold px-8">
-                  <MessageCircle className="h-5 w-5" />
-                  커뮤니티 더보기 →
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* 마트 픽 섹션 */}
-      <section className="py-16 bg-gradient-to-b from-white to-slate-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3">
-              <ShoppingCart className="h-8 w-8 text-primary" />
-              <div>
-                <h2 className="text-xl md:text-4xl font-bold">마트 픽 🛒</h2>
-                <p className="text-slate-500 mt-1 text-sm md:text-base">한인들이 자주 가는 DFW 마트 최신 소식</p>
-              </div>
-            </div>
-            <Link href="/deals">
-              <Button variant="ghost" className="gap-2">
-                핫딜 보기 <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          {/* 마트 카드 4개 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {([
-              {
-                id: "costco" as const,
-                emoji: "🔴",
-                name: "코스트코",
-                tagline: "대용량 & 가성비",
-                color: "from-red-600 to-red-700",
-                href: "https://www.costco.com",
-                fallback: ["멤버십 Executive 할인", "커클랜드 시그니처 특가", "푸드코트 핫도그 $1.50"],
-              },
-              {
-                id: "traderjoes" as const,
-                emoji: "🌿",
-                name: "트레이더 조",
-                tagline: "유니크 & 시즌 픽",
-                color: "from-orange-500 to-red-500",
-                href: "https://www.traderjoes.com",
-                fallback: ["오렌지 치킨 신상", "베이글 시즈닝 핫템", "쿠키 버터 시즌 한정"],
-              },
-              {
-                id: "centralmarket" as const,
-                emoji: "🌟",
-                name: "센트럴 마켓",
-                tagline: "프리미엄 식재료",
-                color: "from-green-600 to-emerald-700",
-                href: "https://www.centralmarket.com",
-                fallback: ["유기농 & 프리미엄", "현지 농장 직거래", "HEB 계열 프리미엄"],
-              },
-              {
-                id: "heb" as const,
-                emoji: "🤠",
-                name: "HEB",
-                tagline: "텍사스 로컬 No.1",
-                color: "from-red-700 to-red-800",
-                href: "https://www.heb.com",
-                fallback: ["텍사스 자몽 제철", "HEB 브랜드 특가", "주간 세일 업데이트"],
-              },
-            ] as const).map((store) => {
-              const news = martNews[store.id] || [];
-              return (
-                <a key={store.id} href={store.href} target="_blank" rel="noopener noreferrer">
-                  <div className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group h-full">
-                    <div className={`bg-gradient-to-br ${store.color} p-5 text-white`}>
-                      <div className="text-3xl mb-2">{store.emoji}</div>
-                      <div className="font-bold text-lg leading-tight">{store.name}</div>
-                      <div className="text-white/80 text-xs mt-1">{store.tagline}</div>
-                    </div>
-                    <div className="bg-white p-4 border border-t-0 rounded-b-2xl">
-                      <ul className="space-y-1.5">
-                        {news.length > 0
-                          ? news.slice(0, 3).map((item: any, i: number) => (
-                              <li key={i} className="text-xs text-slate-700 flex items-start gap-1.5 leading-tight">
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0 mt-1" />
-                                <span className="line-clamp-2">{item.title}</span>
-                              </li>
-                            ))
-                          : store.fallback.map((item, i) => (
-                              <li key={i} className="text-xs text-slate-700 flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-200 flex-shrink-0" />
-                                {item}
-                              </li>
-                            ))
-                        }
-                      </ul>
-                      <div className="mt-3 flex items-center gap-1 text-xs text-primary font-medium group-hover:gap-2 transition-all">
-                        {news.length > 0 ? '최신 소식 보기' : '사이트 바로가기'} <ArrowRight className="h-3 w-3" />
-                      </div>
-                    </div>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ☀️ 오늘의 아침 브리핑 — static promo card */}
-      <section className="py-8 bg-gradient-to-r from-orange-50 to-yellow-50">
-        <div className="container mx-auto px-4">
-          <a
-            href="https://www.instagram.com/dalkonnect"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block max-w-lg mx-auto"
-          >
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow border border-orange-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-400 to-pink-500 p-5 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xl font-bold mb-1 flex items-center gap-2">
-                      <Sun className="w-5 h-5" /> 오늘의 아침 브리핑
-                    </div>
-                    <p className="text-orange-100 text-sm">
-                      {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}
-                    </p>
-                  </div>
-                  <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Play className="w-6 h-6 text-white fill-white" />
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">DFW 한인 커뮤니티 최신 소식</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    <span className="text-pink-500 font-medium">@dalkonnect</span> Instagram에서 보기
-                  </p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
-              </div>
-            </div>
-          </a>
-        </div>
-      </section>
-
-      {/* Home Services Hub Banner */}
-      <section className="py-10 bg-gradient-to-br from-gray-900 to-gray-700">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="text-white text-center md:text-left">
-              <div className="text-2xl mb-1">🔧 달라스 홈서비스 허브</div>
-              <div className="text-gray-300 text-sm">에어컨 · 전기 · 배관 · 청소 · 이사 · 핸디맨</div>
-              <div className="text-gray-400 text-xs mt-1">영어 걱정 없이 — 한국어로 편하게 연결해드립니다</div>
-            </div>
-            <Link href="/services">
-              <span className="inline-block bg-white text-gray-900 font-bold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors whitespace-nowrap">
-                무료 견적 받기 →
-              </span>
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Newsletter Section */}
       <section className="py-16 bg-slate-50">
@@ -1936,21 +1277,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+
+      {/* 업체 사장님 CTA / 업체등록 (히어로 아래 띠배너 + 최하단 CTA 통합) */}
       <section className="py-20 bg-gradient-to-r from-primary to-primary/80 text-white">
         <div className="container mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-semibold mb-5">
+            🏪 내 업체를 달라스 한인들에게 알리세요
+          </div>
           <h2 className="text-xl md:text-4xl font-bold mb-6">업체를 운영하시나요?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
             DalKonnect에 등록하고 더 많은 고객을 만나세요
           </p>
-          <Link href="/pricing">
-            <Button size="lg" variant="secondary" className="h-14 px-10 text-lg">
-              비즈니스 등록하기
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/register-business">
+              <Button size="lg" variant="secondary" className="h-14 px-10 text-lg font-bold">
+                무료 등록하기 →
+              </Button>
+            </Link>
+            <Link href="/pricing">
+              <Button size="lg" variant="outline" className="h-14 px-10 text-lg font-bold bg-transparent border-white text-white hover:bg-white/10">
+                요금제 보기
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </div>
     </>
   );
 }
+

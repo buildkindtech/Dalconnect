@@ -9,13 +9,15 @@ function createDbConnection() {
     throw new Error("DATABASE_URL environment variable is not set");
   }
   
-  const pool = new pg.Pool({ 
+  const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     // Connection pool settings for serverless
     max: 1,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    // Neon 콜드스타트에 2s는 너무 짧아 랜덤 500 유발 → 10s로 상향
+    connectionTimeoutMillis: 10000,
+    keepAlive: true,
   });
   
   return drizzle(pool, { schema });

@@ -37,13 +37,31 @@ export default function Header() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // 사이트 통계
+  // 사이트 통계 — 콜드스타트/500 에러에 강하게: 재시도 + 0값 방지 가드
   const [stats, setStats] = useState<{ totalBusinesses: number; totalPosts: number; totalViews: number; todayViews: number } | null>(null);
   useEffect(() => {
-    fetch('/api/stats')
-      .then(r => r.json())
-      .then(d => { if (d && typeof d.totalBusinesses === 'number') setStats(d); })
-      .catch(() => {});
+    let cancelled = false;
+    const fetchStats = async (attempt = 0): Promise<void> => {
+      try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) throw new Error(`stats ${res.status}`);
+        const d = await res.json();
+        // totalBusinesses가 0이면 콜드스타트 실패로 간주 (실제로 1,175+개 존재)
+        // → 0으로 렌더하지 말고 재시도. 이미 값이 있으면 그 값을 유지.
+        if (d && typeof d.totalBusinesses === 'number' && d.totalBusinesses > 0) {
+          if (!cancelled) setStats(d);
+          return;
+        }
+        throw new Error('empty stats');
+      } catch {
+        if (cancelled || attempt >= 3) return;
+        // 지수 백오프: 400ms, 800ms, 1600ms
+        await new Promise(r => setTimeout(r, 400 * 2 ** attempt));
+        return fetchStats(attempt + 1);
+      }
+    };
+    fetchStats();
+    return () => { cancelled = true; };
   }, []);
 
   const handleCityClick = (city: City) => {
