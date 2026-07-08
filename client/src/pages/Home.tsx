@@ -139,11 +139,16 @@ export default function Home() {
     fetchHotDeals();
   }, []);
 
-  // Grand opening businesses (newest first)
+  // Grand opening businesses (newest first) — 실사진 있는 업소 우선 정렬 후 3개
   useEffect(() => {
-    fetchWithRetry('/api/businesses?sort=recent&limit=3')
+    fetchWithRetry('/api/businesses?sort=recent&limit=12')
       .then(r => r.json())
-      .then(d => setGrandOpeningBiz(d.businesses || []))
+      .then(d => {
+        const list = d.businesses || [];
+        const withImg = list.filter((b: any) => hasValidImage(b.cover_url));
+        const withoutImg = list.filter((b: any) => !hasValidImage(b.cover_url));
+        setGrandOpeningBiz([...withImg, ...withoutImg].slice(0, 3));
+      })
       .catch(() => {});
   }, []);
 
@@ -418,7 +423,7 @@ export default function Home() {
               <button
                 key={tag.category}
                 onClick={() => setLocation(`/businesses?category=${encodeURIComponent(tag.category)}`)}
-                className="px-3 md:px-4 py-1 md:py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full text-xs md:text-sm font-medium text-white transition-all hover:scale-105"
+                className="px-3 md:px-4 py-1 md:py-2 bg-black/40 hover:bg-black/60 border border-white/40 backdrop-blur-sm rounded-full text-xs md:text-sm font-medium text-white transition-all hover:scale-105"
               >
                 {tag.label}
               </button>
@@ -540,6 +545,46 @@ export default function Home() {
       </section>
 
 
+      {/* ☀️ 오늘의 아침 브리핑 — static promo card */}
+      <section className="py-8 bg-gradient-to-r from-orange-50 to-yellow-50">
+        <div className="container mx-auto px-4">
+          <a
+            href="https://www.instagram.com/dalkonnect"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block max-w-lg mx-auto"
+          >
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow border border-orange-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-orange-400 to-pink-500 p-5 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xl font-bold mb-1 flex items-center gap-2">
+                      <Sun className="w-5 h-5" /> 오늘의 아침 브리핑
+                    </div>
+                    <p className="text-orange-100 text-sm">
+                      {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}
+                    </p>
+                  </div>
+                  <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Play className="w-6 h-6 text-white fill-white" />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">DFW 한인 커뮤니티 최신 소식</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    <span className="text-pink-500 font-medium">@dalkonnect</span> Instagram에서 보기
+                  </p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+              </div>
+            </div>
+          </a>
+        </div>
+      </section>
+
+
       {/* 이민/비자 섹션 */}
       <section className="py-12 bg-gradient-to-r from-indigo-50 to-blue-50 border-y border-indigo-100">
         <div className="container mx-auto px-4">
@@ -605,7 +650,7 @@ export default function Home() {
       {/* Community Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-8 sm:mb-12">
             <div>
               <h2 className="text-xl md:text-4xl font-bold flex items-center gap-3">
                 <span className="text-2xl">🔥</span> 커뮤니티 인기글
@@ -734,12 +779,15 @@ export default function Home() {
               </div>
             ) : (
               /* 가로 스와이프 카드 (수동 스크롤만) */
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 -mx-4 px-4">
-                {featuredForAd.map((business: any) => (
-                  <div key={business.id} className="flex-shrink-0 w-[220px] md:w-[280px] snap-start">
-                    <BusinessCard business={business} />
-                  </div>
-                ))}
+              <div className="relative">
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 -mx-4 px-4">
+                  {featuredForAd.map((business: any) => (
+                    <div key={business.id} className="flex-shrink-0 w-[220px] md:w-[280px] snap-start">
+                      <BusinessCard business={business} />
+                    </div>
+                  ))}
+                </div>
+                <div className="pointer-events-none absolute right-[-1rem] top-0 bottom-2 w-16 bg-gradient-to-l from-amber-50 to-transparent hidden md:block" />
               </div>
             )}
           </div>
@@ -1126,15 +1174,21 @@ export default function Home() {
                       <Link key={biz.id} href={`/business/${biz.id}`}>
                         <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-green-100 overflow-hidden group">
                           <div className="relative h-28 overflow-hidden">
-                            {biz.cover_url ? (
+                            {hasValidImage(biz.cover_url) ? (
                               <div
                                 className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-300"
                                 style={{ backgroundImage: `url(${biz.cover_url})` }}
                               />
                             ) : (
-                              <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(biz.category)} flex items-center justify-center`}>
-                                <span className="text-4xl">🏢</span>
-                              </div>
+                              (() => {
+                                const IconComp = (Icons as any)[getCategoryIcon(biz.category)] ?? Icons.Building;
+                                return (
+                                  <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center gap-1">
+                                    <IconComp className="w-8 h-8 text-slate-400" />
+                                    <span className="text-[11px] text-slate-400 font-medium">{biz.category}</span>
+                                  </div>
+                                );
+                              })()
                             )}
                             <Badge className="absolute top-2 left-2 bg-green-500 text-white font-bold text-xs shadow">🎉 새로 오픈</Badge>
                           </div>
@@ -1152,46 +1206,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-
-      {/* ☀️ 오늘의 아침 브리핑 — static promo card */}
-      <section className="py-8 bg-gradient-to-r from-orange-50 to-yellow-50">
-        <div className="container mx-auto px-4">
-          <a
-            href="https://www.instagram.com/dalkonnect"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block max-w-lg mx-auto"
-          >
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow border border-orange-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-400 to-pink-500 p-5 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xl font-bold mb-1 flex items-center gap-2">
-                      <Sun className="w-5 h-5" /> 오늘의 아침 브리핑
-                    </div>
-                    <p className="text-orange-100 text-sm">
-                      {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}
-                    </p>
-                  </div>
-                  <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Play className="w-6 h-6 text-white fill-white" />
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">DFW 한인 커뮤니티 최신 소식</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    <span className="text-pink-500 font-medium">@dalkonnect</span> Instagram에서 보기
-                  </p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
-              </div>
-            </div>
-          </a>
-        </div>
-      </section>
 
 
       {/* Blog Section */}

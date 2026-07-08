@@ -14,7 +14,7 @@
     <script>
       (function() {
         var id = '%VITE_GA4_ID%'.trim();
-        if (!id || id === '' || id.indexOf('VITE_') === 0) return;
+        if (!id || id.indexOf('VITE_') !== -1) return;
         var s = document.createElement('script');
         s.async = true;
         s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
@@ -24,22 +24,6 @@
         window.gtag = gtag;
         gtag('js', new Date());
         gtag('config', id);
-      })();
-    </script>
-
-    <!-- Umami Analytics — set VITE_UMAMI_ID and VITE_UMAMI_URL env vars to enable -->
-    <script>
-      (function() {
-        var id = '%VITE_UMAMI_ID%';
-        var url = '%VITE_UMAMI_URL%';
-        if (!id || id === '' || id.indexOf('VITE_') === 0) return;
-        if (!url || url === '' || url.indexOf('VITE_') === 0) return;
-        var s = document.createElement('script');
-        s.async = true;
-        s.defer = true;
-        s.setAttribute('data-website-id', id);
-        s.src = url + '/script.js';
-        document.head.appendChild(s);
       })();
     </script>
 
