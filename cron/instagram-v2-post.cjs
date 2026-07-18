@@ -38,6 +38,12 @@ function chicagoDate(input) {
 
 function readEnv(name) {
   if (process.env[name]) return process.env[name];
+  try {
+    const value = execFileSync('/usr/bin/security', [
+      'find-generic-password', '-a', 'dalkonnect', '-s', name, '-w',
+    ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (value) return value;
+  } catch {}
   for (const file of ENV_FILES) {
     if (!fs.existsSync(file)) continue;
     const match = fs.readFileSync(file, 'utf8').match(new RegExp(`^(?:export\\s+)?${name}=(.*)$`, 'm'));

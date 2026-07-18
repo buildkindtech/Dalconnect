@@ -103,7 +103,8 @@ Label: `tech.buildkind.dalkonnect.instagram-v2`
 - 같은 날짜 또는 같은 영상 해시는 두 번 게시하지 않는다.
 - Meta 토큰이 무효이면 Firebase 업로드나 Instagram 컨테이너 생성 전에 실패한다.
 - Facebook·Telegram에는 게시하거나 메시지를 보내지 않는다.
-- 현재 Meta 토큰은 2026-07-17 검사에서 무효이므로 OAuth 재인증 전까지 공개 게시되지 않는다.
+- Meta Page 토큰과 Instagram 계정 ID는 macOS Keychain의 `dalkonnect` 계정에서 먼저 읽는다. 환경변수와 로컬 env 파일은 하위 호환용 fallback이며, 토큰을 저장소나 LaunchAgent에 평문으로 넣지 않는다.
+- 2026-07-17 OAuth 재인증과 장기 Page 토큰 교환을 완료했고, `@dalkonnect` Reel 1건을 실제 게시해 전체 경로를 검증했다.
 
 ## 14일 실험 KPI
 
