@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "businesses": {},
+  "notes": "업체 사진을 공개 콘텐츠에 쓰기 전 business id 아래에 approved=true, approvedBy, approvedAt, scope를 기록하세요. claimed=true만으로 사진 사용권을 추정하지 않습니다."
+}

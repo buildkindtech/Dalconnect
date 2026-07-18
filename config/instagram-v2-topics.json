@@ -1,0 +1,330 @@
+{
+  "version": 1,
+  "timezone": "America/Chicago",
+  "defaultFormat": "reel",
+  "editorial": {
+    "market": "DFW Korean community",
+    "minimumQualityScore": 95,
+    "requiredFacts": 3,
+    "maximumFactAgeDays": 180,
+    "minimumDistinctPhotoArtists": 2,
+    "requireVoiceover": true,
+    "voice": {
+      "provider": "google-cloud-tts",
+      "name": "ko-KR-Chirp3-HD-Leda",
+      "languageCode": "ko-KR",
+      "speakingRate": 1,
+      "postSpeed": 1.2,
+      "commaBreakMs": 350,
+      "sentenceBreakMs": 550
+    },
+    "allowedSourceHosts": [
+      "dallascityhall.com",
+      "www.211texas.org",
+      "www.911.gov",
+      "www.weather.gov"
+    ],
+    "blockedPhrases": ["충격", "대박", "소름", "역대급", "무조건", "100%", "안 보면 손해"]
+  },
+  "reel": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "secondsPerSlide": 4.6,
+    "maxSeconds": 30
+  },
+  "publishing": {
+    "enabled": true,
+    "platform": "instagram",
+    "graphVersion": "v24.0",
+    "hour": 11,
+    "minute": 30,
+    "maxPostsPerDay": 1,
+    "authorizedBy": "Aaron",
+    "authorizedAt": "2026-07-17",
+    "requireQualityScore": 95
+  },
+  "schedule": {
+    "0": ["tornado-watch-warning", "dallas-help-numbers"],
+    "1": ["dfw-heat-safety", "dallas-311-request"],
+    "2": ["dallas-311-request", "texas-211-help"],
+    "3": ["texas-211-help", "emergency-911-ready"],
+    "4": ["emergency-911-ready", "tornado-shelter"],
+    "5": ["tornado-shelter", "heat-car-safety"],
+    "6": ["heat-car-safety", "dallas-help-numbers"]
+  },
+  "topics": [
+    {
+      "id": "dallas-help-numbers",
+      "type": "local_guide",
+      "factCheckedAt": "2026-07-17",
+      "photoQuery": "Dallas Texas skyline",
+      "hook": "달라스 살면\n저장할 번호 3개",
+      "dek": "급할 때 검색하지 말고 저장하세요",
+      "facts": [
+        {
+          "eyebrow": "CITY SERVICE",
+          "title": "311",
+          "body": "도로·신호·누수 등\nDallas 시 서비스 요청",
+          "sourceLabel": "City of Dallas",
+          "sourceUrl": "https://dallascityhall.com/services/311/Pages/about_us.aspx"
+        },
+        {
+          "eyebrow": "TEXAS HELP",
+          "title": "211",
+          "body": "식품·주거·건강·복지\n지역 지원 찾기",
+          "sourceLabel": "2-1-1 Texas",
+          "sourceUrl": "https://www.211texas.org/"
+        },
+        {
+          "eyebrow": "EMERGENCY",
+          "title": "911",
+          "body": "경찰·소방·구급이 필요한\n즉각적인 응급상황",
+          "sourceLabel": "National 911 Program",
+          "sourceUrl": "https://www.911.gov/calling-911/"
+        }
+      ],
+      "cta": "가족에게 공유하고\n휴대폰에 저장해두세요",
+      "captionLead": "달라스 생활 중 급할 때 바로 찾을 수 있도록 저장해두세요.",
+      "hashtags": ["달라스한인", "달라스생활", "DFW한인", "텍사스생활", "달커넥트"]
+    },
+    {
+      "id": "tornado-watch-warning",
+      "type": "local_guide",
+      "factCheckedAt": "2026-07-17",
+      "photoQuery": "Texas storm clouds",
+      "hook": "토네이도 알림\n이 차이는 꼭 알아두세요",
+      "dek": "WATCH와 WARNING은 행동이 다릅니다",
+      "facts": [
+        {
+          "eyebrow": "WATCH",
+          "title": "준비",
+          "body": "토네이도 가능성이 있음\n대피 장소와 알림 확인",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/safety/tornado-ww"
+        },
+        {
+          "eyebrow": "WARNING",
+          "title": "즉시 행동",
+          "body": "레이더 또는 목격으로 확인\n최하층 안쪽 방으로 이동",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/safety/tornado-ww"
+        },
+        {
+          "eyebrow": "SAFE PLACE",
+          "title": "창문에서 멀리",
+          "body": "튼튼한 건물 내부에서\n머리를 보호하세요",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/jan/beprepared-tornadoes"
+        }
+      ],
+      "cta": "DFW 가족 단톡방에\n미리 공유해두세요",
+      "captionLead": "토네이도 WATCH는 준비, WARNING은 즉시 행동입니다.",
+      "hashtags": ["달라스날씨", "DFW날씨", "토네이도", "텍사스생활", "달커넥트"]
+    },
+    {
+      "id": "dfw-heat-safety",
+      "type": "local_guide",
+      "factCheckedAt": "2026-07-17",
+      "photoQuery": "Dallas Texas summer skyline",
+      "hook": "DFW 여름\n폭염 때 지킬 3가지",
+      "dek": "더위는 참는 것보다 피하는 게 먼저입니다",
+      "facts": [
+        {
+          "eyebrow": "COOL DOWN",
+          "title": "에어컨 공간",
+          "body": "가능하면 실내에서 쉬고\n직사광선을 피하세요",
+          "sourceLabel": "NWS Fort Worth",
+          "sourceUrl": "https://www.weather.gov/fwd/heat3?n=heat4"
+        },
+        {
+          "eyebrow": "OUTDOOR",
+          "title": "시간 바꾸기",
+          "body": "격한 야외활동은\n이른 아침이나 저녁에",
+          "sourceLabel": "NWS Fort Worth",
+          "sourceUrl": "https://www.weather.gov/fwd/heat3?n=heat4"
+        },
+        {
+          "eyebrow": "CHECK IN",
+          "title": "주변 확인",
+          "body": "아이·어르신·이웃의\n냉방과 수분 상태 확인",
+          "sourceLabel": "NWS Fort Worth",
+          "sourceUrl": "https://www.weather.gov/fwd/heat3?n=heat4"
+        }
+      ],
+      "cta": "이번 여름 필요할 때 보게\n지금 저장하세요",
+      "captionLead": "DFW 폭염은 무리해서 버티지 말고 활동 시간과 장소를 바꾸는 게 먼저입니다.",
+      "hashtags": ["달라스날씨", "DFW여름", "폭염안전", "텍사스생활", "달커넥트"]
+    },
+    {
+      "id": "dallas-311-request",
+      "type": "local_guide",
+      "factCheckedAt": "2026-07-17",
+      "photoQuery": "Dallas Texas city street",
+      "hook": "달라스 311\n이렇게 요청하세요",
+      "dek": "접수부터 추적까지 놓치지 않는 3단계",
+      "facts": [
+        {
+          "eyebrow": "SUBMIT",
+          "title": "이메일 말고",
+          "body": "전화·모바일 앱·온라인으로\n시 서비스 요청 접수",
+          "sourceLabel": "City of Dallas",
+          "sourceUrl": "https://dallascityhall.com/services/311/Pages/about_us.aspx"
+        },
+        {
+          "eyebrow": "TRACK",
+          "title": "SR 번호 저장",
+          "body": "접수마다 고유 번호가 생겨\n처리 상황을 추적할 수 있어요",
+          "sourceLabel": "City of Dallas",
+          "sourceUrl": "https://dallascityhall.com/services/311/Pages/about_us.aspx"
+        },
+        {
+          "eyebrow": "24 / 7",
+          "title": "위험하면 전화",
+          "body": "긴급·위험한 시 서비스는 311\n안 되면 214-670-3111",
+          "sourceLabel": "City of Dallas",
+          "sourceUrl": "https://dallascityhall.com/services/311/Pages/about_us.aspx"
+        }
+      ],
+      "cta": "달라스 사는 가족에게\n저장해서 공유하세요",
+      "captionLead": "Dallas 311 요청은 이메일 대신 전화·앱·온라인으로 접수하고 SR 번호를 저장하세요.",
+      "hashtags": ["달라스311", "달라스생활", "DFW한인", "텍사스생활", "달커넥트"]
+    },
+    {
+      "id": "texas-211-help",
+      "type": "local_guide",
+      "factCheckedAt": "2026-07-17",
+      "photoQuery": "Dallas Texas neighborhood",
+      "hook": "텍사스에서 도움이 필요할 때\n211을 기억하세요",
+      "dek": "식품·건강·주거 지원을 한곳에서 찾습니다",
+      "facts": [
+        {
+          "eyebrow": "CALL",
+          "title": "2-1-1",
+          "body": "전화 211 또는\n877-541-7905",
+          "sourceLabel": "2-1-1 Texas",
+          "sourceUrl": "https://www.211texas.org/"
+        },
+        {
+          "eyebrow": "FIND HELP",
+          "title": "생활 지원 찾기",
+          "body": "식품·건강·주거 등\n지역 자원을 검색",
+          "sourceLabel": "2-1-1 Texas",
+          "sourceUrl": "https://www.211texas.org/"
+        },
+        {
+          "eyebrow": "ONLINE",
+          "title": "웹 채팅도 가능",
+          "body": "영어·스페인어 채팅으로\n필요한 서비스를 안내",
+          "sourceLabel": "2-1-1 Texas",
+          "sourceUrl": "https://www.211texas.org/"
+        }
+      ],
+      "cta": "필요한 사람에게 바로 보내게\n지금 저장하세요",
+      "captionLead": "텍사스의 식품·건강·주거 지원을 찾을 때 2-1-1 Texas를 이용할 수 있습니다.",
+      "hashtags": ["텍사스211", "달라스생활", "DFW한인", "텍사스복지", "달커넥트"]
+    },
+    {
+      "id": "emergency-911-ready",
+      "type": "local_guide",
+      "factCheckedAt": "2026-07-17",
+      "photoQuery": "Texas ambulance emergency",
+      "hook": "911에 전화하면\n먼저 말할 3가지",
+      "dek": "당황할 때를 위해 미리 기억하세요",
+      "facts": [
+        {
+          "eyebrow": "LOCATION",
+          "title": "정확한 위치",
+          "body": "응급상황이 발생한\n주소와 위치부터",
+          "sourceLabel": "National 911 Program",
+          "sourceUrl": "https://www.911.gov/calling-911/"
+        },
+        {
+          "eyebrow": "DETAILS",
+          "title": "상황 설명",
+          "body": "전화번호와 응급 종류\n부상·화재 등 세부 내용",
+          "sourceLabel": "National 911 Program",
+          "sourceUrl": "https://www.911.gov/calling-911/"
+        },
+        {
+          "eyebrow": "STAY ON",
+          "title": "먼저 끊지 않기",
+          "body": "상담원 지시를 따르고\n끊으라는 안내까지 대기",
+          "sourceLabel": "National 911 Program",
+          "sourceUrl": "https://www.911.gov/calling-911/"
+        }
+      ],
+      "cta": "가족 모두가 알 수 있게\n단톡방에 공유하세요",
+      "captionLead": "911 통화에서는 위치, 연락 가능한 번호, 응급상황의 종류와 세부 내용을 준비하세요.",
+      "hashtags": ["911안전", "달라스생활", "DFW한인", "응급상황", "달커넥트"]
+    },
+    {
+      "id": "tornado-shelter",
+      "type": "local_guide",
+      "factCheckedAt": "2026-07-17",
+      "photoQuery": "Texas storm clouds",
+      "hook": "토네이도 경보 때\n어디로 가야 할까요?",
+      "dek": "집·직장·야외에서 행동이 다릅니다",
+      "facts": [
+        {
+          "eyebrow": "AT HOME",
+          "title": "안쪽 작은 방",
+          "body": "지하실·세이프룸 또는\n창문 없는 내부 공간",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/safety/tornado-during"
+        },
+        {
+          "eyebrow": "WORK / SCHOOL",
+          "title": "대피 훈련대로",
+          "body": "창문과 체육관 같은\n큰 개방 공간은 피하기",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/safety/tornado-during"
+        },
+        {
+          "eyebrow": "OUTSIDE",
+          "title": "튼튼한 건물로",
+          "body": "창고·텐트·모바일홈은 위험\n가까운 견고한 대피소로",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/safety/tornado-during"
+        }
+      ],
+      "cta": "폭풍 오기 전에 가족과\n대피 장소를 정하세요",
+      "captionLead": "토네이도 경보가 내려지면 현재 위치에 맞는 가장 튼튼한 내부 대피 공간으로 이동하세요.",
+      "hashtags": ["토네이도안전", "달라스날씨", "DFW날씨", "텍사스생활", "달커넥트"]
+    },
+    {
+      "id": "heat-car-safety",
+      "type": "local_guide",
+      "factCheckedAt": "2026-07-17",
+      "photoQuery": "Texas summer road car",
+      "hook": "텍사스 더위\n차 안은 절대 안 됩니다",
+      "dek": "아이·반려동물을 잠깐도 두지 마세요",
+      "facts": [
+        {
+          "eyebrow": "NEVER",
+          "title": "차 안에 두지 않기",
+          "body": "아이·장애인·반려동물을\n잠긴 차에 남기지 마세요",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/safety/heat"
+        },
+        {
+          "eyebrow": "CHECK IN",
+          "title": "더 취약한 이웃",
+          "body": "영유아·어르신·만성질환자\n임신부의 냉방 상태 확인",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/safety/heat"
+        },
+        {
+          "eyebrow": "LOCK IT",
+          "title": "빈 차도 잠그기",
+          "body": "어린아이가 있는 집은\n집 앞에서도 차량 잠금",
+          "sourceLabel": "National Weather Service",
+          "sourceUrl": "https://www.weather.gov/safety/heat"
+        }
+      ],
+      "cta": "이번 여름 모두가 기억하게\n저장하고 공유하세요",
+      "captionLead": "NWS는 계절과 관계없이 아이·장애인·반려동물을 잠긴 차에 남겨두는 것은 안전하지 않다고 안내합니다.",
+      "hashtags": ["차량열사병", "DFW여름", "폭염안전", "텍사스생활", "달커넥트"]
+    }
+  ]
+}
