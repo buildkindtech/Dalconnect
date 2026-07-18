@@ -12,15 +12,19 @@
 
 const pg = require('pg');
 const fs = require('fs');
+const path = require('path');
 const admin = require('firebase-admin');
-const DB_URL = 'postgresql://neondb_owner:npg_i0WIuEK3jtvd@ep-proud-shadow-ae72irn5-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const BASE = process.env.DALCONNECT_DIR || path.resolve(__dirname, '..');
+const LOCK_FILE = '/tmp/dalkonnect-auto-news-update.lock';
+const DB_URL = process.env.DATABASE_URL || process.env.DALCONNECT_DATABASE_URL;
+if (!DB_URL) throw new Error('DATABASE_URL is required');
 const pool = new pg.Pool({ connectionString: DB_URL, max: 3 });
 
 // Firebase 초기화 (뉴스 캐시용)
 let firestore = null;
 try {
   if (!admin.apps.length) {
-    const sa = JSON.parse(fs.readFileSync('/Users/aaron/.openclaw/workspace-manager/projects/dalconnect/konnect-firebase-key.json', 'utf-8'));
+    const sa = JSON.parse(fs.readFileSync(path.join(BASE, 'konnect-firebase-key.json'), 'utf-8'));
     admin.initializeApp({ credential: admin.credential.cert(sa) });
   }
   firestore = admin.firestore();
@@ -88,95 +92,67 @@ async function translateToKorean(title, content, retry = 0) {
   }
 }
 
-// RSS 피드 소스 — 한국어 + 영어 (번역)
+// RSS 피드 소스 — 하드뉴스 중심 (2026-05-09 전면 정리)
 const RSS_FEEDS = [
-  // 한국 뉴스 (메인)
-  { url: 'https://www.yonhapnewstv.co.kr/browse/feed/', category: '한국뉴스', source: '연합뉴스TV', city: null },
-  { url: 'https://www.hani.co.kr/rss/', category: '한국뉴스', source: '한겨레', city: null },
-  { url: 'https://rss.donga.com/total.xml', category: '한국뉴스', source: '동아일보', city: null },
-  { url: 'https://www.khan.co.kr/rss/rssdata/total_news.xml', category: '한국뉴스', source: '경향신문', city: null },
-  { url: 'https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml', category: '한국뉴스', source: '조선일보', city: null },
+  // ── 한국 주요 언론 ──────────────────────────────────────────
+  { url: 'https://www.yna.co.kr/rss/news.xml',                                       category: '한국뉴스', source: '연합뉴스' },
+  { url: 'https://www.yonhapnewstv.co.kr/browse/feed/',                              category: '한국뉴스', source: '연합뉴스TV' },
+  { url: 'https://www.newsis.com/RSS/sokbo.xml',                                     category: '한국뉴스', source: '뉴시스' },
+  { url: 'https://news.sbs.co.kr/news/headlineRssFeed.do?plink=RSSREADER',           category: '한국뉴스', source: 'SBS' },
+  { url: 'https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml',             category: '한국뉴스', source: '조선일보' },
+  { url: 'https://rss.donga.com/total.xml',                                          category: '한국뉴스', source: '동아일보' },
+  { url: 'https://www.hani.co.kr/rss/',                                              category: '한국뉴스', source: '한겨레' },
+  { url: 'https://www.mk.co.kr/rss/30000001/',                                       category: '한국뉴스', source: '매일경제' },
+  { url: 'https://www.koreaherald.com/rss/newsAll',                                  category: '한국뉴스', source: 'Korea Herald', translate: true },
 
-  // 미주 한인 뉴스
-  { url: 'https://www.koreadaily.com/RSS/news.xml', category: '미주뉴스', source: '중앙일보 미주', city: null },
+  // ── 미주 한인 뉴스 ───────────────────────────────────────────
+  { url: 'https://www.koreadaily.com/RSS/news.xml',                                  category: '미주뉴스', source: '중앙일보 미주' },
 
-  // DFW 로컬 뉴스 (영어 → 번역)
-  { url: 'https://www.wfaa.com/feeds/syndication/rss/news', category: '로컬뉴스', source: 'WFAA', city: 'dallas', translate: true },
-  { url: 'https://www.nbcdfw.com/news/feed/', category: '로컬뉴스', source: 'NBC DFW', city: 'dallas', translate: true },
-  { url: 'https://www.dallasnews.com/arcio/rss/', category: '로컬뉴스', source: 'Dallas Morning News', city: 'dallas', translate: true },
-  { url: 'https://www.fox4news.com/feeds/syndication/rss/news', category: '로컬뉴스', source: 'Fox4 DFW', city: 'dallas', translate: true },
+  // ── DFW 로컬 뉴스 ────────────────────────────────────────────
+  { url: 'https://www.wfaa.com/feeds/syndication/rss/news',                          category: '로컬뉴스', source: 'WFAA',               city: 'dallas', translate: true },
+  { url: 'https://www.nbcdfw.com/news/feed/',                                        category: '로컬뉴스', source: 'NBC DFW',            city: 'dallas', translate: true },
+  { url: 'https://www.dallasnews.com/arcio/rss/',                                    category: '로컬뉴스', source: 'Dallas Morning News', city: 'dallas', translate: true },
+  { url: 'https://www.fox4news.com/?rss=y',                                          category: '로컬뉴스', source: 'Fox4 DFW',           city: 'dallas', translate: true },
+  { url: 'https://www.cbsnews.com/dallas/local-news/feed/',                          category: '로컬뉴스', source: 'CBS11 DFW',          city: 'dallas', translate: true },
+  { url: 'https://www.weather.gov/source/fwd/rss/FTWSPSFWD.xml',                    category: '로컬뉴스', source: 'NWS DFW 날씨특보',    city: 'dallas', translate: true },
 
-  // 이민/비자
-  { url: 'https://www.murthy.com/feed/', category: '이민/비자', source: 'Murthy Law', city: null, translate: true },
-  { url: 'https://feeds.feedburner.com/immigrationimpact', category: '이민/비자', source: 'American Immigration Council', city: null, translate: true },
-  { url: 'https://www.visajourney.com/forums/forum/86-immigration-news/index.xml', category: '이민/비자', source: 'VisaJourney', city: null, translate: true },
-  { url: 'https://immigrationforum.org/feed/', category: '이민/비자', source: 'National Immigration Forum', city: null, translate: true },
-  { url: 'https://lawprofessors.typepad.com/immigration/rss.xml', category: '이민/비자', source: 'ImmigrationProf Blog', city: null, translate: true },
+  // ── 이민/비자 ─────────────────────────────────────────────────
+  { url: 'https://www.uscis.gov/newsroom/news-releases/feed',                        category: '이민/비자', source: 'USCIS',              translate: true },
+  { url: 'https://www.uscis.gov/newsroom/alerts/feed',                               category: '이민/비자', source: 'USCIS 공지',         translate: true },
+  { url: 'https://travel.state.gov/content/travel/en/News/visas-news.html.rss.xml', category: '이민/비자', source: '미국무부 비자',        translate: true },
+  { url: 'https://www.murthy.com/feed/',                                             category: '이민/비자', source: 'Murthy Law',         translate: true },
+  { url: 'https://feeds.feedburner.com/immigrationimpact',                           category: '이민/비자', source: '이민정책 센터',        translate: true },
 
-  // 마트/쇼핑 (Google News RSS — 한인들이 자주 가는 DFW 마트)
-  { url: 'https://news.google.com/rss/search?q=Costco+deals+Texas&hl=ko&gl=US&ceid=US:ko', category: '마트/쇼핑', source: '코스트코', city: 'dallas', translate: true },
-  { url: 'https://news.google.com/rss/search?q=Trader+Joes+new+products+2025&hl=en&gl=US&ceid=US:en', category: '마트/쇼핑', source: '트레이더 조', city: 'dallas', translate: true },
-  { url: 'https://news.google.com/rss/search?q=HEB+grocery+Texas+deals+2025&hl=en&gl=US&ceid=US:en', category: '마트/쇼핑', source: 'HEB', city: 'dallas', translate: true },
-  { url: 'https://news.google.com/rss/search?q=Central+Market+Texas+specials&hl=en&gl=US&ceid=US:en', category: '마트/쇼핑', source: '센트럴 마켓', city: 'dallas', translate: true },
+  // ── K-POP / 연예 ─────────────────────────────────────────────
+  { url: 'https://www.soompi.com/feed',                                              category: 'K-POP', source: 'Soompi',          translate: true },
+  { url: 'https://www.koreaboo.com/feed/',                                           category: 'K-POP', source: 'Koreaboo',        translate: true },
+  { url: 'https://www.koreaherald.com/rss/kh_Kpop',                                 category: 'K-POP', source: 'KH K-pop',        translate: true },
+  { url: 'https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=14&plink=RSSREADER', category: 'K-POP', source: 'SBS 연예' },
 
-  // K-POP / 연예
-  { url: 'https://www.soompi.com/feed', category: 'K-POP', source: 'Soompi', city: null, translate: true },
+  // ── 스포츠 ───────────────────────────────────────────────────
+  { url: 'https://rss.donga.com/sports.xml',                                         category: '스포츠', source: '동아 스포츠' },
+  { url: 'https://www.yna.co.kr/rss/sports.xml',                                    category: '스포츠', source: '연합뉴스 스포츠' },
+  { url: 'https://www.espn.com/espn/rss/mlb/news',                                  category: '스포츠', source: 'ESPN MLB',  translate: true },
+  { url: 'https://www.espn.com/espn/rss/nfl/news',                                  category: '스포츠', source: 'ESPN NFL',  translate: true },
 
-  // 스포츠
-  { url: 'https://rss.donga.com/sports.xml', category: '스포츠', source: '동아 스포츠', city: null },
-  { url: 'https://www.espn.com/espn/rss/nfl/news', category: '스포츠', source: 'ESPN', city: null, translate: true },
+  // ── 경제/금융 ─────────────────────────────────────────────────
+  { url: 'https://www.yna.co.kr/rss/economy.xml',                                   category: '경제', source: '연합뉴스 경제' },
+  { url: 'https://rss.donga.com/economy.xml',                                       category: '경제', source: '동아 경제' },
+  { url: 'https://www.cbsnews.com/latest/rss/moneywatch',                           category: '경제', source: 'CBS MoneyWatch', translate: true },
+  { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html',                    category: '경제', source: 'CNBC 개인재정',  translate: true },
 
-  // 건강
-  { url: 'https://www.kormedi.com/rss/', category: '건강', source: '코메디닷컴', city: null },
-  { url: 'https://rss.donga.com/health.xml', category: '건강', source: '동아일보 건강', city: null },
-  { url: 'https://www.healthline.com/rss/health-news', category: '건강', source: 'Healthline', city: null, translate: true },
-  { url: 'https://rss.donga.com/wellness.xml', category: '건강', source: '동아 웰니스', city: null },
-  { url: 'https://www.yna.co.kr/rss/health.xml', category: '건강', source: '연합뉴스 건강', city: null },
+  // ── 월드뉴스 ─────────────────────────────────────────────────
+  { url: 'https://www.yna.co.kr/rss/international.xml',                             category: '월드뉴스', source: '연합뉴스 국제' },
+  { url: 'https://rss.donga.com/international.xml',                                 category: '월드뉴스', source: '동아 국제' },
+  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml',                             category: '월드뉴스', source: 'BBC World', translate: true },
 
-  // 부동산
-  { url: 'https://www.redfin.com/blog/feed/', category: '부동산/숙소', source: 'Redfin Blog', city: null, translate: true },
-  { url: 'https://feeds.feedburner.com/TheMortgageReports', category: '부동산/숙소', source: 'The Mortgage Reports', city: null, translate: true },
-  { url: 'https://feeds.feedburner.com/fortunebuilders', category: '부동산/숙소', source: 'Fortune Builders', city: null, translate: true },
-  { url: 'https://rss.donga.com/economy.xml', category: '부동산/숙소', source: '동아 경제/부동산', city: null },
+  // ── 기술/AI ──────────────────────────────────────────────────
+  { url: 'https://www.yna.co.kr/rss/industry.xml',                                  category: '기술/AI', source: '연합뉴스 산업' },
+  { url: 'https://www.etnews.com/rss',                                               category: '기술/AI', source: '전자신문' },
 
-  // 월드뉴스
-  { url: 'https://www.yna.co.kr/rss/international.xml', category: '월드뉴스', source: '연합뉴스 국제', city: null },
-  { url: 'https://rss.donga.com/international.xml', category: '월드뉴스', source: '동아 국제', city: null },
-  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: '월드뉴스', source: 'BBC World', city: null, translate: true },
-
-  // 육아
-  { url: 'https://www.mother.ly/feed/', category: '육아', source: 'Motherly', city: null, translate: true },
-  { url: 'https://rss.donga.com/child.xml', category: '육아', source: '동아 육아', city: null },
-
-  // 이민/비자
-  { url: 'https://www.uscis.gov/newsroom/news-releases/feed', category: '이민/비자', source: 'USCIS', city: null, translate: true },
-  { url: 'https://www.uscis.gov/newsroom/alerts/feed', category: '이민/비자', source: 'USCIS 공지', city: null, translate: true },
-  { url: 'https://travel.state.gov/content/travel/en/News/visas-news.html.rss.xml', category: '이민/비자', source: '미국무부 비자', city: null, translate: true },
-  { url: 'https://www.boundless.com/blog/feed/', category: '이민/비자', source: 'Boundless Immigration', city: null, translate: true },
-
-  // 취업/사업
-  { url: 'https://www.entrepreneur.com/latest/feed', category: '취업/사업', source: 'Entrepreneur', city: null, translate: true },
-  { url: 'https://www.inc.com/rss', category: '취업/사업', source: 'Inc.com', city: null, translate: true },
-  { url: 'https://www.yna.co.kr/rss/industry.xml', category: '취업/사업', source: '연합뉴스 산업', city: null },
-  { url: 'https://www.fastcompany.com/latest/rss', category: '취업/사업', source: 'Fast Company', city: null, translate: true },
-  { url: 'https://fortune.com/feed', category: '취업/사업', source: 'Fortune', city: null, translate: true },
-  { url: 'https://rss.donga.com/economy.xml', category: '취업/사업', source: '동아 경제', city: null },
-  { url: 'https://www.yna.co.kr/rss/economy.xml', category: '취업/사업', source: '연합뉴스 취업', city: null },
-
-  // 패션/뷰티
-  { url: 'https://www.wkorea.com/feed/', category: '패션/뷰티', source: 'W Korea', city: null },
-  { url: 'https://www.allurekorea.com/feed/', category: '패션/뷰티', source: 'Allure Korea', city: null },
-  { url: 'https://www.elle.com/rss/all.xml/', category: '패션/뷰티', source: 'Elle', city: null, translate: true },
-
-  // 세금/재정
-  { url: 'https://www.nerdwallet.com/blog/feed/', category: '세금/재정', source: 'NerdWallet', city: null, translate: true },
-  { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html', category: '세금/재정', source: 'CNBC 개인재정', city: null, translate: true },
-  { url: 'https://www.yna.co.kr/rss/economy.xml', category: '세금/재정', source: '연합뉴스 경제', city: null },
-  { url: 'https://rss.donga.com/money.xml', category: '세금/재정', source: '동아 경제', city: null },
-  { url: 'https://www.chosun.com/arc/outboundfeeds/rss/category/economy/?outputType=xml', category: '세금/재정', source: '조선일보 경제', city: null },
-
-  // 테크
-  { url: 'https://www.etnews.com/rss', category: '테크', source: '전자신문', city: null },
+  // ── 건강 (하드뉴스만) ─────────────────────────────────────────
+  { url: 'https://www.yna.co.kr/rss/health.xml',                                    category: '건강', source: '연합뉴스 건강' },
+  { url: 'https://rss.donga.com/health.xml',                                        category: '건강', source: '동아일보 건강' },
 ];
 
 // Simple XML parser for RSS (no dependency needed)
@@ -342,12 +318,12 @@ function smartCategory(defaultCategory, title) {
   if (local.some(k => t.includes(k))) return '로컬뉴스';
   const world = ['북한','이란','이라크','쿠바','cuba','중국','러시아','우크라이나','이스라엘','팔레스타인','암스테르담','바그다드','걸프','하마스','iran','iraq','north korea','ukraine','russia','china','europe','middle east','gaza','hamas','gulf','tehran','beijing','moscow','바레인','bahrain'];
   if (world.some(k => t.includes(k))) return '월드뉴스';
-  const sports = ['nfl','nba','mlb','nhl','march madness','ncaa','formula 1','f1','bracket','ravens','titans','jets','bills','falcons','seahawks','광란의'];
+  const sports = ['nfl','nba','mlb','nhl','march madness','ncaa','formula 1','f1','bracket','british open','dechambeau','golf','ravens','titans','jets','bills','falcons','seahawks','광란의'];
   if (sports.some(k => t.includes(k))) return '스포츠';
   // 나머지 로컬소스 전국 뉴스
   const national = ['미시간','michigan','애리조나','arizona','조지아','georgia','플로리다','florida','콜로라도','colorado','캘리포니아','california','오헤어','o\'hare','dulles','dolly','southwest airlines','gas price','포브스','forbes','oscar','emmy','senate','congress','federal'];
   if (national.some(k => t.includes(k))) return '미국뉴스';
-  return '로컬뉴스'; // WFAA/NBC DFW 기본값: 로컬뉴스로 유지
+  return '미국뉴스'; // DFW 지명이 없는 로컬 방송사의 전국 기사는 로컬로 가장하지 않음
 }
 
 async function insertIfNew(article) {
@@ -613,7 +589,17 @@ async function run() {
   // Post-collection: translate any remaining English articles
   if (GOOGLE_AI_KEY) {
     console.log('\n🌐 영어 기사 번역 시작...');
-    const { rows } = await pool.query(`SELECT id, title, content FROM news WHERE (title ~ '[A-Za-z]{5,}' AND title !~ '[가-힣]') OR (content IS NOT NULL AND content !~ '[가-힣]' AND content ~ '[a-zA-Z]{5,}')`);
+    // Do not let historical cleanup turn a scheduled refresh into a multi-hour job.
+    // New feed items are translated before insert; this is only a small recent safety net.
+    const { rows } = await pool.query(`
+      SELECT id, title, content
+      FROM news
+      WHERE published_date >= NOW() - INTERVAL '7 days'
+        AND ((title ~ '[A-Za-z]{5,}' AND title !~ '[가-힣]')
+          OR (content IS NOT NULL AND content !~ '[가-힣]' AND content ~ '[a-zA-Z]{5,}'))
+      ORDER BY published_date DESC
+      LIMIT 30
+    `);
     if (rows.length > 0) {
       console.log(`  번역 대상: ${rows.length}개`);
       let translated = 0;
@@ -646,4 +632,33 @@ async function run() {
   }
 }
 
-run().catch(e => { console.error(e); process.exit(1); });
+function acquireRunLock() {
+  try {
+    const fd = fs.openSync(LOCK_FILE, 'wx', 0o600);
+    fs.writeFileSync(fd, String(process.pid));
+    fs.closeSync(fd);
+  } catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+    const activePid = Number(fs.readFileSync(LOCK_FILE, 'utf8').trim());
+    try {
+      process.kill(activePid, 0);
+      console.log(`뉴스 수집 스킵: 이미 실행 중 (pid ${activePid})`);
+      return null;
+    } catch {
+      fs.unlinkSync(LOCK_FILE);
+      return acquireRunLock();
+    }
+  }
+  return () => {
+    try {
+      if (Number(fs.readFileSync(LOCK_FILE, 'utf8').trim()) === process.pid) fs.unlinkSync(LOCK_FILE);
+    } catch {}
+  };
+}
+
+if (require.main === module) {
+  const release = acquireRunLock();
+  if (release) run().catch(e => { console.error(e); process.exitCode = 1; }).finally(release);
+}
+
+module.exports = { smartCategory, acquireRunLock };
