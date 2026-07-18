@@ -92,6 +92,14 @@ async function translateToKorean(title, content, retry = 0) {
   }
 }
 
+function mergeValidatedTranslation(row, translated) {
+  const translatedTitle = translated?.title || '';
+  const translatedContent = translated?.content || '';
+  const title = /[가-힣]{2,}/.test(translatedTitle) ? translatedTitle : row.title;
+  const content = /[가-힣]{3,}/.test(translatedContent) ? translatedContent : row.content;
+  return { title, content, changed: title !== row.title || content !== row.content };
+}
+
 // RSS 피드 소스 — 하드뉴스 중심 (2026-05-09 전면 정리)
 const RSS_FEEDS = [
   // ── 한국 주요 언론 ──────────────────────────────────────────
@@ -606,8 +614,9 @@ async function run() {
       for (const row of rows) {
         try {
           const t = await translateToKorean(row.title, row.content);
-          if (t.title !== row.title) {
-            await pool.query('UPDATE news SET title = $1, content = $2 WHERE id = $3', [t.title, t.content || '', row.id]);
+          const merged = mergeValidatedTranslation(row, t);
+          if (merged.changed) {
+            await pool.query('UPDATE news SET title = $1, content = $2 WHERE id = $3', [merged.title, merged.content, row.id]);
             translated++;
           }
         } catch(e) {}
@@ -661,4 +670,4 @@ if (require.main === module) {
   if (release) run().catch(e => { console.error(e); process.exitCode = 1; }).finally(release);
 }
 
-module.exports = { smartCategory, acquireRunLock };
+module.exports = { smartCategory, acquireRunLock, mergeValidatedTranslation };
