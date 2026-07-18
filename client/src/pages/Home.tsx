@@ -227,13 +227,16 @@ export default function Home() {
   const headlineNews = useMemo(() => {
     const seen = new Set<string>();
     const lowTrust = /shoot|murder|killed|dead|arrest|총격|살인|살해|시신|체포|충격|대박|소름|역대급/i;
+    const dfwSignal = /달라스|댈러스|dallas|dfw|포트워스|fort worth|북텍사스|노스\s*텍사스|north texas|알링턴|arlington|플레이노|plano|캐럴턴|카롤톤|carrollton|프리스코|frisco|맥키니|mckinney|그레이프바인|grapevine|어빙|irving|리처드슨|richardson|가랜드|garland/i;
     const filtered = [...localNews, ...(newsItems ?? [])].filter((n: any) => {
       if (!n?.id || seen.has(n.id) || isReddit(n) || lowTrust.test(n.title || '')) return false;
       if (!/[가-힣]{3,}/.test(n.title || '')) return false;
       seen.add(n.id);
       return true;
     });
-    const local = filtered.filter((n: any) => n.category === '로컬뉴스').slice(0, 2);
+    const local = filtered
+      .filter((n: any) => n.category === '로컬뉴스' && dfwSignal.test(n.title || ''))
+      .slice(0, 2);
     const categoryOrder = ['이민/비자', '경제', '미국뉴스', '건강', '기술/AI', '한국뉴스', '월드뉴스', '스포츠', 'K-POP'];
     const useful = categoryOrder.flatMap(category => filtered.filter((n: any) => n.category === category).slice(0, 1));
     return [...local, ...useful].slice(0, 5);
