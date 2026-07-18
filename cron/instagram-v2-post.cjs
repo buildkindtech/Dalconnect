@@ -37,13 +37,13 @@ function chicagoDate(input) {
 }
 
 function readEnv(name) {
-  if (process.env[name]) return process.env[name];
   try {
     const value = execFileSync('/usr/bin/security', [
       'find-generic-password', '-a', 'dalkonnect', '-s', name, '-w',
     ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
     if (value) return value;
   } catch {}
+  if (process.env[name]) return process.env[name];
   for (const file of ENV_FILES) {
     if (!fs.existsSync(file)) continue;
     const match = fs.readFileSync(file, 'utf8').match(new RegExp(`^(?:export\\s+)?${name}=(.*)$`, 'm'));
@@ -236,10 +236,14 @@ async function main() {
   console.log(JSON.stringify({ published: true, date, igMediaId, username }, null, 2));
 }
 
-const releaseLock = acquireRunLock();
-main()
-  .catch(error => {
-    console.error(`instagram-v2-post failed: ${error.message}`);
-    process.exitCode = 1;
-  })
-  .finally(releaseLock);
+if (require.main === module) {
+  const releaseLock = acquireRunLock();
+  main()
+    .catch(error => {
+      console.error(`instagram-v2-post failed: ${error.message}`);
+      process.exitCode = 1;
+    })
+    .finally(releaseLock);
+}
+
+module.exports = { readEnv };
