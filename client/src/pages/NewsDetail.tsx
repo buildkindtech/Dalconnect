@@ -122,7 +122,7 @@ export default function NewsDetail() {
 
   const metaTitle = newsItem?.title ? `${newsItem.title} | DalKonnect` : "달라스 한인 뉴스 | DalKonnect";
   const metaDesc = newsItem?.content ? newsItem.content.slice(0, 160) : "달라스 DFW 한인 커뮤니티 최신 뉴스";
-  const metaImage = newsItem?.thumbnail_url || "https://dalkonnect.com/og-image.png";
+  const metaImage = newsItem?.thumbnail_url || "https://dalkonnect.com/opengraph.jpg";
 
   return (
     <>

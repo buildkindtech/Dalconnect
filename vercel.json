@@ -12,6 +12,9 @@
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/sitemap-dynamic.xml", "destination": "/api/sitemap" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/business/:id", "destination": "/api/og?path=/business/:id" },
+    { "source": "/news/:id", "destination": "/api/og?path=/news/:id" },
+    { "source": "/blog/:slug", "destination": "/api/og?path=/blog/:slug" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

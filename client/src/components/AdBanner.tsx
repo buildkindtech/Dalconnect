@@ -16,6 +16,7 @@ interface Business {
   rating?: number | string;
   review_count?: number;
   featured?: boolean;
+  tier?: string;
 }
 
 // rating이 string으로 내려올 수 있음 (DB varchar) → number로 변환
@@ -23,6 +24,10 @@ function toRating(r?: number | string): string {
   if (r == null) return "0.0";
   const n = Number(r);
   return isNaN(n) ? "0.0" : n.toFixed(1);
+}
+
+function promotionLabel(business: Business): string {
+  return business.tier && business.tier !== "free" ? "광고" : "추천";
 }
 
 type AdSize = 
@@ -103,7 +108,7 @@ function InfeedAdCard({ business }: { business: Business }) {
           }}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           <div className="absolute top-2 left-2">
-            <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-bold">광고</span>
+            <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-bold">{promotionLabel(business)}</span>
           </div>
           <div className="absolute bottom-0 p-2.5">
             <p className="text-white text-xs font-bold leading-tight line-clamp-2">{name}</p>
@@ -180,7 +185,7 @@ function LeaderboardBanner({ businesses }: { businesses: Business[] }) {
           style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.3s ease' }}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-[10px] bg-amber-400 text-black px-2 py-0.5 rounded-full font-bold flex-shrink-0">광고</span>
+            <span className="text-[10px] bg-amber-400 text-black px-2 py-0.5 rounded-full font-bold flex-shrink-0">{promotionLabel(biz)}</span>
             <div className="min-w-0">
               <p className="text-white font-bold text-sm md:text-base truncate drop-shadow">{name}</p>
               <p className="text-white/80 text-xs truncate">
@@ -275,7 +280,7 @@ export function AdBanner({ size, businesses = [], category, className = "", labe
   return (
     <Link href={`/business/${biz.id}`}>
       <div className={`group cursor-pointer flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-lg px-3 py-2 ${className}`}>
-        <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold flex-shrink-0">광고</span>
+        <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold flex-shrink-0">{promotionLabel(biz)}</span>
         <span className="text-sm font-medium text-gray-800 truncate flex-1">{name}</span>
         <span className="text-xs text-blue-600 font-medium flex-shrink-0">보기 →</span>
       </div>

@@ -15,6 +15,7 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 import BusinessCard from "@/components/BusinessCard";
 import * as Icons from "lucide-react";
 import { AdBanner } from "@/components/AdBanner";
+import { trackEvent } from "@/lib/analytics";
 
 const CATEGORIES = [
   { id: '식당', name: '식당', icon: UtensilsCrossed, color: 'bg-red-500' },
@@ -112,10 +113,15 @@ export default function Home() {
 
   // Fetch immigration/visa news
   const [immigrationNews, setImmigrationNews] = useState<any[]>([]);
+  const [localNews, setLocalNews] = useState<any[]>([]);
   useEffect(() => {
     fetchWithRetry('/api/news?category=%EC%9D%B4%EB%AF%BC%2F%EB%B9%84%EC%9E%90&limit=4')
       .then(r => r.json())
       .then(d => setImmigrationNews(Array.isArray(d) ? d.slice(0, 4) : []))
+      .catch(() => {});
+    fetchWithRetry('/api/news?category=%EB%A1%9C%EC%BB%AC%EB%89%B4%EC%8A%A4&limit=12')
+      .then(r => r.json())
+      .then(d => setLocalNews(Array.isArray(d) ? d.slice(0, 12) : []))
       .catch(() => {});
   }, []);
 
@@ -182,7 +188,12 @@ export default function Home() {
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
         if (response.ok) {
-          const results = await response.json();
+          const payload = await response.json();
+          const results = Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload.businesses)
+              ? payload.businesses
+              : [];
           setSearchResults(results.slice(0, 5));
           setShowAutocomplete(true);
         }
@@ -212,21 +223,21 @@ export default function Home() {
   const featuredForAd = useMemo(() => allFeatured.slice(0, 8), [allFeatured]);
   // Reddit 제외
   const isReddit = (n: any) => n.source?.startsWith('r/') || n.category === '달라스';
-  // 뉴스 헤드라인 — 카테고리별 인터리브 후 최신 5개 (정적 리스트)
+  // 뉴스 헤드라인 — 검증 가능한 DFW 생활 뉴스 우선, 전국 사건사고·영문 원문 제외
   const headlineNews = useMemo(() => {
-    const filtered = (newsItems ?? []).filter((n: any) => !isReddit(n));
-    const catGroups: Record<string, any[]> = {};
-    filtered.forEach((n: any) => {
-      if (!catGroups[n.category]) catGroups[n.category] = [];
-      catGroups[n.category].push(n);
+    const seen = new Set<string>();
+    const lowTrust = /shoot|murder|killed|dead|arrest|총격|살인|살해|시신|체포|충격|대박|소름|역대급/i;
+    const filtered = [...localNews, ...(newsItems ?? [])].filter((n: any) => {
+      if (!n?.id || seen.has(n.id) || isReddit(n) || lowTrust.test(n.title || '')) return false;
+      if (!/[가-힣]{3,}/.test(n.title || '')) return false;
+      seen.add(n.id);
+      return true;
     });
-    const interleaved: any[] = [];
-    const maxLen = Math.max(0, ...Object.values(catGroups).map(g => g.length));
-    for (let i = 0; i < maxLen; i++) {
-      Object.values(catGroups).forEach(g => { if (g[i]) interleaved.push(g[i]); });
-    }
-    return interleaved.slice(0, 5);
-  }, [newsItems]);
+    const local = filtered.filter((n: any) => n.category === '로컬뉴스').slice(0, 2);
+    const categoryOrder = ['이민/비자', '경제', '미국뉴스', '건강', '기술/AI', '한국뉴스', '월드뉴스', '스포츠', 'K-POP'];
+    const useful = categoryOrder.flatMap(category => filtered.filter((n: any) => n.category === category).slice(0, 1));
+    return [...local, ...useful].slice(0, 5);
+  }, [localNews, newsItems]);
   const recentBlogs = blogPosts?.slice(0, 4) ?? [];
   const recentListings = (listingsData?.items ?? []).filter((l: any) => {
     // 테스트/더미 매물 제외
@@ -246,8 +257,10 @@ export default function Home() {
     if (selectedIndex >= 0 && searchResults[selectedIndex]) {
       // Navigate to selected result
       setLocation(`/business/${searchResults[selectedIndex].id}`);
+      trackEvent('search_result_select', { query: searchQuery, source: 'autocomplete' });
       setShowAutocomplete(false);
     } else if (searchQuery.trim()) {
+      trackEvent('search_submit', { query: searchQuery.trim(), source: 'home' });
       setLocation(`/businesses?search=${encodeURIComponent(searchQuery)}`);
       setShowAutocomplete(false);
     }
@@ -285,13 +298,13 @@ export default function Home() {
       <meta name="description" content="달라스-포트워스 DFW 한인 커뮤니티. 1,175개 한인 업체 정보, 매일 업데이트 최신 한인 뉴스, 커뮤니티, 마켓플레이스." />
       <meta property="og:title" content="DalKonnect — DFW 달라스 한인 커뮤니티" />
       <meta property="og:description" content="달라스-포트워스 DFW 한인 커뮤니티. 1,175개 한인 업체 정보, 매일 업데이트 최신 한인 뉴스, 커뮤니티, 마켓플레이스." />
-      <meta property="og:image" content="https://dalkonnect.com/og-image.png" />
+      <meta property="og:image" content="https://dalkonnect.com/opengraph.jpg" />
       <meta property="og:url" content="https://dalkonnect.com/" />
       <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="DalKonnect — DFW 달라스 한인 커뮤니티" />
       <meta name="twitter:description" content="달라스-포트워스 DFW 한인 업체 & 뉴스 커뮤니티" />
-      <meta name="twitter:image" content="https://dalkonnect.com/og-image.png" />
+      <meta name="twitter:image" content="https://dalkonnect.com/opengraph.jpg" />
       <link rel="canonical" href="https://dalkonnect.com/" />
     </Helmet>
     <div className="flex flex-col min-h-screen">
@@ -545,7 +558,7 @@ export default function Home() {
       </section>
 
 
-      {/* ☀️ 오늘의 아침 브리핑 — static promo card */}
+      {/* 출처 기반 Instagram 생활 가이드 */}
       <section className="py-8 bg-gradient-to-r from-orange-50 to-yellow-50">
         <div className="container mx-auto px-4">
           <a
@@ -559,10 +572,10 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-xl font-bold mb-1 flex items-center gap-2">
-                      <Sun className="w-5 h-5" /> 오늘의 아침 브리핑
+                      <Sun className="w-5 h-5" /> DalKonnect 생활 가이드
                     </div>
                     <p className="text-orange-100 text-sm">
-                      {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}
+                      공식 출처를 확인한 DFW 정보
                     </p>
                   </div>
                   <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -572,7 +585,7 @@ export default function Home() {
               </div>
               <div className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">DFW 한인 커뮤니티 최신 소식</p>
+                  <p className="text-sm font-semibold text-slate-700">실사진·출처 기반 생활정보</p>
                   <p className="text-xs text-slate-500 mt-0.5">
                     <span className="text-pink-500 font-medium">@dalkonnect</span> Instagram에서 보기
                   </p>
@@ -757,8 +770,8 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl md:text-3xl font-bold">추천 업체</h2>
-                <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">광고</span>
+                <h2 className="text-xl md:text-3xl font-bold">추천·스폰서 업체</h2>
+                <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">광고 포함</span>
               </div>
               <Link href="/businesses?featured=true">
                 <Button variant="ghost" className="gap-1 text-sm">
@@ -1320,4 +1333,3 @@ export default function Home() {
     </>
   );
 }
-
