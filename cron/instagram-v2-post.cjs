@@ -29,9 +29,11 @@ function parseArgs(argv) {
 
 function chicagoDate(input) {
   if (input && /^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+  const value = input ? new Date(input) : new Date();
+  if (Number.isNaN(value.getTime())) throw new Error(`Invalid date: ${input}`);
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(new Date());
+  }).format(value);
 }
 
 function readEnv(name) {
@@ -198,7 +200,10 @@ async function main() {
   if (!config?.publishing?.enabled || config.publishing.platform !== 'instagram') throw new Error('Automatic Instagram publishing is disabled');
   const pkg = validatePackage(date, config);
   const registry = loadJson(REGISTRY_FILE, { version: 1, posts: [] });
-  const dailyPosts = registry.posts.filter(post => post.date === date).length;
+  const publishDate = chicagoDate();
+  const dailyPosts = registry.posts.filter(post =>
+    (post.publishDate || (post.publishedAt && chicagoDate(post.publishedAt))) === publishDate
+  ).length;
   if (dailyPosts >= config.publishing.maxPostsPerDay) {
     console.log(JSON.stringify({ skipped: true, reason: 'daily post limit reached', date }, null, 2));
     return;
@@ -219,7 +224,7 @@ async function main() {
   const username = await checkInstagramCredential(config.publishing.graphVersion, token, igId);
   const urls = await uploadAssets(date, pkg);
   const igMediaId = await publishReel(config, token, igId, pkg, urls);
-  registry.posts.push({ date, topicId: pkg.manifest.topicId, artifactHash: pkg.artifactHash,
+  registry.posts.push({ date, publishDate, topicId: pkg.manifest.topicId, artifactHash: pkg.artifactHash,
     igMediaId, username, publishedAt: new Date().toISOString() });
   saveJson(REGISTRY_FILE, registry);
   console.log(JSON.stringify({ published: true, date, igMediaId, username }, null, 2));
